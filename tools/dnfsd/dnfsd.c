@@ -25,7 +25,6 @@
 #include <arpa/inet.h>
 
 #include "nfslib.h"
-#include "nfssvc.h"
 #include "xlog.h"
 
 #ifndef NFSD_NPROC
