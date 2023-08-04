@@ -24,8 +24,9 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include "nfslib.h"
-#include "xlog.h"
+#include "dnfsd/nfslib.h"
+#include "utils/xlog.h"
+#include "dnfsd/dnfssvc.h"
 
 #ifndef NFSD_NPROC
 #define NFSD_NPROC 8
@@ -270,9 +271,8 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
-    // TODO, 将nfsd挂载到/proc/fs/nfsd中，具体作用未知
-	/* make sure nfsdfs is mounted if it's available */
-	nfssvc_mount_nfsdfs(progname);
+    // 初始化dnfsd的状态文件目录
+	dnfssvc_create_status_dir(progname);
 
     // 根据"/proc/fs/nfsd/portlist"文件是否有接口相关的内容来确定当前nfsd是否启动
     // 如果已经启动可以修改当前运行中的进程数量，但是要求运行同一个nfsd程序处理才能完成修改

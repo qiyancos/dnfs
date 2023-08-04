@@ -21,19 +21,19 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include "stdarg.h"
+#include <stdarg.h>
 
-#include "nfslib.h"
-#include "xlog.h"
-#include "nfssvc.h"
+#include "dnfsd/nfslib.h"
+#include "utils/xlog.h"
+#include "dnfsd/dnfssvc.h"
 
-#ifndef NFSD_FS_DIR
-#define NFSD_FS_DIR	  "/proc/fs/nfsd"
+#ifndef DNFSD_FS_DIR
+#define DNFSD_FS_DIR	  "/proc/fs/dnfsd"
 #endif
 
-#define NFSD_PORTS_FILE   NFSD_FS_DIR "/portlist"
-#define NFSD_VERS_FILE    NFSD_FS_DIR "/versions"
-#define NFSD_THREAD_FILE  NFSD_FS_DIR "/threads"
+#define DNFSD_PORTS_FILE   DNFSD_FS_DIR "/portlist"
+#define DNFSD_VERS_FILE    DNFSD_FS_DIR "/versions"
+#define DNFSD_THREAD_FILE  DNFSD_FS_DIR "/threads"
 
 /*
  * declaring a common static scratch buffer here keeps us from having to
@@ -43,44 +43,23 @@
  */
 char buf[128];
 
-/*
- * Using the "new" interfaces for nfsd requires that /proc/fs/nfsd is
- * actually mounted. Make an attempt to mount it here if it doesn't appear
- * to be. If the mount attempt fails, no big deal -- fall back to using nfsctl
- * instead.
- */
 void
-nfssvc_mount_nfsdfs(char *progname)
+dnfssvc_create_status_dir(char *progname)
 {
 	int err;
 	struct stat statbuf;
 
-	err = stat(NFSD_THREAD_FILE, &statbuf);
-	if (err == 0)
-		return;
-
-	if (errno != ENOENT) {
-		xlog(L_ERROR, "Unable to stat %s: errno %d (%m)",
-			 NFSD_THREAD_FILE, errno);
-		return;
-	}
-
-	/*
-	 * this call can return an error if modprobe is set up to automatically
-	 * mount nfsdfs when nfsd.ko is plugged in. So, ignore the return
-	 * code from it and just check for the "threads" file afterward.
-	 */
-	system("/bin/mount -t nfsd nfsd " NFSD_FS_DIR " >/dev/null 2>&1");
-
-	err = stat(NFSD_THREAD_FILE, &statbuf);
-	if (err == 0)
-		return;
-
-	xlog(L_WARNING, "Unable to access " NFSD_FS_DIR " errno %d (%m)."
-					"\nPlease try, as root, 'mount -t nfsd nfsd " NFSD_FS_DIR
-					"' and then restart %s to correct the problem", errno, progname);
-
-	return;
+    if (stat(DNFSD_FS_DIR, &statbuf) == -1) {
+        errno = mkdir(DNFSD_FS_DIR, 0700);
+        if (errno != SUCCESS) {
+            xlog(L_ERROR, "Unable to create directory %s: errno %d (%m)",
+                 DNFSD_THREAD_FILE, errno);
+            return;
+        }
+	} else {
+        xlog(L_NOTICE, "Directory already exists: %s", DNFSD_FS_DIR);
+        return;
+    }
 }
 
 /*
@@ -96,7 +75,7 @@ nfssvc_inuse(void)
 {
 	int fd, n;
 
-	fd = open(NFSD_PORTS_FILE, O_RDONLY);
+	fd = open(DNFSD_PORTS_FILE, O_RDONLY);
 
 	/* problem opening file, assume that nothing is configured */
 	if (fd < 0)
@@ -122,7 +101,7 @@ nfssvc_setfds(const struct addrinfo *hints, const char *node, const char *port)
 	 * if file can't be opened, then assume that it's not available and
 	 * that the caller should just fall back to the old nfsctl interface
  	 */
-	fd = open(NFSD_PORTS_FILE, O_WRONLY);
+	fd = open(DNFSD_PORTS_FILE, O_WRONLY);
 	if (fd < 0)
 		return 0;
 
@@ -216,7 +195,7 @@ nfssvc_setfds(const struct addrinfo *hints, const char *node, const char *port)
 		}
 
 		if (fd < 0)
-			fd = open(NFSD_PORTS_FILE, O_WRONLY);
+			fd = open(DNFSD_PORTS_FILE, O_WRONLY);
 
 		if (fd < 0) {
 			xlog(L_ERROR, "couldn't open ports file: errno "
@@ -295,7 +274,7 @@ nfssvc_set_rdmaport(const char *port)
 		}
 	}
 
-	fd = open(NFSD_PORTS_FILE, O_WRONLY);
+	fd = open(DNFSD_PORTS_FILE, O_WRONLY);
 	if (fd < 0)
 		return 1;
 	snprintf(buf, sizeof(buf), "rdma %d", nport);
@@ -315,7 +294,7 @@ nfssvc_set_time(const char *type, const int seconds)
 	char nbuf[10];
 	int fd;
 
-	snprintf(pathbuf, sizeof(pathbuf), NFSD_FS_DIR "/nfsv4%stime", type);
+	snprintf(pathbuf, sizeof(pathbuf), DDNFSD_FS_DIR "/nfsv4%stime", type);
 	snprintf(nbuf, sizeof(nbuf), "%d", seconds);
 	fd = open(pathbuf, O_WRONLY);
 	if (fd >= 0) {
@@ -341,7 +320,7 @@ nfssvc_setvers(unsigned int ctlbits, unsigned int minorvers, unsigned int minorv
 
 	ptr = buf;
 	off = 0;
-	fd = open(NFSD_VERS_FILE, O_WRONLY);
+	fd = open(DNFSD_VERS_FILE, O_WRONLY);
 	if (fd < 0)
 		return;
 
@@ -353,7 +332,7 @@ nfssvc_setvers(unsigned int ctlbits, unsigned int minorvers, unsigned int minorv
 				off += snprintf(ptr+off, sizeof(buf) - off, "-4.%d ", n);
 		}
 	}
-	for (n = NFSD_MINVERS; n <= NFSD_MAXVERS; n++) {
+	for (n = DNFSD_MINVERS; n <= DNFSD_MAXVERS; n++) {
 		if (NFSCTL_VERISSET(ctlbits, n))
 			off += snprintf(ptr+off, sizeof(buf) - off, "+%d ", n);
 		else
@@ -377,7 +356,7 @@ nfssvc_threads(unsigned short port, const int nrservs)
 	ssize_t n;
 	int fd;
 
-	fd = open(NFSD_THREAD_FILE, O_WRONLY);
+	fd = open(DNFSD_THREAD_FILE, O_WRONLY);
 	if (fd < 0)
 		fd = open("/proc/fs/nfs/threads", O_WRONLY);
 	if (fd >= 0) {
