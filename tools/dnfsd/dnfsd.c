@@ -24,12 +24,13 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#include "dnfsd/dnfs.h"
 #include "dnfsd/nfslib.h"
 #include "utils/xlog.h"
-#include "dnfsd/dnfssvc.h"
+#include "dnfsd/dnfsinit.h"
 
-#ifndef NFSD_NPROC
-#define NFSD_NPROC 8
+#ifndef DNFSD_NPROC
+#define DNFSD_NPROC 8
 #endif
 
 static void	usage(const char *);
@@ -55,15 +56,14 @@ static struct option longopts[] =
 int
 main(int argc, char **argv)
 {
-	int	count = NFSD_NPROC, c, i, error = 0, portnum = 0, fd, found_one;
+	int	count = DNFSD_NPROC, c, i, error = 0, portnum = 0, fd, found_one;
 	char *p, *progname, *port, *rdma_port = NULL;
 	char **haddr = NULL;
 	int hcounter = 0;
 	int	socket_up = 0;
 	unsigned int minorvers = 0;
-	unsigned int minorversset = 0;
-	unsigned int versbits = NFSCTL_VERDEFAULT;
-	unsigned int protobits = NFSCTL_ALLBITS;
+	unsigned int versbits = DNFSCTL_VERDEFAULT;
+	unsigned int protobits = DNFSCTL_ALLBITS;
 	int grace = -1;
 	int lease = -1;
 
@@ -150,17 +150,16 @@ main(int argc, char **argv)
 			case 4:
 				if (*p == '.') {
 					int i = atoi(p+1);
-					if (i > NFS4_MAXMINOR) {
+					if (i > DNFS4_MAXMINOR) {
 						fprintf(stderr, "%s: unsupported minor version\n", optarg);
 						exit(1);
 					}
-					NFSCTL_VERSET(minorversset, i);
-					NFSCTL_VERUNSET(minorvers, i);
+					DNFSCTL_VERUNSET(minorvers, i);
 					break;
 				}
 			case 3:
 			case 2:
-				NFSCTL_VERUNSET(versbits, c);
+				DNFSCTL_VERUNSET(versbits, c);
 				break;
 			default:
 				fprintf(stderr, "%s: Unsupported version\n", optarg);
@@ -168,22 +167,21 @@ main(int argc, char **argv)
 			}
 			break;
 		case 'V':
-            // 启动指定的NFS协议版本
+            // 启动指定的DNFS协议版本
 			switch((c = strtol(optarg, &p, 0))) {
 			case 4:
 				if (*p == '.') {
 					int i = atoi(p+1);
-					if (i > NFS4_MAXMINOR) {
+					if (i > DNFS4_MAXMINOR) {
 						fprintf(stderr, "%s: unsupported minor version\n", optarg);
 						exit(1);
 					}
-					NFSCTL_VERSET(minorversset, i);
-					NFSCTL_VERSET(minorvers, i);
+					DNFSCTL_VERSET(minorvers, i);
 					break;
 				}
 			case 3:
 			case 2:
-				NFSCTL_VERSET(versbits, c);
+				DNFSCTL_VERSET(versbits, c);
 				break;
 			default:
 				fprintf(stderr, "%s: Unsupported version\n", optarg);
@@ -197,11 +195,11 @@ main(int argc, char **argv)
 			break;
 		case 'T':
             // TCP协议支持开关，默认自动依据系统端口占用情况启用，为占用就会启动
-			NFSCTL_TCPUNSET(protobits);
+			DNFSCTL_TCPUNSET(protobits);
 			break;
 		case 'U':
             // UDP协议支持开关，默认自动依据系统端口占用情况启用，为占用就会启动
-			NFSCTL_UDPUNSET(protobits);
+			DNFSCTL_UDPUNSET(protobits);
 			break;
 		case 'G':
             // TODO，grace时间，不确定用途
@@ -251,8 +249,8 @@ main(int argc, char **argv)
     // 基于输入的版本支持信息以及TCP和UDP开关情况，设置相应的标志位
 	/* make sure that at least one version is enabled */
 	found_one = 0;
-	for (c = NFSD_MINVERS; c <= NFSD_MAXVERS; c++) {
-		if (NFSCTL_VERISSET(versbits, c))
+	for (c = DNFSD_MINVERS; c <= DNFSD_MAXVERS; c++) {
+		if (DNFSCTL_VERISSET(versbits, c))
 			found_one = 1;
 	}
 	if (!found_one) {
@@ -260,55 +258,64 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
-	if (NFSCTL_VERISSET(versbits, 4) &&
-	    !NFSCTL_TCPISSET(protobits)) {
+	if (DNFSCTL_VERISSET(versbits, 4) &&
+	    !DNFSCTL_TCPISSET(protobits)) {
 		xlog(L_ERROR, "version 4 requires the TCP protocol");
 		exit(1);
 	}
 
-	if (chdir(NFS_STATEDIR)) {
-		xlog(L_ERROR, "chdir(%s) failed: %m", NFS_STATEDIR);
+	if (chdir(DNFS_STATEDIR)) {
+		xlog(L_ERROR, "chdir(%s) failed: %m", DNFS_STATEDIR);
 		exit(1);
 	}
 
     // 初始化dnfsd的状态文件目录
-	dnfssvc_create_status_dir(progname);
+	error = dnfssvc_create_status_dir(progname);
+    if (error != SUCCESS) {
+        exit(1);
+    }
 
     // 根据"/proc/fs/nfsd/portlist"文件是否有接口相关的内容来确定当前nfsd是否启动
     // 如果已经启动可以修改当前运行中的进程数量，但是要求运行同一个nfsd程序处理才能完成修改
-	/* can only change number of threads if nfsd is already up */
-	if (nfssvc_inuse()) {
+	if (dnfssvc_inuse()) {
 		socket_up = 1;
 		goto set_threads;
 	}
 
-	/*
-	 * Must set versions before the fd's so that the right versions get
-	 * registered with rpcbind. Note that on older kernels w/o the right
-	 * interfaces, these are a no-op.
-	 * Timeouts must also be set before ports are created else we get
-	 * EBUSY.
-	 */
-    // 根据启动选项中的版本支持情况，将版本信息写入"/proc/fs/nfsd/versions"中
-	nfssvc_setvers(versbits, minorvers, minorversset);
-    // 设置grace和lease时间并写入到/proc/fs/nfsd下面的两个时间文件中
-	if (grace > 0)
-		nfssvc_set_time("grace", grace);
-	if (lease  > 0)
-		nfssvc_set_time("lease", lease);
+    // 根据启动选项中的版本支持情况，将版本信息写入"/proc/fs/dnfsd/versions"中
+	error = dnfssvc_setvers(versbits, minorvers);
+    if (error != SUCCESS) {
+        exit(1);
+    }
 
+    // 设置grace和lease时间并写入到/proc/fs/nfsd下面的两个时间文件中
+	if (grace > 0) {
+        error = dnfssvc_set_time("grace", grace);
+    }
+	if (lease  > 0) {
+        error = dnfssvc_set_time("lease", lease);
+    }
+    if (error != SUCCESS) {
+        exit(1);
+    }
+
+    // 初始化dnfsd的端口号（默认会使用nfsd的端口号）对应的socket并注册服务
 	i = 0;
 	do {
-		error = nfssvc_set_sockets(protobits, haddr[i], port);
+		error = dnfssvc_set_sockets(protobits, haddr[i], port);
 		if (!error)
 			socket_up = 1;
 	} while (++i < hcounter);
 
+    // 设置rdma功能，暂时屏蔽该功能
 	if (rdma_port) {
-		error = nfssvc_set_rdmaport(rdma_port);
-		if (!error)
-			socket_up = 1;
+        xlog(L_ERROR, "rdma support is already disabled");
+        exit(1);
+//		error = nfssvc_set_rdmaport(rdma_port);
+//		if (!error)
+//			socket_up = 1;
 	}
+
 set_threads:
 	/* don't start any threads if unable to hand off any sockets */
 	if (!socket_up) {
@@ -336,7 +343,7 @@ set_threads:
 	}
 	closeall(3);
 
-	if ((error = nfssvc_threads(portnum, count)) < 0)
+	if ((error = dnfssvc_threads(portnum, count)) < 0)
 		xlog(L_ERROR, "error starting threads: errno %d (%m)", errno);
 out:
 	free(port);
