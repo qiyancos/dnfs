@@ -16,3 +16,4 @@ include_directories(${KERNEL_INCLUDE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 add_subdirectory(tools/dnfsd)
+add_subdirectory(tools/mountd)
