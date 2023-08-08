@@ -5,26 +5,7 @@
  * Copyright (C) 1995, 1996 Olaf Kirch <okir@monad.swb.de>
  */
 
-#include <linux/slab.h>
-#include <linux/namei.h>
-#include <linux/ctype.h>
-#include <linux/fs_context.h>
-
-#include <linux/sunrpc/svcsock.h>
-#include <linux/lockd/lockd.h>
-#include <linux/sunrpc/addr.h>
-#include <linux/sunrpc/gss_api.h>
-#include <linux/sunrpc/gss_krb5_enctypes.h>
-#include <linux/sunrpc/rpc_pipe_fs.h>
-#include <linux/module.h>
-#include <linux/fsnotify.h>
-
-#include "idmap.h"
-#include "nfsd.h"
-#include "cache.h"
-#include "state.h"
-#include "netns.h"
-#include "pnfs.h"
+#include "dnfsd/dnfsctl.h"
 
 /*
  *	We have a single directory with several nodes in it.
@@ -561,7 +542,7 @@ nfsd_print_version_support(struct nfsd_net *nn, char *buf, int remaining,
 			supported ? '+' : '-', vers, minor);
 }
 
-static ssize_t __write_versions(struct file *file, char *buf, size_t size)
+static ssize_t __write_versions(struct file* file, char *buf, size_t size)
 {
 	char *mesg = buf;
 	char *vers, *minorp, sign;
@@ -659,48 +640,6 @@ out:
 	if (len >= remaining)
 		return -EINVAL;
 	return tlen + len;
-}
-
-/**
- * write_versions - Set or report the available NFS protocol versions
- *
- * Input:
- *			buf:		ignored
- *			size:		zero
- * Output:
- *	On success:	passed-in buffer filled with '\n'-terminated C
- *			string containing positive or negative integer
- *			values representing the current status of each
- *			protocol version;
- *			return code is the size in bytes of the string
- *	On error:	return code is zero or a negative errno value
- *
- * OR
- *
- * Input:
- * 			buf:		C string containing whitespace-
- * 					separated positive or negative
- * 					integer values representing NFS
- * 					protocol versions to enable ("+n")
- * 					or disable ("-n")
- *			size:		non-zero length of C string in @buf
- * Output:
- *	On success:	status of zero or more protocol versions has
- *			been updated; passed-in buffer filled with
- *			'\n'-terminated C string containing positive
- *			or negative integer values representing the
- *			current status of each protocol version;
- *			return code is the size in bytes of the string
- *	On error:	return code is zero or a negative errno value
- */
-static ssize_t write_versions(struct file *file, char *buf, size_t size)
-{
-	ssize_t rv;
-
-	mutex_lock(&nfsd_mutex);
-	rv = __write_versions(file, buf, size);
-	mutex_unlock(&nfsd_mutex);
-	return rv;
 }
 
 /*

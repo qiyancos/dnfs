@@ -5,6 +5,6 @@ set(CMAKE_C_STANDARD 11)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 add_executable(dnfsd
         dnfsd.c
-        dnfsdinit.c
-        dnfsctl.c
+        dnfsinit.c
+        dnfssvc.c
 )
