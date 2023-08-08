@@ -1,8 +1,6 @@
 #ifndef _DNFS_DNFS_H
 #define _DNFS_DNFS_H
 
-#include <config.h>
-
 #include <linux/posix_types.h>
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -15,10 +13,7 @@
 #define	DNFS_FHSIZE	32
 
 #define DNFSD_MINVERS 2
-#define DNFSD_MAXVERS 4
-
-#define DNFS4_MINMINOR 1
-#define DNFS4_MAXMINOR (sizeof(int) << 3)
+#define DNFSD_MAXVERS 3
 
 struct nfs_fh_len {
 	int		fh_size;

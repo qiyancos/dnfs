@@ -14,8 +14,8 @@
 #include <linux/uaccess.h>
 #include <linux/kernel.h>
 
-#include "state.h"
-#include "netns.h"
+#include "dnfsd/state.h"
+#include "dnfsd/netns.h"
 
 struct nfsd_fault_inject_op {
 	char *file;

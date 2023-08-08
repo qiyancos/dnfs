@@ -6,10 +6,6 @@
  * Copyright (C) 1995, 1996 Olaf Kirch <okir@monad.swb.de>
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -30,29 +26,146 @@
 #include "dnfsd/dnfsinit.h"
 #include "dnfsd/dnfsctl.h"
 
-#ifndef DNFSD_FS_DIR
-#define DNFSD_FS_DIR	  "/proc/fs/dnfsd"
-#endif
-
-#define DNFSD_PORTS_FILE   DNFSD_FS_DIR "/portlist"
-#define DNFSD_VERS_FILE    DNFSD_FS_DIR "/versions"
-#define DNFSD_THREAD_FILE  DNFSD_FS_DIR "/threads"
-
-/*----------------------------------------------------------------------------*/
-/*
- * payload - write methods
- */
-
-static inline struct net *netns(struct file *file)
+static int nfsd_init_net(struct net *net)
 {
-    return file_inode(file)->i_sb->s_fs_info;
+    int retval;
+    struct nfsd_net *nn = net_generic(net, nfsd_net_id);
+
+    retval = nfsd_export_init(net);
+    if (retval)
+        goto out_export_error;
+    retval = nfsd_idmap_init(net);
+    if (retval)
+        goto out_idmap_error;
+    nn->nfsd_versions = NULL;
+    nn->nfsd4_minorversions = NULL;
+    retval = nfsd_reply_cache_init(nn);
+    if (retval)
+        goto out_drc_error;
+    nn->nfsd4_lease = 90;	/* default lease time */
+    nn->nfsd4_grace = 90;
+    nn->somebody_reclaimed = false;
+    nn->track_reclaim_completes = false;
+    nn->clverifier_counter = prandom_u32();
+    nn->clientid_base = prandom_u32();
+    nn->clientid_counter = nn->clientid_base + 1;
+    nn->s2s_cp_cl_id = nn->clientid_counter++;
+
+    atomic_set(&nn->ntf_refcnt, 0);
+    init_waitqueue_head(&nn->ntf_wq);
+    seqlock_init(&nn->boot_lock);
+
+    return 0;
+
+    out_drc_error:
+    nfsd_idmap_shutdown(net);
+    out_idmap_error:
+    out_export_error:
+    return retval;
+}
+
+static void nfsd_exit_net(struct net *net)
+{
+    struct nfsd_net *nn = net_generic(net, nfsd_net_id);
+
+    nfsd_reply_cache_shutdown(nn);
+    nfsd_idmap_shutdown(net);
+    nfsd_netns_free_versions(net_generic(net, nfsd_net_id));
+}
+
+static int nfsd_init_fs_context(struct fs_context *fc)
+{
+    put_user_ns(fc->user_ns);
+    fc->user_ns = get_user_ns(fc->net_ns->user_ns);
+    fc->ops = &nfsd_fs_context_ops;
+    return 0;
+}
+
+static struct file_system_type nfsd_fs_type = {
+        .owner		= NULL,
+        .name		= "nfsd",
+        .init_fs_context = nfsd_init_fs_context,
+        .kill_sb	= nfsd_umount,
+};
+
+static struct pernet_operations nfsd_net_ops = {
+        .init = nfsd_init_net,
+        .exit = nfsd_exit_net,
+        .id   = &nfsd_net_id,
+        .size = sizeof(struct nfsd_net),
+};
+
+/*
+ * dnfsd模块初始化主函数
+ */
+int
+dnfsd_init() {
+    int retval;
+
+    // 执行内核错误注入处理操作，基于虚拟化的文件进行debug，通过读操作绑定函数
+    // 可以实时查看系统运行时信息或者使用写操作；通过写操作绑定函数，实现相关的
+    // 错误处理或者状态处理操作操作。
+    // nfsd_fault_inject_init(); /* nfsd fault injection controls */
+
+    // 注册和初始化统计相关的信息，统计信息设置了一个默认的描述符文件存放统计的相关信息
+    // 涉及所有统计信息的更新都是在各个功能函数中处理更新的，这里的注册只是注册了一个读取功能
+    // 到对应的描述符文件中，允许通过读取直接获取nfs的统计信息
+    // nfsd_stat_init();	/* Statistics */
+
+    // 为NFS创建一个缓存结构，用于后续缓存的生成和使用，缓存用于存储特定的数据结构
+    // 每次都会申请都会获得一个该数据结构的空间来处理对应的内容
+    retval = nfsd_drc_slab_create();
+    if (retval)
+        goto out_free_stat;
+
+    // 将实际的lockd回调函数注册到lockd对应的头文件中，lockd类似于一个文件锁
+    // 该锁定为rpc的请求提供一个远程与本地的共享锁
+    nfsd_lockd_init();	/* lockd->nfsd callbacks */
+
+    // 在操作系统中注册一个新的文件系统信息
+    retval = register_filesystem(&nfsd_fs_type);
+    if (retval)
+        goto out_free_exports;
+
+    // 针对nfsd添加一个专属的网络命名空间，并将这个空间追加到网络命名空间的链表尾部
+    // 常用的net指针就是当前进程所在网络命名空间的指针，通过net_generic函数可以提取出
+    // 当前网络空间id(nfsd_net_id)对应的专门的网络空间信息结构体指针(struct nfsd_net)
+    retval = register_pernet_subsys(&nfsd_net_ops);
+    if (retval < 0)
+        goto out_free_filesystem;
+
+    return 0;
+
+out_free_filesystem:
+    unregister_filesystem(&nfsd_fs_type);
+out_free_exports:
+    nfsd_lockd_shutdown();
+    nfsd_drc_slab_free();
+out_free_stat:
+    nfsd_stat_shutdown();
+    nfsd_fault_inject_cleanup();
+    return retval;
+}
+
+/*
+ * 退出函数，对注册的信息取消相关的注册内容
+ */
+void
+exit_nfsd(void)
+{
+    //unregister_pernet_subsys(&nfsd_net_ops);
+    nfsd_drc_slab_free();
+    nfsd_stat_shutdown();
+    nfsd_lockd_shutdown();
+    nfsd_fault_inject_cleanup();
+    unregister_filesystem(&nfsd_fs_type);
 }
 
 /*
  * 创建DNFS的运行时目录
  */
 int
-dnfssvc_create_status_dir(char *progname)
+dnfssvc_create_status_dir()
 {
 	int err;
 	struct stat statbuf;
@@ -126,36 +239,10 @@ dnfssvc_setvers(unsigned int ctlbits, unsigned int minorvers)
     unsigned minor = 0;
     int n = 0;
 	for (n = DNFSD_MINVERS; n <= DNFSD_MAXVERS; n++) {
-        if (n == 4 && minorvers == 0) {
-            cmd = DNFSCTL_VERISSET(ctlbits, n) ? NFSD_SET : NFSD_CLEAR;
-            if ((cmd == NFSD_SET) != nfsd_vers(nn, n, NFSD_TEST)) {
-                /*
-                 * Either we have +4 and no minors are enabled,
-                 * or we have -4 and at least one minor is enabled.
-                 * In either case, propagate 'cmd' to all minors.
-                 */
-                while (nfsd_minorversion(nn, minor, cmd) >= 0)
-                    minor++;
-            }
-            off += snprintf(buf+off, sizeof(buf) - off, "%c%d ",
-                            DNFSCTL_VERISSET(ctlbits, n) ? '+' : '-', n);
-        } else if (n == 4) {
-            // 如果出现小版本号，那么一定是nfsv4协议版本
-            for (minor = DNFS4_MINMINOR; minor <= DNFS4_MAXMINOR; minor++) {
-                if (DNFSCTL_VERISSET(minorvers, minor)) {
-                    cmd = DNFSCTL_VERISSET(minorvers, minor) ? NFSD_SET : NFSD_CLEAR;
-                    if (nfsd_minorversion(nn, minor, cmd) < 0)
-                        return -EINVAL;
-                }
-            }
-            off += snprintf(buf+off, sizeof(buf) - off, "%c4.%d ",
-                            DNFSCTL_VERISSET(minorvers, minor) ? '+' : '-', minor);
-        } else {
-            cmd = DNFSCTL_VERISSET(ctlbits, n) ? NFSD_SET : NFSD_CLEAR;
-            nfsd_vers(nn, n, cmd);
-            off += snprintf(buf+off, sizeof(buf) - off, "%c%d ",
-                            DNFSCTL_VERISSET(ctlbits, n) ? '+' : '-', n);
-        }
+        cmd = DNFSCTL_VERISSET(ctlbits, n) ? NFSD_SET : NFSD_CLEAR;
+        nfsd_vers(nn, n, cmd);
+        off += snprintf(buf+off, sizeof(buf) - off, "%c%d ",
+                        DNFSCTL_VERISSET(ctlbits, n) ? '+' : '-', n);
 	}
     nfsd_reset_versions(nn);
 
@@ -165,72 +252,6 @@ dnfssvc_setvers(unsigned int ctlbits, unsigned int minorvers)
         xlog(L_ERROR, "Failed to write version info to %s: %m", DNFSD_VERS_FILE);
     }
     close(fd);
-
-    mutex_unlock(&nfsd_mutex);
-    return SUCCESS;
-}
-
-/*
- * 设置服务的grace或者lease时间
- */
-int
-dnfssvc_set_time(const char *type, const int seconds)
-{
-    mutex_lock(&nfsd_mutex);
-
-    char pathbuf[40];
-    snprintf(pathbuf, sizeof(pathbuf), DNFSD_FS_DIR "/nfsv4%stime", type);
-    int fd = open(pathbuf, O_WRONLY);
-    if (fd < 0) {
-        xlog(L_ERROR, "Failed to open nfs %stime file: %m", type);
-        return errno;
-    }
-
-    struct nfsd_net *nn = net_generic(netns(file), nfsd_net_id);
-    if (nn->nfsd_serv) {
-        /* Cannot change versions without updating
-         * nn->nfsd_serv->sv_xdrsize, and reallocing
-         * rq_argp and rq_resp
-         */
-        xlog(L_ERROR, "Cannot change versions while nfsd is busy");
-        return -EBUSY;
-    }
-
-    /*
-     * Some sanity checking.  We don't have a reason for
-     * these particular numbers, but problems with the
-     * extremes are:
-     *	- Too short: the briefest network outage may
-     *	  cause clients to lose all their locks.  Also,
-     *	  the frequent polling may be wasteful.
-     *	- Too long: do you really want reboot recovery
-     *	  to take more than an hour?  Or to make other
-     *	  clients wait an hour before being able to
-     *	  revoke a dead client's locks?
-     */
-    if (seconds < 10 || seconds > 3600)
-        return -EINVAL;
-    if (strcmp(type, "grace") == 0) {
-        nn->nfsd4_grace = seconds;
-    } else {
-        nn->nfsd4_lease = seconds;
-    }
-
-    char nbuf[10];
-    snprintf(nbuf, sizeof(nbuf), "%d", seconds);
-    if (write(fd, nbuf, strlen(nbuf)) != (ssize_t)strlen(nbuf)) {
-        xlog(L_ERROR, "Failed to write nfsv4%stime to %s: %m", type, pathbuf);
-    }
-    close(fd);
-
-//    if (strcmp(type, "grace") == 0) {
-//        /* set same value for lockd */
-//        fd = open("/proc/sys/fs/nfs/nlm_grace_period", O_WRONLY);
-//        if (fd >= 0) {
-//            write(fd, nbuf, strlen(nbuf));
-//            close(fd);
-//        }
-//    }
 
     mutex_unlock(&nfsd_mutex);
     return SUCCESS;
@@ -253,6 +274,7 @@ dnfssvc_write_ports(const int sockfd) {
         return -EINVAL;
     }
 
+    // 将NFS不同版本对应的入口函数注册到SUNRPC服务器中
     err = nfsd_create_serv(net);
     if (err != 0)
         return err;
