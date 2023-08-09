@@ -7,28 +7,28 @@
  * Copyright (C) 1995, 1996, 1997 Olaf Kirch <okir@monad.swb.de>
  */
 
-//#include <linux/sched/signal.h>
-//#include <linux/freezer.h>
-//#include <linux/module.h>
-//#include <linux/fs_struct.h>
-//#include <linux/swap.h>
+#include <linux/sched/signal.h>
+#include <linux/freezer.h>
+#include <linux/module.h>
+#include <linux/fs_struct.h>
+#include <linux/swap.h>
 
-//#include <linux/sunrpc/stats.h>
-//#include <linux/sunrpc/svcsock.h>
-//#include <linux/sunrpc/svc_xprt.h>
-//#include <linux/lockd/bind.h>
-//#include <linux/nfsacl.h>
-//#include <linux/seq_file.h>
-//#include <linux/inetdevice.h>
-//#include <net/addrconf.h>
-//#include <net/ipv6.h>
-//#include <net/net_namespace.h>
+#include <linux/sunrpc/stats.h>
+#include <linux/sunrpc/svcsock.h>
+#include <linux/sunrpc/svc_xprt.h>
+#include <linux/lockd/bind.h>
+#include <linux/nfsacl.h>
+#include <linux/seq_file.h>
+#include <linux/inetdevice.h>
+#include <net/addrconf.h>
+#include <net/ipv6.h>
+#include <net/net_namespace.h>
 
 #include "dnfsd/dnfsd.h"
-//#include "dnfsd/cache.h"
-//#include "dnfsd/vfs.h"
-//#include "dnfsd/netns.h"
-//#include "dnfsd/filecache.h"
+#include "dnfsd/cache.h"
+#include "dnfsd/vfs.h"
+#include "dnfsd/netns.h"
+#include "dnfsd/filecache.h"
 
 #define NFSDDBG_FACILITY	NFSDDBG_SVC
 

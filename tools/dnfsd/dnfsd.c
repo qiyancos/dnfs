@@ -7,16 +7,16 @@
  * Copyright (C) 1995, 1996 Olaf Kirch <okir@monad.swb.de>
  * Copyright (C) 2023 Rock Lee <lsk_mprc@pku.edu.cn>
  */
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <string.h>
-#include <errno.h>
-#include <getopt.h>
-#include <libgen.h>
+//#include <stdio.h>
+//#include <stdlib.h>
+//#include <unistd.h>
+//#include <fcntl.h>
+//#include <string.h>
+//#include <errno.h>
+//#include <getopt.h>
+//#include <libgen.h>
 
-#include "dnfsd/dnfs.h"
+#include "dnfsd/dnfsd.h"
 #include "dnfsd/nfslib.h"
 #include "utils/xlog.h"
 #include "dnfsd/dnfsinit.h"
