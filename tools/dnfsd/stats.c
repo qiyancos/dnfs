@@ -27,7 +27,7 @@
 #include <linux/sunrpc/stats.h>
 #include <net/net_namespace.h>
 
-#include "nfsd.h"
+#include "dnfsd/dnfsd.h"
 
 struct nfsd_stats	nfsdstats;
 struct svc_stat		nfsd_svcstats = {

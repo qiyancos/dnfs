@@ -4,13 +4,15 @@
  * This level of indirection is necessary so we can run nfsd+lockd without
  * requiring the nfs client to be compiled in/loaded, and vice versa.
  *
+ * nlm: nfs lock manager
+ *
  * Copyright (C) 1996, Olaf Kirch <okir@monad.swb.de>
  */
 
 #include <linux/file.h>
 #include <linux/lockd/bind.h>
-#include "nfsd.h"
-#include "vfs.h"
+#include "dnfsd/dnfsd.h"
+#include "dnfsd/vfs.h"
 
 #define NFSDDBG_FACILITY		NFSDDBG_LOCKD
 

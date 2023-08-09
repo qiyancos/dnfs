@@ -1,16 +1,12 @@
 /*
- * nfsd
+ * dnfsd
  *
- * This is the user level part of nfsd. This is very primitive, because
- * all the work is now done in the kernel module.
+ * This is the main program for dnfsd service running in kernel level.
+ * This service only support NFS V2 & V3 protocol now.
  *
  * Copyright (C) 1995, 1996 Olaf Kirch <okir@monad.swb.de>
+ * Copyright (C) 2023 Rock Lee <lsk_mprc@pku.edu.cn>
  */
-
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -18,11 +14,7 @@
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
-#include <netdb.h>
 #include <libgen.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 
 #include "dnfsd/dnfs.h"
 #include "dnfsd/nfslib.h"
@@ -47,9 +39,6 @@ static struct option longopts[] =
 	{ "port", 1, 0, 'p' },
 	{ "debug", 0, 0, 'd' },
 	{ "syslog", 0, 0, 's' },
-	{ "rdma", 2, 0, 'R' },
-	{ "grace-time", 1, 0, 'G'},
-	{ "lease-time", 1, 0, 'L'},
 	{ NULL, 0, 0, 0 }
 };
 
@@ -57,15 +46,13 @@ int
 main(int argc, char **argv)
 {
 	int	count = DNFSD_NPROC, c, i, error = 0, portnum = 0, fd, found_one;
-	char *p, *progname, *port, *rdma_port = NULL;
+	char *p, *progname, *port;
 	char **haddr = NULL;
 	int hcounter = 0;
 	int	socket_up = 0;
 	unsigned int minorvers = 0;
 	unsigned int versbits = DNFSCTL_VERDEFAULT;
 	unsigned int protobits = DNFSCTL_ALLBITS;
-	int grace = -1;
-	int lease = -1;
 
 	progname = strdup(basename(argv[0]));
 	if (!progname) {
@@ -90,7 +77,7 @@ main(int argc, char **argv)
 	xlog_stderr(1);
 
     // 解析参数并生成相应的初始化参数
-	while ((c = getopt_long(argc, argv, "dH:hN:V:p:P:sTUrG:L:", longopts, NULL)) != EOF) {
+	while ((c = getopt_long(argc, argv, "dH:hN:V:p:P:sTU", longopts, NULL)) != EOF) {
 		switch(c) {
 		case 'd':
             // 如果开启debug模式，那么所有类型的信息都会被打印出来
@@ -133,30 +120,9 @@ main(int argc, char **argv)
 				exit(1);
 			}
 			break;
-		case 'r':
-            // 默认启动的时候并不会使用rdma加速
-			rdma_port = "nfsrdma";
-			break;
-		case 'R': /* --rdma */
-			if (optarg)
-				rdma_port = optarg;
-			else
-				rdma_port = "nfsrdma";
-			break;
-
 		case 'N':
             // 禁用指定的版本，只能对2、3、4的大版本进行操作
 			switch((c = strtol(optarg, &p, 0))) {
-			case 4:
-				if (*p == '.') {
-					int i = atoi(p+1);
-					if (i > DNFS4_MAXMINOR) {
-						fprintf(stderr, "%s: unsupported minor version\n", optarg);
-						exit(1);
-					}
-					DNFSCTL_VERUNSET(minorvers, i);
-					break;
-				}
 			case 3:
 			case 2:
 				DNFSCTL_VERUNSET(versbits, c);
@@ -169,16 +135,6 @@ main(int argc, char **argv)
 		case 'V':
             // 启动指定的DNFS协议版本
 			switch((c = strtol(optarg, &p, 0))) {
-			case 4:
-				if (*p == '.') {
-					int i = atoi(p+1);
-					if (i > DNFS4_MAXMINOR) {
-						fprintf(stderr, "%s: unsupported minor version\n", optarg);
-						exit(1);
-					}
-					DNFSCTL_VERSET(minorvers, i);
-					break;
-				}
 			case 3:
 			case 2:
 				DNFSCTL_VERSET(versbits, c);
@@ -200,22 +156,6 @@ main(int argc, char **argv)
 		case 'U':
             // UDP协议支持开关，默认自动依据系统端口占用情况启用，为占用就会启动
 			DNFSCTL_UDPUNSET(protobits);
-			break;
-		case 'G':
-            // TODO，grace时间，不确定用途
-			grace = strtol(optarg, &p, 0);
-			if (*p || grace <= 0) {
-				fprintf(stderr, "%s: Unrecognized grace time.\n", optarg);
-				exit(1);
-			}
-			break;
-		case 'L':
-            // TODO，lease时间，不确定用途
-			lease = strtol(optarg, &p, 0);
-			if (*p || lease <= 0) {
-				fprintf(stderr, "%s: Unrecognized lease time.\n", optarg);
-				exit(1);
-			}
 			break;
 		default:
 			fprintf(stderr, "Invalid argument: '%c'\n", c);
@@ -258,20 +198,18 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
-	if (DNFSCTL_VERISSET(versbits, 4) &&
-	    !DNFSCTL_TCPISSET(protobits)) {
-		xlog(L_ERROR, "version 4 requires the TCP protocol");
-		exit(1);
-	}
-
-	if (chdir(DNFS_STATEDIR)) {
-		xlog(L_ERROR, "chdir(%s) failed: %m", DNFS_STATEDIR);
-		exit(1);
-	}
-
     // 初始化dnfsd的状态文件目录
-	error = dnfssvc_create_status_dir(progname);
+	error = dnfssvc_create_status_dir();
     if (error != SUCCESS) {
+        exit(1);
+    } else if (chdir(DNFSD_FS_DIR)) {
+        xlog(L_ERROR, "chdir(%s) failed: %m", DNFSD_FS_DIR);
+        exit(1);
+    }
+
+    // 初始化dnfsd服务相关内容
+    if (dnfsd_init() < 0) {
+        xlog(L_ERROR, "Failed to init dnfsd service module: %m.");
         exit(1);
     }
 
@@ -288,17 +226,6 @@ main(int argc, char **argv)
         exit(1);
     }
 
-    // 设置grace和lease时间并写入到/proc/fs/nfsd下面的两个时间文件中
-	if (grace > 0) {
-        error = dnfssvc_set_time("grace", grace);
-    }
-	if (lease  > 0) {
-        error = dnfssvc_set_time("lease", lease);
-    }
-    if (error != SUCCESS) {
-        exit(1);
-    }
-
     // 初始化dnfsd的端口号（默认会使用nfsd的端口号）对应的socket并注册服务
 	i = 0;
 	do {
@@ -306,15 +233,6 @@ main(int argc, char **argv)
 		if (!error)
 			socket_up = 1;
 	} while (++i < hcounter);
-
-    // 设置rdma功能，暂时屏蔽该功能
-	if (rdma_port) {
-        xlog(L_ERROR, "rdma support is already disabled");
-        exit(1);
-//		error = nfssvc_set_rdmaport(rdma_port);
-//		if (!error)
-//			socket_up = 1;
-	}
 
 set_threads:
 	/* don't start any threads if unable to hand off any sockets */
@@ -345,6 +263,7 @@ set_threads:
 
 	if ((error = dnfssvc_threads(portnum, count)) < 0)
 		xlog(L_ERROR, "error starting threads: errno %d (%m)", errno);
+
 out:
 	free(port);
 	for(i=0; i < hcounter; i++)
@@ -360,8 +279,7 @@ usage(const char *prog)
 	fprintf(stderr, "Usage:\n"
 		"%s [-d|--debug] [-H hostname] [-p|-P|--port port]\n"
 		"     [-N|--no-nfs-version version] [-V|--nfs-version version]\n"
-		"     [-s|--syslog] [-T|--no-tcp] [-U|--no-udp] [-r|--rdma=]\n"
-		"     [-G|--grace-time secs] [-L|--leasetime secs] nrservs\n",
+		"     [-s|--syslog] [-T|--no-tcp] [-U|--no-udp] nrservs\n",
 		prog);
 	exit(2);
 }
