@@ -9,7 +9,7 @@
  * Copyright (C) 1995, 1996 Olaf Kirch <okir@monad.swb.de>
  */
 
-#include <linux/sunrpc/svc_xprt.h>
+#include <sunrpc/svc_xprt.h>
 #include <linux/slab.h>
 #include <linux/vmalloc.h>
 #include <linux/sunrpc/addr.h>

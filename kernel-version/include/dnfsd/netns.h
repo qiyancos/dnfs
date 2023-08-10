@@ -8,8 +8,8 @@
 #ifndef __NFSD_NETNS_H__
 #define __NFSD_NETNS_H__
 
-#include <net/net_namespace.h>
-#include <net/netns/generic.h>
+#include <linux/net_namespace.h>
+//#include <net/netns/generic.h>
 
 /* Hash tables for nfs4_clientid state */
 #define CLIENT_HASH_BITS                 4

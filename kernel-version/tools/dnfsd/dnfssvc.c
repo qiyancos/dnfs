@@ -7,7 +7,7 @@
  * Copyright (C) 1995, 1996, 1997 Olaf Kirch <okir@monad.swb.de>
  */
 
-#include <linux/sched/signal.h>
+#include <signal.h>
 #include <linux/freezer.h>
 #include <linux/module.h>
 #include <linux/fs_struct.h>
