@@ -1,0 +1,510 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="NTIRPC"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;CMake Files\libntirpc\;CMake Files\libntirpc\cmake\;CMake Files\libntirpc\cmake\modules\;CMake Files\libntirpc\src\;CMake Files\libntirpc\tests\;CMake Files\cmake\;CMake Files\cmake\modules\;CMake Files\..\;CMake Files\..\.git\;CMake Files\..\.git\refs\;CMake Files\..\.git\refs\heads\;CMake Files\include\;CMake Files\scripts\;CMake Files\scripts\systemd\;CMake Files\scripts\docker\;CMake Files\log\;CMake Files\config_parsing\;CMake Files\cidr\;CMake Files\test\;CMake Files\avl\;CMake Files\hashtable\;CMake Files\SAL\;CMake Files\RPCAL\;CMake Files\Protocols\;CMake Files\Protocols\NFS\;CMake Files\Protocols\XDR\;CMake Files\Protocols\NLM\;CMake Files\Protocols\RQUOTA\;CMake Files\Protocols\NFSACL\;CMake Files\Protocols\9P\;CMake Files\support\;CMake Files\os\;CMake Files\FSAL\;CMake Files\FSAL\Stackable_FSALs\;CMake Files\FSAL\Stackable_FSALs\FSAL_NULL\;CMake Files\FSAL\Stackable_FSALs\FSAL_MDCACHE\;CMake Files\FSAL\FSAL_PSEUDO\;CMake Files\FSAL\FSAL_VFS\;CMake Files\FSAL\FSAL_VFS\os\;CMake Files\FSAL\FSAL_VFS\vfs\;CMake Files\FSAL\FSAL_PROXY_V4\;CMake Files\FSAL\FSAL_PROXY_V3\;CMake Files\FSAL\FSAL_GPFS\;CMake Files\FSAL\FSAL_MEM\;CMake Files\idmapper\;CMake Files\MainNFSD\;CMake Files\tools\;CMake Files\doc\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -f &quot;/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -f &quot;/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -f &quot;/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -f &quot;/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ntirpc">
+				<Option output="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/libntirpc.so" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src"/>
+				<Option object_output="./"/>
+				<Option type="3"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-D_GNU_SOURCE=1"/>
+					<Add option="-DHAS_DOFF"/>
+					<Add option="-DHAVE_CONFIG_H"/>
+					<Add option="-DPORTMAP"/>
+					<Add option="-DINET6"/>
+					<Add option="-D_GNU_SOURCE"/>
+					<Add directory="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/ntirpc"/>
+					<Add directory="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc"/>
+					<Add directory="/home/iecas/rpc_test/nfs-ganesha/src/include"/>
+					<Add directory="/home/iecas/rpc_test/nfs-ganesha/src/include/os/linux"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -f &quot;/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/Makefile&quot;  VERBOSE=1 ntirpc"/>
+					<CompileFile command="/usr/bin/make -f &quot;/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -f &quot;/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -f &quot;/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ntirpc/fast">
+				<Option output="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/libntirpc.so" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src"/>
+				<Option object_output="./"/>
+				<Option type="3"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-D_GNU_SOURCE=1"/>
+					<Add option="-DHAS_DOFF"/>
+					<Add option="-DHAVE_CONFIG_H"/>
+					<Add option="-DPORTMAP"/>
+					<Add option="-DINET6"/>
+					<Add option="-D_GNU_SOURCE"/>
+					<Add directory="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/ntirpc"/>
+					<Add directory="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc"/>
+					<Add directory="/home/iecas/rpc_test/nfs-ganesha/src/include"/>
+					<Add directory="/home/iecas/rpc_test/nfs-ganesha/src/include/os/linux"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -f &quot;/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/Makefile&quot;  VERBOSE=1 ntirpc/fast"/>
+					<CompileFile command="/usr/bin/make -f &quot;/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -f &quot;/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -f &quot;/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rpcping">
+				<Option output="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/tests/rpcping" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/tests"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-D_GNU_SOURCE=1"/>
+					<Add option="-DHAS_DOFF"/>
+					<Add option="-DHAVE_CONFIG_H"/>
+					<Add directory="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/ntirpc"/>
+					<Add directory="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc"/>
+					<Add directory="/home/iecas/rpc_test/nfs-ganesha/src/include"/>
+					<Add directory="/home/iecas/rpc_test/nfs-ganesha/src/include/os/linux"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -f &quot;/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/tests/Makefile&quot;  VERBOSE=1 rpcping"/>
+					<CompileFile command="/usr/bin/make -f &quot;/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/tests/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -f &quot;/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/tests/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -f &quot;/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/tests/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rpcping/fast">
+				<Option output="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/tests/rpcping" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/tests"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-D_GNU_SOURCE=1"/>
+					<Add option="-DHAS_DOFF"/>
+					<Add option="-DHAVE_CONFIG_H"/>
+					<Add directory="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/ntirpc"/>
+					<Add directory="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc"/>
+					<Add directory="/home/iecas/rpc_test/nfs-ganesha/src/include"/>
+					<Add directory="/home/iecas/rpc_test/nfs-ganesha/src/include/os/linux"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -f &quot;/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/tests/Makefile&quot;  VERBOSE=1 rpcping/fast"/>
+					<CompileFile command="/usr/bin/make -f &quot;/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/tests/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -f &quot;/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/tests/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -f &quot;/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/tests/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/auth_none.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/auth_unix.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/authunix_prot.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/bindresvport.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/bsd_epoll.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/city.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/clnt_bcast.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/clnt_dg.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/clnt_generic.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/clnt_perror.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/clnt_raw.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/clnt_simple.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/clnt_vc.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/getnetconfig.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/getnetpath.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/getpeereid.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/getrpcent.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/mt_misc.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/pmap_prot.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/pmap_prot2.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/pmap_rmt.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/rbtree.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/rbtree_x.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/rpc_callmsg.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/rpc_commondata.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/rpc_crc32.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/rpc_dplx_msg.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/rpc_dtablesize.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/rpc_generic.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/rpc_prot.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/rpcb_clnt.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/rpcb_prot.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/rpcb_st_xdr.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/strlcpy.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/svc.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/svc_auth.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/svc_auth_none.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/svc_auth_unix.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/svc_dg.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/svc_generic.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/svc_ioq.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/svc_ioq.h">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/svc_raw.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/svc_rqst.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/svc_simple.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/svc_vc.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/svc_xprt.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/svc_xprt.h">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/work_pool.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/xdr.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/xdr_float.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/xdr_ioq.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/xdr_mem.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/xdr_reference.c">
+			<Option target="ntirpc"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/tests/rpcping.c">
+			<Option target="rpcping"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/nfs-ganesha.spec-in.cmake">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\libntirpc\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/config-h.in.cmake">
+			<Option virtualFolder="CMake Files\libntirpc\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/libntirpc.pc.in.cmake">
+			<Option virtualFolder="CMake Files\libntirpc\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/libntirpc.spec-in.cmake">
+			<Option virtualFolder="CMake Files\libntirpc\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/version-h.in.cmake">
+			<Option virtualFolder="CMake Files\libntirpc\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/cmake/modules/FindNSL.cmake">
+			<Option virtualFolder="CMake Files\libntirpc\cmake\modules\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\libntirpc\src\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/src/libntirpc.map.in.cmake">
+			<Option virtualFolder="CMake Files\libntirpc\src\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/libntirpc/tests/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\libntirpc\tests\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/cmake/cpack_config.cmake">
+			<Option virtualFolder="CMake Files\cmake\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/cmake/goption.cmake">
+			<Option virtualFolder="CMake Files\cmake\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/cmake/maintainer_mode.cmake">
+			<Option virtualFolder="CMake Files\cmake\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/cmake/modules/FindASan.cmake">
+			<Option virtualFolder="CMake Files\cmake\modules\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/cmake/modules/FindCEPHFS.cmake">
+			<Option virtualFolder="CMake Files\cmake\modules\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/cmake/modules/FindCaps.cmake">
+			<Option virtualFolder="CMake Files\cmake\modules\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/cmake/modules/FindEPOLL.cmake">
+			<Option virtualFolder="CMake Files\cmake\modules\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/cmake/modules/FindJeMalloc.cmake">
+			<Option virtualFolder="CMake Files\cmake\modules\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/cmake/modules/FindLSB_release.cmake">
+			<Option virtualFolder="CMake Files\cmake\modules\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/cmake/modules/FindLibACL.cmake">
+			<Option virtualFolder="CMake Files\cmake\modules\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/cmake/modules/FindMSan.cmake">
+			<Option virtualFolder="CMake Files\cmake\modules\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/cmake/modules/FindNfsIdmap.cmake">
+			<Option virtualFolder="CMake Files\cmake\modules\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/cmake/modules/FindRADOS.cmake">
+			<Option virtualFolder="CMake Files\cmake\modules\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/cmake/modules/FindRGW.cmake">
+			<Option virtualFolder="CMake Files\cmake\modules\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/cmake/modules/FindSanitizers.cmake">
+			<Option virtualFolder="CMake Files\cmake\modules\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/cmake/modules/FindTSan.cmake">
+			<Option virtualFolder="CMake Files\cmake\modules\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/cmake/modules/FindToolchain.cmake">
+			<Option virtualFolder="CMake Files\cmake\modules\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/cmake/modules/FindUBSan.cmake">
+			<Option virtualFolder="CMake Files\cmake\modules\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/cmake/modules/GetGitRevisionDescription.cmake">
+			<Option virtualFolder="CMake Files\cmake\modules\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/cmake/modules/GetGitRevisionDescription.cmake.in">
+			<Option virtualFolder="CMake Files\cmake\modules\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/cmake/modules/InstallClobberImmune.cmake">
+			<Option virtualFolder="CMake Files\cmake\modules\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/cmake/modules/InstallPackageConfigFile.cmake">
+			<Option virtualFolder="CMake Files\cmake\modules\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/cmake/modules/sanitize-helpers.cmake">
+			<Option virtualFolder="CMake Files\cmake\modules\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/../.git/HEAD">
+			<Option virtualFolder="CMake Files\..\.git\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/../.git/refs/heads/next">
+			<Option virtualFolder="CMake Files\..\.git\refs\heads\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/include/config-h.in.cmake">
+			<Option virtualFolder="CMake Files\include\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/scripts/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\scripts\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/scripts/systemd/nfs-ganesha-config.service-in.cmake">
+			<Option virtualFolder="CMake Files\scripts\systemd\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/scripts/docker/Dockerfile-in.cmake">
+			<Option virtualFolder="CMake Files\scripts\docker\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/scripts/docker/entrypoint.sh-in.cmake">
+			<Option virtualFolder="CMake Files\scripts\docker\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/log/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\log\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/config_parsing/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\config_parsing\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/cidr/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\cidr\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/test/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\test\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/avl/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\avl\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/hashtable/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\hashtable\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/SAL/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\SAL\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/RPCAL/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\RPCAL\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/Protocols/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\Protocols\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/Protocols/NFS/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\Protocols\NFS\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/Protocols/XDR/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\Protocols\XDR\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/Protocols/NLM/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\Protocols\NLM\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/Protocols/RQUOTA/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\Protocols\RQUOTA\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/Protocols/NFSACL/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\Protocols\NFSACL\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/Protocols/9P/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\Protocols\9P\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/support/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\support\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/os/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\os\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/FSAL/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\FSAL\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/FSAL/Stackable_FSALs/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\FSAL\Stackable_FSALs\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/FSAL/Stackable_FSALs/FSAL_NULL/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\FSAL\Stackable_FSALs\FSAL_NULL\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/FSAL/Stackable_FSALs/FSAL_MDCACHE/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\FSAL\Stackable_FSALs\FSAL_MDCACHE\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/FSAL/FSAL_PSEUDO/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\FSAL\FSAL_PSEUDO\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/FSAL/FSAL_VFS/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\FSAL\FSAL_VFS\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/FSAL/FSAL_VFS/os/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\FSAL\FSAL_VFS\os\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/FSAL/FSAL_VFS/vfs/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\FSAL\FSAL_VFS\vfs\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/FSAL/FSAL_VFS/vfs/main-c.in.cmake">
+			<Option virtualFolder="CMake Files\FSAL\FSAL_VFS\vfs\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/FSAL/FSAL_PROXY_V4/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\FSAL\FSAL_PROXY_V4\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/FSAL/FSAL_PROXY_V3/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\FSAL\FSAL_PROXY_V3\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/FSAL/FSAL_GPFS/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\FSAL\FSAL_GPFS\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/FSAL/FSAL_MEM/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\FSAL\FSAL_MEM\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/idmapper/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\idmapper\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/MainNFSD/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\MainNFSD\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/tools/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\tools\"/>
+		</Unit>
+		<Unit filename="/home/iecas/rpc_test/nfs-ganesha/src/doc/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\doc\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>
