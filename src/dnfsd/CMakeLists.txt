@@ -1,9 +1,9 @@
 add_executable(dnfs
-        dnfsd_main.c
-        dnfs_init.c
-        dnfs_dispatcher.c
-        dnfs_worker.c
-        dnfs_admin.c
+        dnfsd_main.cpp
+        dnfs_init.cpp
+        dnfs_dispatcher.cpp
+        dnfs_worker.cpp
+        dnfs_admin.cpp
 )
 
 target_link_libraries(dnfs

@@ -12,13 +12,13 @@
 #include <libgen.h>
 #include <sys/time.h>
 
-#include "rpc/types.h"
-#include "rpc/rpc.h"
-#include "log/display.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "rpc/types.h"
+#include "rpc/rpc.h"
+#include "log/display.h"
 
 #if (__GNUC__ >= 3)
 #ifndef likely

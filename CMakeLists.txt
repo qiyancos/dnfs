@@ -1,9 +1,11 @@
 cmake_minimum_required(VERSION 3.10)
-project(dnfs C CXX)
+project(dnfs CXX C)
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
+#set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")  #设置c++的编译选项
+#set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")  #设置c的编译选项
 
 message("Using c compiler: ${CMAKE_C_COMPILER}(${CMAKE_C_COMPILER_VERSION})")
-
-set(CMAKE_C_STANDARD 11)
 
 # 获取系统内核版本和相应的内核include目录
 execute_process(
@@ -36,11 +38,12 @@ endif ()
 set(ARCH ${INCLUDE_ARCH})
 message("Get linux system arch: ${SYSTEM_ARCH}, include arch: ${INCLUDE_ARCH}")
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
+        "${CMAKE_SOURCE_DIR}/src/libntirpc/cmake/modules/")
+add_subdirectory(${CMAKE_SOURCE_DIR}/src/libntirpc)
+
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/src/libntirpc/ntirpc)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
-        "${CMAKE_SOURCE_DIR}/src/libntirpc/cmake/modules/")
-add_subdirectory(src/libntirpc)
 add_subdirectory(src/log)
 add_subdirectory(src/dnfsd)

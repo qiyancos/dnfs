@@ -1,6 +1,24 @@
+/*
+ *
+ * Copyright Reserved By All Project Contributors
+ * Contributor: Rock Lee lsk_mprc@pku.edu.cn
+ * Contributor(nfs-ganesha): Philippe DENIEL   philippe.deniel@cea.fr
+ *                Thomas LEIBOVICI  thomas.leibovici@cea.fr
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the MIT License; This program is
+ * distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the MIT lisence for
+ * more details. You should have received a copy of the MIT License
+ * along with this project.
+ *
+ */
+
+#include "log/log.h"
+#include "dnfsd/config.h"
 #include "dnfsd/dnfsd.h"
 #include "dnfsd/dnfs_init.h"
-#include "log/log.h"
 
 char *nfs_config_path = GANESHA_CONFIG_PATH;
 char *nfs_pidfile_path = GANESHA_PIDFILE_PATH;
@@ -32,20 +50,8 @@ static const char usage[] =
 	"SIGTERM    : Cleanly terminate the program\n"
 	"------------- Default Values -------------\n"
 	"LogFile    : SYSLOG\n"
-	"PidFile    : "GANESHA_PIDFILE_PATH"\n"
-	"DebugLevel : NIV_EVENT\n" "ConfigFile : "GANESHA_CONFIG_PATH"\n";
-
-static inline char *main_strdup(const char *var, const char *str)
-{
-	char *s = strdup(str);
-
-	if (s == NULL) {
-		fprintf(stderr, "strdup failed for %s value %s\n", var, str);
-		abort();
-	}
-
-	return s;
-}
+	"PidFile    : " GANESHA_PIDFILE_PATH "\n"
+	"DebugLevel : NIV_EVENT\n" "ConfigFile : " GANESHA_CONFIG_PATH " \n";
 
 /**
  * main: simply the main function.
@@ -58,14 +64,11 @@ static inline char *main_strdup(const char *var, const char *str)
  * @return status to calling program by calling the exit(3C) function.
  *
  */
-
 int main(int argc, char *argv[])
 {
 	char *tempo_exec_name = NULL;
 	char localmachine[MAXHOSTNAMELEN + 1];
 	int c;
-//	int dsc;
-//	int rc;
 	int pidfile = -1;               /* fd for file to store pid */
 	char *log_path = NULL;
 	char *exec_name = "nfs-ganesha";
@@ -77,7 +80,7 @@ int main(int argc, char *argv[])
 
 	tempo_exec_name = strrchr(argv[0], '/');
 	if (tempo_exec_name != NULL)
-		exec_name = main_strdup("exec_name", tempo_exec_name + 1);
+		exec_name = strdup(tempo_exec_name + 1);
 
 	if (*exec_name == '\0')
 		exec_name = argv[0];
