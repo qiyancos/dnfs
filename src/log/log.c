@@ -13,7 +13,7 @@
 
 #include "log/log.h"
 #include "log/display.h"
-#include "common_utils.h"
+#include "utils/common_utils.h"
 
 #ifndef ARRAY_SIZE
 #define ARRAY_SIZE(a) (sizeof(a)/sizeof(a[0]))

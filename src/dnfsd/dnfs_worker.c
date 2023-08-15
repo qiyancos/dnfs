@@ -4,9 +4,9 @@
 #include "log/display.h"
 #include "log/log.h"
 
-#define container_of(addr, type, member) ({			\
-	const typeof(((type *) 0)->member) * __mptr = (addr);	\
-	(type *)((char *) __mptr - offsetof(type, member)); })
+#define container_of(addr, type, member) ({            \
+    const typeof(((type *) 0)->member) * __mptr = (addr);    \
+    (type *)((char *) __mptr - offsetof(type, member)); })
 
 
 /**
@@ -15,8 +15,7 @@
  * @param[in] reqnfs	NFS request
  *
  */
-static enum xprt_stat nfs_rpc_noprog(nfs_request_t *reqdata)
-{
+static enum xprt_stat nfs_rpc_noprog(nfs_request_t *reqdata) {
     LogFullDebug(COMPONENT_DISPATCH,
                  "Invalid Program number %" PRIu32,
                  reqdata->svc.rq_msg.cb_prog);
@@ -30,8 +29,7 @@ static enum xprt_stat nfs_rpc_noprog(nfs_request_t *reqdata)
  *
  */
 static enum xprt_stat nfs_rpc_novers(nfs_request_t *reqdata,
-                                     int lo_vers, int hi_vers)
-{
+                                     int lo_vers, int hi_vers) {
     LogFullDebug(COMPONENT_DISPATCH,
                  "Invalid protocol Version %" PRIu32
                          " for Program number %" PRIu32,
@@ -53,33 +51,32 @@ static enum xprt_stat nfs_rpc_novers(nfs_request_t *reqdata,
  *
  * @return whether the request is valid.
  */
-enum xprt_stat nfs_rpc_valid_NFS(struct svc_req *req)
-{
+enum xprt_stat nfs_rpc_valid_NFS(struct svc_req *req) {
     nfs_request_t *reqdata =
-    container_of(req, struct nfs_request, svc);
+            container_of(req, struct nfs_request, svc);
     int lo_vers;
     int hi_vers;
 #ifdef USE_LTTNG
     SVCXPRT *xprt = reqdata->svc.rq_xprt;
 
-	tracepoint(nfs_rpc, valid, __func__, __LINE__, xprt,
-		   (unsigned int) req->rq_msg.cb_prog,
-		   (unsigned int) req->rq_msg.cb_vers,
-		   (unsigned int) reqdata->svc.rq_msg.cb_proc);
+    tracepoint(nfs_rpc, valid, __func__, __LINE__, xprt,
+           (unsigned int) req->rq_msg.cb_prog,
+           (unsigned int) req->rq_msg.cb_vers,
+           (unsigned int) reqdata->svc.rq_msg.cb_proc);
 #endif
 
     // reqdata->funcdesc = &invalid_funcdesc;
 
 #ifdef USE_NFSACL3
     if (req->rq_msg.cb_prog == NFS_program[P_NFSACL]) {
-		if (req->rq_msg.cb_vers == NFSACL_V3 && CORE_OPTION_NFSV3) {
-			if (req->rq_msg.cb_proc <= NFSACLPROC_SETACL) {
-				reqdata->funcdesc =
-					&nfsacl_func_desc[req->rq_msg.cb_proc];
-				return nfs_rpc_process_request(reqdata, false);
-			}
-		}
-	}
+        if (req->rq_msg.cb_vers == NFSACL_V3 && CORE_OPTION_NFSV3) {
+            if (req->rq_msg.cb_proc <= NFSACLPROC_SETACL) {
+                reqdata->funcdesc =
+                    &nfsacl_func_desc[req->rq_msg.cb_proc];
+                return nfs_rpc_process_request(reqdata, false);
+            }
+        }
+    }
 #endif /* USE_NFSACL3 */
 
     if (req->rq_msg.cb_prog != NFS_program[P_NFS]) {
@@ -88,13 +85,13 @@ enum xprt_stat nfs_rpc_valid_NFS(struct svc_req *req)
 
 #ifdef _USE_NFS3
     if (req->rq_msg.cb_vers == NFS_V3 && NFS_options & CORE_OPTION_NFSV3) {
-		if (req->rq_msg.cb_proc <= NFSPROC3_COMMIT) {
-			reqdata->funcdesc =
-				&nfs3_func_desc[req->rq_msg.cb_proc];
-			return nfs_rpc_process_request(reqdata, false);
-		}
-		return nfs_rpc_noproc(reqdata);
-	}
+        if (req->rq_msg.cb_proc <= NFSPROC3_COMMIT) {
+            reqdata->funcdesc =
+                &nfs3_func_desc[req->rq_msg.cb_proc];
+            return nfs_rpc_process_request(reqdata, false);
+        }
+        return nfs_rpc_noproc(reqdata);
+    }
 #endif /* _USE_NFS3 */
 
     /* Unsupported version! Set low and high versions correctly */
@@ -104,9 +101,9 @@ enum xprt_stat nfs_rpc_valid_NFS(struct svc_req *req)
         hi_vers = NFS_V3;
 #ifdef _USE_NFS3
     if (NFS_options & CORE_OPTION_NFSV3)
-		lo_vers = NFS_V3;
-	else
-		lo_vers = NFS_V4;
+        lo_vers = NFS_V3;
+    else
+        lo_vers = NFS_V4;
 #else
     lo_vers = NFS_V4;
 #endif

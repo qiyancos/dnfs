@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(dnfs CXX C)
+project(dnfsd CXX C)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")  #设置c++的编译选项
@@ -38,12 +38,12 @@ endif ()
 set(ARCH ${INCLUDE_ARCH})
 message("Get linux system arch: ${SYSTEM_ARCH}, include arch: ${INCLUDE_ARCH}")
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
-        "${CMAKE_SOURCE_DIR}/src/libntirpc/cmake/modules/")
-add_subdirectory(${CMAKE_SOURCE_DIR}/src/libntirpc)
-
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/src/libntirpc/ntirpc)
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
+        "${CMAKE_SOURCE_DIR}/src/libntirpc/cmake/modules/")
+add_subdirectory(${CMAKE_SOURCE_DIR}/src/libntirpc)
+add_subdirectory(src/utils)
 add_subdirectory(src/log)
 add_subdirectory(src/dnfsd)

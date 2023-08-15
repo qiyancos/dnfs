@@ -15,7 +15,6 @@
 
 #include "rpc/rpc.h"
 #include "rpc/types.h"
-#include "dnfsd/dnfsd.h"
 
 struct _nfs_health {
     uint64_t enqueued_reqs;

@@ -46,13 +46,12 @@ static pthread_mutex_t admin_control_mtx;
 
 static pthread_cond_t admin_control_cv;
 
-void nfs_Init_admin_thread(void)
-{
+void nfs_Init_admin_thread(void) {
     PTHREAD_MUTEX_init(&admin_control_mtx, NULL);
     PTHREAD_COND_init(&admin_control_cv, NULL);
 #ifdef USE_DBUS
     gsh_dbus_register_path("admin", admin_interfaces);
-#endif				/* USE_DBUS */
+#endif                /* USE_DBUS */
     LogEvent(COMPONENT_NFS_CB, "Admin thread initialized");
 }
 
@@ -67,8 +66,7 @@ bool admin_shutdown;
  * @brief Signal the admin thread to shut down the system
  */
 
-void admin_halt(void)
-{
+void admin_halt(void) {
     PTHREAD_MUTEX_lock(&admin_control_mtx);
 
     if (!admin_shutdown) {
@@ -80,8 +78,7 @@ void admin_halt(void)
     LogEvent(COMPONENT_MAIN, "NFS EXIT: %s done", __func__);
 }
 
-static void do_shutdown(void)
-{
+static void do_shutdown(void) {
 //    int rc = 0;
 //    bool disorderly = false;
 
@@ -92,15 +89,14 @@ static void do_shutdown(void)
     Clean_RPC();
 
     LogEvent(COMPONENT_MAIN, "Shutting down RPC services");
-    (void)svc_shutdown(SVC_SHUTDOWN_FLAG_NONE);
+    (void) svc_shutdown(SVC_SHUTDOWN_FLAG_NONE);
 
     PTHREAD_MUTEX_destroy(&admin_control_mtx);
     PTHREAD_COND_destroy(&admin_control_cv);
     LogEvent(COMPONENT_MAIN, "NFS EXIT: %s done", __func__);
 }
 
-void *admin_thread(void *UnusedArg)
-{
+void *admin_thread(void *UnusedArg) {
     SetNameFunction("Admin");
 
     PTHREAD_MUTEX_lock(&admin_control_mtx);
