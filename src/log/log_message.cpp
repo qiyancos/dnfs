@@ -14,9 +14,10 @@
  */
 
 #include "log/log_message.h"
+using namespace std;
 
 /*将时间戳转化为字符串*/
-std::string LogMessage::get_record_time(const time_t &timeStamp) {
+string LogMessage::get_record_time(const time_t &timeStamp) {
 
     /*保存转化时间*/
     char time_buffer[30] = {0};

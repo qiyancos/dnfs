@@ -22,6 +22,7 @@
 
 #include "log/log.h"
 #include "utils/common_utils.h"
+using namespace std;
 
 /*建立日志实例*/
 Logger &logger = Logger::get_instance();
@@ -36,7 +37,7 @@ void (*Logger::exit_func)(int) = exit;
 int Logger::exit_code = 0;
 
 /*判单日志级别是否合法，并且返回日志级别*/
-log_level_t Logger::decode_log_level(const std::string &log_level_str) {
+log_level_t Logger::decode_log_level(const string &log_level_str) {
     /*获取日志等级的数量*/
     size_t level_num = logger.log_level_info_dict.size();
     /*遍历判定数据*/
@@ -52,14 +53,14 @@ log_level_t Logger::decode_log_level(const std::string &log_level_str) {
 }
 
 /*设置全局属性，项目名称 主机名称*/
-void Logger::init(const std::string &program_name, const std::string &hostname) {
+void Logger::init(const string &program_name, const string &hostname) {
     logger.hostname = hostname;
     logger.program_name = program_name;
 }
 
 /*使用默认日志属性初始化一个模块日志*/
-void Logger::init_module(const std::string &module_name) {
-    module_attr.insert(std::pair<std::string, LoggerAttr>(module_name, default_attr));
+void Logger::init_module(const string &module_name) {
+    module_attr.insert(pair<string, LoggerAttr>(module_name, default_attr));
 }
 
 /*默认构造函数*/
@@ -72,7 +73,7 @@ void Logger::set_exit_func(int e_code, void (*exit_f)(int)) {
 }
 
 /*对默认日志属性的设置*/
-int Logger::set_default_attr_from(const std::string &module_name, std::string *error_info) {
+int Logger::set_default_attr_from(const string &module_name, string *error_info) {
     /*如果不存在*/
     if (!logger.judge_module_attr_exist(module_name)) {
         /*设置错误信息*/
@@ -85,8 +86,8 @@ int Logger::set_default_attr_from(const std::string &module_name, std::string *e
 }
 
 /*设置指定模块的日志属性*/
-int Logger::copy_module_attr_from(const std::string &target_module_name, const std::string &src_module_name,
-                                  std::string *error_info) {
+int Logger::copy_module_attr_from(const string &target_module_name, const string &src_module_name,
+                                  string *error_info) {
     /*如果源模块不存在*/
     if (!judge_module_attr_exist(src_module_name)) {
         /*设置错误信息*/
@@ -99,7 +100,7 @@ int Logger::copy_module_attr_from(const std::string &target_module_name, const s
         module_attr[target_module_name] = module_attr[src_module_name];
     } else {
         /*先创建*/
-        module_attr.insert(std::pair<std::string, LoggerAttr>(target_module_name, LoggerAttr()));
+        module_attr.insert(pair<string, LoggerAttr>(target_module_name, LoggerAttr()));
         /*在赋值*/
         module_attr[target_module_name] = module_attr[src_module_name];
     }
@@ -109,7 +110,7 @@ int Logger::copy_module_attr_from(const std::string &target_module_name, const s
 }
 
 /*判断模块日志设置存不存在*/
-bool Logger::judge_module_attr_exist(const std::string &module_name) {
+bool Logger::judge_module_attr_exist(const string &module_name) {
     if (module_attr.find(module_name) != module_attr.end()) {
         return true;
     }
@@ -123,7 +124,7 @@ Logger &Logger::get_instance() {
 }
 
 /*设置所有模块日志等级日志文件路径*/
-int Logger::set_log_output(const std::string &log_path, std::string *error_info) {
+int Logger::set_log_output(const string &log_path, string *error_info) {
 
     /*先构造一个日志输出对象，用来生成日志路径*/
     LogOutputAttr generate_attr = LogOutputAttr();
@@ -131,13 +132,13 @@ int Logger::set_log_output(const std::string &log_path, std::string *error_info)
     generate_attr.generate_config(log_path, error_info);
 
     /*获取遍历对象*/
-    std::map<std::string, LoggerAttr>::iterator it;
+    map<string, LoggerAttr>::iterator it;
     /*遍历判定更改数据*/
     for (it = module_attr.begin(); it != module_attr.end(); it++) {
         /*遍历每个日志级别的数据*/
         for (int i = 0; i < LEVEL_COUNT; ++i) {
             /*设置日志路径*/
-//            it->second.log_level_output[i].log_files = std::vector<LogFile>
+//            it->second.log_level_output[i].log_files = vector<LogFile>
         }
     }
     return 0;
@@ -150,15 +151,15 @@ Logger::LogOutputAttr::LogOutputAttr() = default;
  * 比如 "stderr:syslog:/tmp/a.log@(time,midnight,30):/tmp/b.log"
  * 比如 "stderr:syslog:/tmp/a.log@(size,10MB,30):/tmp/b.log"
  * */
-int Logger::LogOutputAttr::generate_config(const std::string &log_out_attr_str, std::string *error_info) {
+int Logger::LogOutputAttr::generate_config(const string &log_out_attr_str, string *error_info) {
     /*设置切割保存结果*/
-    std::vector<std::string> split_result;
+    vector<string> split_result;
 
     /*切割配置字符串*/
     split_str(log_out_attr_str, ":", split_result);
 
     /*遍历进行参数配置*/
-    std::vector<std::string>::iterator it;
+    vector<string>::iterator it;
     for (it = split_result.begin(); it != split_result.end(); it++) {
         /*如果长度为空则继续*/
         if (it[0].empty()) continue;

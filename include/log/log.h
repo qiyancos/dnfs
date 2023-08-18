@@ -29,7 +29,6 @@
 /*日志等级*/
 typedef enum LogLevel {
     NOLOG,
-    EXIT_EXCEPTION,
     EXIT_ERROR,
     L_ERROR,
     L_WARN,
@@ -82,7 +81,8 @@ private:
          * 比如 "stderr:syslog:/tmp/a.log@(time,midnight,30):/tmp/b.log"
          * 比如 "stderr:syslog:/tmp/a.log@(size,10MB,30):/tmp/b.log"
          * */
-        int generate_config(const std::string &log_out_attr_str,std::string *error_info);
+        int generate_config(const std::string &log_out_attr_str,
+                            std::string *error_info);
 
         /*默认的构造函数*/
         LogOutputAttr();
@@ -105,11 +105,29 @@ private:
         /*设置程序名*/
         std::string module_name = "default";
         /*输出日志的基本格式字符串*/
+        /*log formatter 打印日志格式设置
+        * %(program_name)s 程序名
+        * %(hostname)s 主机名
+        * %(levelno)s 数字形式的日志级别
+        * %(pathname)s 输出模块的完整路径名
+        * %(filename)s 输出模块的文件名
+        * %(funcName)s 输出函数函数名
+        * %(lineno)d 输出调用日志代码所在行
+        * %(created)f 当前时间，UNIX浮点数表示
+        * %(relativeCreated)d 自logger创建以来的毫秒数
+        * %(asctime)s 字符串形式的当前时间 默认为2023-08-18 11:18:45998
+        * %(thread)d 线程id
+        * %(threadName)s 线程名
+        * %(process)d 进程id
+        * %(message)s 用户输出消息
+        * */
         std::string formatter = "%module_name";
         /*每一个日志级别可以对应单独的输出日志文件*/
         LogOutputAttr log_level_output[LEVEL_COUNT];
         /*日志等级开关，比他小的都可以输出*/
         log_level_t log_level = LEVEL_COUNT;
+        /*是不是debug*/
+        bool debug_on = false;
     };
 
     /*日志等级对照结构体*/
@@ -122,20 +140,22 @@ private:
 private:
     /*初始化日志等级对照字典*/
     const std::map<log_level_t, std::pair<std::string, int>> log_level_info_dict = {
-            {L_INFO,         {"LOG_INFO",        LOG_INFO}},
-            {L_WARN,         {"LOG_WARN",        LOG_WARNING}},
-            {L_ERROR,        {"LOG_ERROR",       LOG_ERR}},
-            {L_BACKTRACE,    {"LOG_BACKTRACE",   LOG_ERR}},
-            {D_ERROR,        {"DEBUG_ERROR",     LOG_ERR}},
-            {D_WARN,         {"DEBUG_WARN",      LOG_WARNING}},
-            {D_BACKTRACE,    {"DEBUG_BACKTRACE", LOG_ERR}},
-            {D_INFO,         {"DEBUG_INFO",      LOG_INFO}},
-            {EXIT_ERROR,     {"EXIT_ERROR",      LOG_ALERT}},
-            {EXIT_EXCEPTION, {"EXIT_EXCEPTION",  LOG_ALERT}},
+            {L_INFO,      {"LOG_INFO",        LOG_INFO}},
+            {L_WARN,      {"LOG_WARN",        LOG_WARNING}},
+            {L_ERROR,     {"LOG_ERROR",       LOG_ERR}},
+            {L_BACKTRACE, {"LOG_BACKTRACE",   LOG_ERR}},
+            {D_ERROR,     {"DEBUG_ERROR",     LOG_ERR}},
+            {D_WARN,      {"DEBUG_WARN",      LOG_WARNING}},
+            {D_BACKTRACE, {"DEBUG_BACKTRACE", LOG_ERR}},
+            {D_INFO,      {"DEBUG_INFO",      LOG_INFO}},
+            {EXIT_ERROR,  {"EXIT_ERROR",      LOG_ALERT}},
     };
 
     /*不同模块的日志属性*/
     std::map<std::string, LoggerAttr> module_attr;
+
+    /*设置创建时间*/
+    time_t init_time =time(nullptr);
 
     /*默认日志属性，新建日志默认使用该属性*/
     static LoggerAttr default_attr;
@@ -148,6 +168,7 @@ private:
 private:
     /*默认构造函数*/
     Logger();
+
 public:
     /*设置主机名*/
     std::string hostname = "localhost";
@@ -157,19 +178,21 @@ public:
 
 public:
     /*初始化全局日志类*/
-    static void init(const std::string &program_name, const std::string &hostname);
+    static void
+    init(const std::string &program_name, const std::string &hostname);
 
     /*判断日志级别*/
     static log_level_t decode_log_level(const std::string &log_level_str);
 
     /*对默认日志属性的设置*/
-    static int set_default_attr_from(const std::string &module_name, std::string *error_info);
+    static int set_default_attr_from(const std::string &module_name,
+                                     std::string *error_info);
 
     /*设置退出函数,和退出状态码*/
     static void set_exit_func(int e_code, void (*exit_f)(int));
 
     /*得到单例模式*/
-    static Logger& get_instance();
+    static Logger &get_instance();
 
 public:
 
@@ -178,16 +201,18 @@ public:
 
     /*设置指定模块的日志属性*/
     int copy_module_attr_from(const std::string &target_module_name,
-                              const std::string &src_module_name, std::string *error_info);
+                              const std::string &src_module_name,
+                              std::string *error_info);
 
     /*判断模块日志设置存不存在*/
-    bool judge_module_attr_exist(const std::string& module_name);
+    bool judge_module_attr_exist(const std::string &module_name);
 
     /*设置所有模块日志等级日志文件路径*/
     int set_log_output(const std::string &log_path, std::string *error_info);
 
     /*设置指定模块日志等级日志文件路径*/
-    int set_module_log_output(const std::string &module_name, const std::string &log_path,
+    int set_module_log_output(const std::string &module_name,
+                              const std::string &log_path,
                               std::string *error_info);
 
     /*设置所有模块多个日志等级日志文件路径*/
@@ -197,27 +222,31 @@ public:
     /*设置多个日志等级日志文件路径*/
     int set_module_log_output(const std::string &module_name,
                               const std::vector<log_level_t> &log_level_list,
-                              const std::string &log_path, std::string *error_info);
+                              const std::string &log_path,
+                              std::string *error_info);
 
     /*设置指定日志等级日志文件路径*/
     int set_log_output(const log_level_t log_level, const std::string &log_path,
                        std::string *error_info);
 
     /*设置指定日志等级日志文件路径*/
-    int set_module_log_output(const log_level_t log_level, const std::string &log_path,
+    int set_module_log_output(const log_level_t log_level,
+                              const std::string &log_path,
                               std::string *error_info);
 
     /*设置所有模块的日志等级，高于该等级的才可以输出*/
     void set_log_level(const log_level_t log_level);
 
     /*设置指定模块日志等级，高于该等级的才可以输出*/
-    void set_module_log_level(const std::string &module_name, const log_level_t log_level);
+    void set_module_log_level(const std::string &module_name,
+                              const log_level_t log_level);
 
     /*设置所有模块日志格式*/
     int set_formatter(const std::string format_str, std::string *error_info);
 
     /*设置指定模块日志格式*/
-    int set_module_formatter(const std::string &module_name, const std::string format_str,
+    int set_module_formatter(const std::string &module_name,
+                             const std::string format_str,
                              std::string *error_info);
 
     /*打印输出日志*/
