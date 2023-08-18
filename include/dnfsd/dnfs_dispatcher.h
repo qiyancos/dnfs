@@ -13,7 +13,7 @@
 #include "rpc/svc_rqst.h"
 #include "rpc/rpcb_clnt.h"
 
-#include "dnfsd/dnfs_init.h"
+#include "dnfsd/dnfs_init_old.h"
 #include "log/display.h"
 
 enum evchan {

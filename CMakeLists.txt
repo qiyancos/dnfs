@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(dnfsd CXX C)
 set(CMAKE_VERBOSE_MAKEFILE ON)
+set(CMAKE_CXX_STANDARD 17)
 
 #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")  #设置c++的编译选项
 #set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")  #设置c的编译选项
@@ -43,6 +44,7 @@ include_directories(${CMAKE_SOURCE_DIR}/src/libntirpc/ntirpc)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
         "${CMAKE_SOURCE_DIR}/src/libntirpc/cmake/modules/")
+
 add_subdirectory(${CMAKE_SOURCE_DIR}/src/libntirpc)
 add_subdirectory(src/utils)
 add_subdirectory(src/log)

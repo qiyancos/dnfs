@@ -17,18 +17,18 @@
 
 #include <unistd.h>
 #include <string>
+#include <iostream>
 
+#include "rpc/rpc.h"
 #include "utils/thread_utils.h"
-#include "utils/rpc_mem_util.h"
-#include "utils/log.h"
+#include "utils/rpc_mem_utils.h"
+#include "utils/log_utils.h"
 #include "dnfsd/dnfsd.h"
-
-extern "C" {
-#include "dnfsd/config.h"
 #include "dnfsd/dnfs_init.h"
-}
 
 using namespace std;
+
+#define MODULE_NAME "main"
 
 // 服务默认选项字符串信息
 static const char options[] = "v@L:N:f:p:FRTE:ChI:x";
@@ -58,7 +58,7 @@ static const char usage[] =
 	"DebugLevel : NIV_EVENT\n" "ConfigFile : " GANESHA_CONFIG_PATH " \n";
 
 // 服务启动配置信息
-static nfs_start_info_t my_nfs_start_info = {
+static nfs_start_info_t nfs_start_info = {
         .dump_default_config = false,
         .lw_mark_trigger = false,
         .drop_caps = true
@@ -68,16 +68,13 @@ static nfs_start_info_t my_nfs_start_info = {
 string nfs_config_path = GANESHA_CONFIG_PATH;
 
 // 默认的PID文件路径
-string nfs_pidfile_path = GANESHA_PIDFILE_PATH;
+[[maybe_unused]] string nfs_pidfile_path = GANESHA_PIDFILE_PATH;
 
 // TODO
 time_t nfs_ServerEpoch = 0;
 
-// 是否在出现致命错误日志的时候直接退出程序
-bool config_errors_fatal = false;
-
 // debug日志的级别 todo
-int debug_level = -1;
+log_level_t debug_level = LNOLOG;
 
 // 是否常驻后台的形式运行
 bool detach_flag = true;
@@ -94,17 +91,20 @@ string nfs_host_name = "localhost";
 // 日志文件完整路径
 string log_path;
 
+/* 全局唯一的配置文件结构体 */
+YAML::Node dnfs_config;
+
 // tirpc的控制参数集合
 tirpc_pkg_params ntirpc_pp = {
     TIRPC_DEBUG_FLAG_DEFAULT,
     0,
     ThreadPool::set_thread_name,
-    NULL, // 打印错误日志使用的函数 void(char* fmt, ...)
+    rpc_warnx,
     rpc_free,
     rpc_malloc,
-    NULL, // 包含对齐的内存空间分配函数
-    NULL, // 根据给定的结构体个数和结构体大小分配空间
-    NULL, // 根据新的大小对之前已经分配的内存区域进行重新分配，新的区域会复制之前区域的数据
+    rpc_malloc_aligned,
+    rpc_calloc,
+    rpc_realloc, // 根据新的大小对之前已经分配的内存区域进行重新分配，新的区域会复制之前区域的数据
 };
 
 // 主程序运行参数解析
@@ -139,7 +139,6 @@ static void arg_parser(int argc, char** argv) {
                 printf("Git HEAD = %s\n", _GIT_HEAD_COMMIT);
                 printf("Git Describe = %s\n", _GIT_DESCRIBE);
                 exit(0);
-                break;
 
             case 'L':
                 /* Default Log */
@@ -148,13 +147,7 @@ static void arg_parser(int argc, char** argv) {
 
             case 'N':
                 /* debug level */
-                // TODO
-                debug_level = ReturnLevelAscii(optarg);
-                if (debug_level == -1) {
-                    fprintf(stderr,
-                            "Invalid value for option 'N': NIV_NULL, NIV_MAJ, NIV_CRIT, NIV_EVENT, NIV_DEBUG, NIV_MID_DEBUG or NIV_FULL_DEBUG expected.\n");
-                    exit(1);
-                }
+                debug_level = Logger::decode_log_level(optarg);
                 break;
 
             case 'f':
@@ -184,11 +177,10 @@ static void arg_parser(int argc, char** argv) {
                 fprintf(stderr, "\tActive_krb5 = true ;\n");
                 fprintf(stderr, "}\n\n\n");
                 exit(1);
-                break;
 
             case 'T':
                 /* Dump the default configuration on stdout */
-                my_nfs_start_info.dump_default_config = true;
+                nfs_start_info.dump_default_config = true;
                 break;
 
             case 'C':
@@ -214,6 +206,11 @@ static void arg_parser(int argc, char** argv) {
     }
 }
 
+/* 该函数用于处理程序退出的时候需要执行的操作 */
+void exit_process(const int exit_code) {
+    exit(exit_code);
+}
+
 // 主程序入口
 int main(int argc, char ** argv)
 {
@@ -223,8 +220,13 @@ int main(int argc, char ** argv)
     // 解析主程序参数并初始化部分状态变量
     arg_parser(argc, argv);
 
+    // 初始化配置文件解析处理
+    init_config(nfs_config_path);
+
     // 初始化日志
-    Logger& logger = Logger::init(exec_name + "_main", nfs_host_name);
+    Logger::set_exit_func(-1, exit_process);
+    init_logging(exec_name, nfs_host_name, debug_level,
+                 detach_flag, log_path);
 
     // 初始化崩溃信号处理函数hook
     if (dump_trace) {
@@ -233,69 +235,30 @@ int main(int argc, char ** argv)
 
     // 注册tirpc的处理操作参数
     if (!tirpc_control(TIRPC_PUT_PARAMETERS, &ntirpc_pp)) {
-        LogFatal(COMPONENT_INIT, "Setting nTI-RPC parameters failed");
+        logger.log(MODULE_NAME, EXIT_ERROR,
+                   "Setting nTI-RPC parameters failed");
     }
 
-    dnfs_prereq_init(exec_name, nfs_host_name debug_level, log_path, dump_trace);
+    /* 检查malloc功能的可用性 */
+    init_check_malloc();
 
-	/* initialize nfs_init */
-	nfs_init_init();
-    /* Check if malloc function is valid */
-	nfs_check_malloc();
-
-	/* Start in background, if wanted */
+	/* 确定是否在后台以守护进程的形式执行 */
 	if (detach_flag) {
-        /* daemonize the process (fork, close xterm fds,
- * detach from parent process) */
-        if (daemon(0, 0))
-            LogFatal(COMPONENT_MAIN,
+        /* 调用系统函数自动转化为daemon运行模式
+         * 当nochdir为零时，将当前目录变为根目录，否则不变，当noclose为零时，标准输入、
+         * 标准输出和错误输出重导向为/dev/null不输出任何信息，否则照样输出。 */
+        if (daemon(0, 0)) {
+            logger.log(MODULE_NAME, L_ERROR,
                      "Error detaching process from parent: %s",
                      strerror(errno));
-
-        /* In the child process, change the log header
-         * if not, the header will contain the parent's pid */
-        set_const_log_str();
+        }
     }
 
-	/* Make sure Linux file i/o will return with error
-	 * if file size is exceeded. */
-#ifdef _LINUX
-	signal(SIGXFSZ, SIG_IGN);
-#endif
-    sigset_t signals_to_block;
-
-	/* Set up for the signal handler.
-	 * Blocks the signals the signal handler will handle.
-	 */
-	sigemptyset(&signals_to_block);
-	sigaddset(&signals_to_block, SIGTERM);
-	sigaddset(&signals_to_block, SIGHUP);
-	sigaddset(&signals_to_block, SIGPIPE);
-	if (pthread_sigmask(SIG_BLOCK, &signals_to_block, NULL) != 0) {
-		LogFatal(COMPONENT_MAIN,
-			 "Could not start nfs daemon, pthread_sigmask failed");
-			goto fatal_die;
-	}
+    /* 初始化线程对信号的处理操作 */
+    init_thread_signal_mask();
 
 	/* Everything seems to be OK! We can now start service threads */
-	nfs_start(&my_nfs_start_info);
-
-	if (log_path)
-		free(log_path);
+	dnfs_start(&nfs_start_info);
 
 	return 0;
-
-fatal_die:
-	if (log_path)
-		free(log_path);
-	if (pidfile != -1)
-		close(pidfile);
-
-	/* systemd journal won't display our errors without this */
-	sleep(1);
-
-	LogFatal(COMPONENT_INIT,
-		 "Fatal errors.  Server exiting...");
-	/* NOT REACHED */
-	return 2;
 }

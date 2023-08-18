@@ -15,7 +15,7 @@
 
 #include <sstream>
 
-#include "utils/log.h"
+#include "utils/log_utils.h"
 #include "utils/thread_utils.h"
 
 using namespace std;
@@ -32,10 +32,12 @@ void ThreadPool::set_thread_name(const string &name) {
     }
     thread_name_id_map[name] = tid;
     if (thread_id_name_map.find(tid) != thread_id_name_map.end()) {
-        logger.log(D_INFO, "Reset thread name from \"%s\" to \"%s\" for thread-%d",
-                    thread_id_name_map[tid], name, tid)
+        logger.log(MODULE_NAME,D_INFO,
+                   "Reset thread name from \"%s\" to \"%s\" for thread-%d",
+                    thread_id_name_map[tid].c_str(), name.c_str(), tid)
     } else {
-        logger.log(D_INFO, "Set thread %d name as \"%s\"", tid, name);
+        logger.log(MODULE_NAME,D_INFO,
+                   "Set thread %d name as \"%s\"", tid, name.c_str());
     }
     thread_id_name_map[tid] = name;
 }

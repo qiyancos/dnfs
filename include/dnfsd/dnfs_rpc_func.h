@@ -13,15 +13,9 @@
  *
  */
 
-#ifndef UTILS_RPC_MEM_UTIL_H
-#define UTILS_RPC_MEM_UTIL_H
+#ifndef DNFSD_DNFS_RPC_FUNC_H
+#define DNFSD_DNFS_RPC_FUNC_H
 
-#include <stdlib.h>
+struct svc_req *alloc_nfs_request(SVCXPRT *xprt, XDR *xdrs);
 
-// 该函数船体给tirpc，释放内存空间使用的函数
-void rpc_free(void *p, size_t n);
-
-// 该函数负责分配新的内存区域，并在分配失败的时候打印错误信息
-void* rpc_malloc(size_t n, const char *file, int line, const char *function);
-
-#endif //UTILS_RPC_MEM_UTIL_H
+#endif //DNFSD_DNFS_RPC_FUNC_H
