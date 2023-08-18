@@ -34,7 +34,7 @@ void ThreadPool::set_thread_name(const string &name) {
     if (thread_id_name_map.find(tid) != thread_id_name_map.end()) {
         LOG(MODULE_NAME,D_INFO,
                    "Reset thread name from \"%s\" to \"%s\" for thread-%d",
-                    thread_id_name_map[tid].c_str(), name.c_str(), tid)
+                    thread_id_name_map[tid].c_str(), name.c_str(), tid);
     } else {
         LOG(MODULE_NAME,D_INFO,
                    "Set thread %d name as \"%s\"", tid, name.c_str());

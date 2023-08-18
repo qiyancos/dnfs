@@ -106,20 +106,21 @@ private:
         std::string module_name = "default";
         /*输出日志的基本格式字符串*/
         /*log formatter 打印日志格式设置
-        * %(program_name)s 程序名
-        * %(hostname)s 主机名
-        * %(levelno)s 数字形式的日志级别
-        * %(pathname)s 输出模块的完整路径名
-        * %(filename)s 输出模块的文件名
-        * %(funcName)s 输出函数函数名
-        * %(lineno)d 输出调用日志代码所在行
-        * %(created)f 当前时间，UNIX浮点数表示
-        * %(relativeCreated)d 自logger创建以来的毫秒数
-        * %(asctime)s 字符串形式的当前时间 默认为2023-08-18 11:18:45998
-        * %(thread)d 线程id
-        * %(threadName)s 线程名
-        * %(process)d 进程id
-        * %(message)s 用户输出消息
+        * %(program_name) 程序名
+        * %(hostname) 主机名
+        * %(levelno) 数字形式的日志级别
+        * %(pathname) 输出模块的完整路径名
+        * %(filename) 输出模块的文件名
+        * %(modulename) 输出模块名
+        * %(funcName) 输出函数函数名
+        * %(lineno) 输出调用日志代码所在行
+        * %(created) 当前时间，UNIX浮点数表示
+        * %(relativeCreated) 自logger创建以来的毫秒数
+        * %(asctime) 字符串形式的当前时间 默认为2023-08-18 11:18:45998
+        * %(thread) 线程id
+        * %(threadName) 线程名
+        * %(process) 进程id
+        * %(message) 用户输出消息
         * */
         std::string formatter = "%module_name";
         /*每一个日志级别可以对应单独的输出日志文件*/

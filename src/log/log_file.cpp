@@ -14,7 +14,6 @@
  */
 
 #include <vector>
-#include <algorithm>
 
 #include "log/log_file.h"
 #include "utils/common_utils.h"

@@ -1,9 +1,9 @@
 #include <iostream>
 #include "log/log.h"
 #include <time.h>
-
+using namespace std;
 void exit_t(int code) {
-    std::cout << "错误退出" << std::endl;
+    cout << "错误退出" << endl;
     exit(code);
 }
 
@@ -15,17 +15,17 @@ int main() {
     Logger::init("xx", "xx");
 
     /*解析日志类别*/
-    std::cout << Logger::decode_log_level("DEBUG_INFO") << std::endl;
+    cout << Logger::decode_log_level("DEBUG_INFO") << endl;
 
     /*测试建立模板和设置默认模板*/
-    std::string w;
-    std::string *s = &w;
+    string w;
+    string *s = &w;
     logger.init_module("test");
-    std::cout << Logger::set_default_attr_from("test", s) << std::endl;
-    std::cout << *s << std::endl;
+    cout << Logger::set_default_attr_from("test", s) << endl;
+    cout << *s << endl;
 
     /*赋值模块日志模板*/
-    std::cout << logger.copy_module_attr_from("yes", "test", s) << std::endl;
-    std::cout << *s << std::endl;
+    cout << logger.copy_module_attr_from("yes", "test", s) << endl;
+    cout << *s << endl;
     return 0;
 }
