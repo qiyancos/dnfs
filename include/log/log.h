@@ -152,16 +152,16 @@ private:
 
 private:
     /*初始化日志等级对照字典*/
-    static std::map<log_level_t, std::pair<std::string, int>> log_level_info_dict;
+    const std::map<log_level_t, std::pair<std::string, int>> log_level_info_dict = LOG_LEVEL_DICT_INIT;
 
     /*默认日志属性，新建日志默认使用该属性*/
-    static LoggerAttr default_attr;
+    LoggerAttr default_attr;
 
     /*退出函数指针*/
-    static void (*exit_func)(int);
+    void (*exit_func)(int) =exit;
 
     /*退出函数退出码*/
-    static int exit_code;
+    int exit_code;
 
     /*不同模块的日志属性*/
     std::map<std::string, LoggerAttr> module_attr;
@@ -182,18 +182,17 @@ public:
 
 public:
     /*初始化全局日志类*/
-    static void
-    init(const std::string &program_name, const std::string &hostname);
+    void init(const std::string &program_name_in, const std::string &hostname_in);
 
     /*判断日志级别*/
-    static log_level_t decode_log_level(const std::string &log_level_str);
+    log_level_t decode_log_level(const std::string &log_level_str);
 
     /*对默认日志属性的设置*/
-    static int set_default_attr_from(const std::string &module_name,
-                                     std::string *error_info);
+    int set_default_attr_from(const std::string &module_name,
+                              std::string *error_info);
 
     /*设置退出函数,和退出状态码*/
-    static void set_exit_func(int e_code, void (*exit_f)(int));
+    void set_exit_func(int e_code, void (*exit_f)(int));
 
     /*得到单例模式*/
     static Logger &get_instance();

@@ -8,12 +8,12 @@ void exit_t(int code) {
 
 int main() {
     /*建立退出函数*/
-    Logger::set_exit_func(3, exit_t);
+    logger.set_exit_func(3, exit_t);
 
     /*设置全局属性*/
-    Logger::init("xx", "xx");
+    logger.init("xx", "xx");
 
-    int in_s=Logger::decode_log_level("DEBUG_INFO");
+    int in_s=logger.decode_log_level("DEBUG_INFO");
 
     /*解析日志类别*/
     cout << in_s << endl;
@@ -22,7 +22,7 @@ int main() {
     string w;
     string *s = &w;
     logger.init_module("test");
-    cout << Logger::set_default_attr_from("test", s) << endl;
+    cout << logger.set_default_attr_from("test", s) << endl;
     cout << *s << endl;
 
     /*赋值模块日志模板*/

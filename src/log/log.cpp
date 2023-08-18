@@ -25,21 +25,10 @@ using namespace std;
 /*建立日志实例*/
 Logger &logger = Logger::get_instance();
 
-/*初始化日志默认属性*/
-Logger::LoggerAttr Logger::default_attr;
-
-std::map<log_level_t, std::pair<std::string, int>> Logger::log_level_info_dict = LOG_LEVEL_DICT_INIT;
-
-/*建立默认退出指针函数*/
-void (*Logger::exit_func)(int) = exit;
-
-/*设置默认退出码*/
-int Logger::exit_code = 0;
-
 /*判单日志级别是否合法，并且返回日志级别*/
 log_level_t Logger::decode_log_level(const string &log_level_str) {
 
-    for (const auto &item: Logger::log_level_info_dict) {
+    for (const auto &item: log_level_info_dict) {
         if (log_level_str == item.second.first) {
             return item.first;
         }
@@ -48,9 +37,9 @@ log_level_t Logger::decode_log_level(const string &log_level_str) {
 }
 
 /*设置全局属性，项目名称 主机名称*/
-void Logger::init(const string &program_name, const string &hostname) {
-    logger.hostname = hostname;
-    logger.program_name = program_name;
+void Logger::init(const string &program_name_in, const string &hostname_in) {
+    hostname = hostname_in;
+    program_name = program_name_in;
 }
 
 /*使用默认日志属性初始化一个模块日志*/
