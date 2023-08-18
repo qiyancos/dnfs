@@ -1,5 +1,1 @@
-add_library(log
-        SHARED
-        log.c
-        display.c
-)
+add_library(log log.cpp log_file.cpp log_message.cpp log_buffer.cpp)

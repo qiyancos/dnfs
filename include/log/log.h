@@ -1,519 +1,207 @@
-#ifndef _LOGS_H
-#define _LOGS_H
+/*
+ *
+ * Copyright Reserved By All Project Contributors
+ * Contributor: Rock Lee lsk_mprc@pku.edu.cn
+ * Contributor: Jiao Yue 3059497228@qq.com
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the MIT License; This program is
+ * distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the MIT lisence for
+ * more details. You should have received a copy of the MIT License
+ * along with this project.
+ *
+ */
 
-#include <stdio.h>
-#include <stdarg.h>
-#include <sys/types.h>
-#include <sys/param.h>
+#ifndef UTILS_LOG_H
+#define UTILS_LOG_H
+
+#include <map>
+#include <string>
+#include <vector>
 #include <syslog.h>
-#include <inttypes.h>
-#include <stdbool.h>
-#include <fcntl.h>
-#include <libgen.h>
-#include <sys/time.h>
+#include <atomic>
+#include <queue>
+#include "log_file.h"
+/*日志等级*/
+typedef enum LogLevel {
+    EXIT_EXCEPTION,
+    EXIT_ERROR,
+    L_ERROR,
+    L_WARN,
+    L_BACKTRACE,
+    L_INFO,
+    D_ERROR,
+    D_WARN,
+    D_BACKTRACE,
+    D_INFO,
+    LEVEL_COUNT,
+    NONE = -1,
+} log_level_t;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+/*不输出任何日志*/
+#define LNOLOG
+/*只输出导致退出的日志*/
+#define LEXIT EXIT_ERROR
+/*输出普通日志以及退出日志*/
+#define LRUNTIME L_INFO
+/*输出DEBUG日志、普通日志和退出日志*/
+#define LDEBUG D_INFO
+/*输出所有日志*/
+#define LALL LEVEL_COUNT
 
-#include "rpc/types.h"
-#include "rpc/rpc.h"
-#include "log/display.h"
+/*日志类*/
+class Logger {
+private:
+    struct LogOutputAttr {
+        /*从配置字符串生成配置
+         * 比如 "stderr:syslog:/tmp/a.log@(time,midnight,30):/tmp/b.log"
+         * 比如 "stderr:syslog:/tmp/a.log@(size,10MB,30):/tmp/b.log"
+         * */
+        int generate_config(const std::string &log_out_attr_str,std::string *error_info);
 
-#if (__GNUC__ >= 3)
-#ifndef likely
-#define likely(x)    __builtin_expect(!!(x), 1)
-#define unlikely(x)  __builtin_expect(!!(x), 0)
-#endif
-#else
-#define likely(x) (x)
-#define unlikely(x) (x)
-#endif
+        /*默认的构造函数*/
+        LogOutputAttr();
 
-/* The maximum size of a log buffer */
-#define LOG_BUFF_LEN 2048
+        /*是否输出到stderr*/
+        bool stderr_on = false;
+        /*是否输出到stdout*/
+        bool stdout_on = false;
+        /*是否输出到syslog*/
+        bool syslog_on = false;
+        /*是否输出到日志文件，可以同时输出到多个日志文件*/
+        std::vector<LogFile> log_files;
+    };
 
-/*
-* Log message severity constants
-*/
-typedef enum log_levels {
-    NIV_NULL,
-    NIV_FATAL,
-    NIV_MAJ,
-    NIV_CRIT,
-    NIV_WARN,
-    NIV_EVENT,
-    NIV_INFO,
-    NIV_DEBUG,
-    NIV_MID_DEBUG,
-    NIV_FULL_DEBUG,
-    NB_LOG_LEVEL
-} log_levels_t;
+    /*一个模块日志的相关属性*/
+    struct LoggerAttr {
+        /*默认初始化构造函数 */
+        LoggerAttr();
 
-typedef enum log_header_t {
-    LH_NONE,
-    LH_COMPONENT,
-    LH_ALL,
-    NB_LH_TYPES
-} log_header_t;
+        /*设置程序名*/
+        std::string module_name = "default";
+        /*输出日志的基本格式字符串*/
+        std::string formatter = "%module_name";
+        /*每一个日志级别可以对应单独的输出日志文件*/
+        LogOutputAttr log_level_output[LEVEL_COUNT];
+        /*日志等级开关，比他小的都可以输出*/
+        log_level_t log_level = LEVEL_COUNT;
+    };
 
-/**
- * @brief Prototype for special log facility logging functions
- */
+    /*日志等级对照结构体*/
+    struct LogLevelInfo {
+        log_level_t level;
+        std::string level_str;
+        int syslog_level;
+    };
 
-typedef int (lf_function_t) (log_header_t headers, void *priv,
-                             log_levels_t level,
-                             struct display_buffer *buffer, char *compstr,
-                             char *message);
+private:
+    /*初始化日志等级对照字典*/
+    const std::map<log_level_t, std::pair<std::string, int>> log_level_info_dict = {
+            {L_INFO,         {"LOG_INFO",        LOG_INFO}},
+            {L_WARN,         {"LOG_WARN",        LOG_WARNING}},
+            {L_ERROR,        {"LOG_ERROR",       LOG_ERR}},
+            {L_BACKTRACE,    {"LOG_BACKTRACE",   LOG_ERR}},
+            {D_ERROR,        {"DEBUG_ERROR",     LOG_ERR}},
+            {D_WARN,         {"DEBUG_WARN",      LOG_WARNING}},
+            {D_BACKTRACE,    {"DEBUG_BACKTRACE", LOG_ERR}},
+            {D_INFO,         {"DEBUG_INFO",      LOG_INFO}},
+            {EXIT_ERROR,     {"EXIT_ERROR",      LOG_ALERT}},
+            {EXIT_EXCEPTION, {"EXIT_EXCEPTION",  LOG_ALERT}},
+    };
 
-/*
- * Log components used throughout the code.
- */
-typedef enum log_components {
-	COMPONENT_ALL = 0,	/* Used for changing logging for all
-				 * components */
-	COMPONENT_LOG,		/* Keep this first, some code depends on it
-				 * being the first component */
-	COMPONENT_MEM_ALLOC,
-	COMPONENT_MEMLEAKS,
-	COMPONENT_FSAL,
-	COMPONENT_NFSPROTO,
-	COMPONENT_NFS_V4,
-	COMPONENT_EXPORT,
-	COMPONENT_FILEHANDLE,
-	COMPONENT_DISPATCH,
-	COMPONENT_MDCACHE,
-	COMPONENT_MDCACHE_LRU,
-	COMPONENT_HASHTABLE,
-	COMPONENT_HASHTABLE_CACHE,
-	COMPONENT_DUPREQ,
-	COMPONENT_INIT,
-	COMPONENT_MAIN,
-	COMPONENT_IDMAPPER,
-	COMPONENT_NFS_READDIR,
-	COMPONENT_NFS_V4_LOCK,
-	COMPONENT_CONFIG,
-	COMPONENT_CLIENTID,
-	COMPONENT_SESSIONS,
-	COMPONENT_PNFS,
-	COMPONENT_RW_LOCK,
-	COMPONENT_NLM,
-	COMPONENT_RPC,
-	COMPONENT_TIRPC,
-	COMPONENT_NFS_CB,
-	COMPONENT_THREAD,
-	COMPONENT_NFS_V4_ACL,
-	COMPONENT_STATE,
-	COMPONENT_9P,
-	COMPONENT_9P_DISPATCH,
-	COMPONENT_FSAL_UP,
-	COMPONENT_DBUS,
-	COMPONENT_NFS_MSK,
-	COMPONENT_COUNT
-} log_components_t;
+    /*不同模块的日志属性*/
+    std::map<std::string, LoggerAttr> module_attr;
 
-/* previously at log_macros.h */
-typedef void (*cleanup_function) (void);
-struct cleanup_list_element {
-	struct cleanup_list_element *next;
-	cleanup_function clean;
+    /*默认日志属性，新建日志默认使用该属性*/
+    static LoggerAttr default_attr;
+
+    /*退出函数指针*/
+    static void (*exit_func)(int);
+
+    /*退出函数退出码*/
+    static int exit_code;
+private:
+    /*默认构造函数*/
+    Logger();
+public:
+    /*设置主机名*/
+    std::string hostname = "localhost";
+
+    /*设置程序名*/
+    std::string program_name = "Unknown";
+
+public:
+    /*初始化全局日志类*/
+    static void init(const std::string &program_name, const std::string &hostname);
+
+    /*判断日志级别*/
+    static log_level_t decode_log_level(const std::string &log_level_str);
+
+    /*对默认日志属性的设置*/
+    static int set_default_attr_from(const std::string &module_name, std::string *error_info);
+
+    /*设置退出函数,和退出状态码*/
+    static void set_exit_func(int e_code, void (*exit_f)(int));
+
+    /*得到单例模式*/
+    static Logger& get_instance();
+
+public:
+
+    /*使用默认日志属性初始化一个模块日志*/
+    void init_module(const std::string &module_name);
+
+    /*设置指定模块的日志属性*/
+    int copy_module_attr_from(const std::string &target_module_name,
+                              const std::string &src_module_name, std::string *error_info);
+
+    /*判断模块日志设置存不存在*/
+    bool judge_module_attr_exist(const std::string& module_name);
+
+    /*设置所有模块日志等级日志文件路径*/
+    int set_log_output(const std::string &log_path, std::string *error_info);
+
+    /*设置指定模块日志等级日志文件路径*/
+    int set_module_log_output(const std::string &module_name, const std::string &log_path,
+                              std::string *error_info);
+
+    /*设置所有模块多个日志等级日志文件路径*/
+    int set_log_output(const std::vector<log_level_t> &log_level_list,
+                       const std::string &log_path, std::string *error_info);
+
+    /*设置多个日志等级日志文件路径*/
+    int set_module_log_output(const std::string &module_name,
+                              const std::vector<log_level_t> &log_level_list,
+                              const std::string &log_path, std::string *error_info);
+
+    /*设置指定日志等级日志文件路径*/
+    int set_log_output(const log_level_t log_level, const std::string &log_path,
+                       std::string *error_info);
+
+    /*设置指定日志等级日志文件路径*/
+    int set_module_log_output(const log_level_t log_level, const std::string &log_path,
+                              std::string *error_info);
+
+    /*设置所有模块的日志等级，高于该等级的才可以输出*/
+    void set_log_level(const log_level_t log_level);
+
+    /*设置指定模块日志等级，高于该等级的才可以输出*/
+    void set_module_log_level(const std::string &module_name, const log_level_t log_level);
+
+    /*设置所有模块日志格式*/
+    int set_formatter(const std::string format_str, std::string *error_info);
+
+    /*设置指定模块日志格式*/
+    int set_module_formatter(const std::string &module_name, const std::string format_str, std::string *error_info);
+
+    /*打印输出日志*/
+    void log(const std::string &module_name, const log_level_t log_level,
+             const std::string &format, ...);
 };
 
-/* Allocates buffer containing debug info to be printed.
- * Returned buffer needs to be freed. Returns number of
- * characters in size if size != NULL.
- */
-char *get_debug_info(int *size);
+/*全局唯一日志实例*/
+extern Logger &logger;
 
-/* Function prototypes */
-
-void SetNamePgm(const char *nom);
-void SetNameHost(const char *nom);
-void SetNameFunction(const char *nom);	/* thread safe */
-void SetClientIP(char *ip_str);
-
-void init_logging(const char *log_path, const int debug_level);
-
-int ReturnLevelAscii(const char *LevelInAscii);
-char *ReturnLevelInt(int level);
-
-/* previously at log_macros.h */
-void RegisterCleanup(struct cleanup_list_element *clean);
-void Cleanup(void);
-void Fatal(void);
-
-/* This function is primarily for setting log level from config, it will
- * not override log level set from environment.
- */
-void SetComponentLogLevel(log_components_t component, int level_to_set);
-
-void display_log_component_level(log_components_t component, const char *file,
-				int line, const char *function,
-				log_levels_t level, const char *format,
-				va_list arguments);
-
-void DisplayLogComponentLevel(log_components_t component, const char *file,
-			int line, const char *function, log_levels_t level,
-			const char *format, ...)
-	__attribute__ ((format(printf, 6, 7)));
-			      /* 6=format 7=params */
-
-void LogMallocFailure(const char *file, int line, const char *function,
-		      const char *allocator);
-
-void gsh_backtrace(void);
-
-typedef enum log_type {
-	SYSLOG = 0,
-	FILELOG,
-	STDERRLOG,
-	STDOUTLOG,
-	TESTLOG
-} log_type_t;
-
-void release_log_facility(const char *name);
-int enable_log_facility(const char *name);
-int disable_log_facility(const char *name);
-int set_log_destination(const char *name, char *dest);
-int set_log_level(const char *name, log_levels_t max_level);
-void set_const_log_str(void);
-
-struct log_component_info {
-	const char *comp_name;	/* component name */
-	const char *comp_str;	/* shorter, more useful name */
-};
-
-extern log_levels_t *component_log_level;
-extern log_levels_t original_log_level;
-extern log_levels_t default_log_level;
-
-extern struct log_component_info LogComponents[COMPONENT_COUNT];
-
-#define LogAlways(component, format, args...) \
-	DisplayLogComponentLevel(component, __FILE__, \
-				 __LINE__, \
-				 __func__, \
-				 NIV_NULL, format, ## args)
-
-#define LogTest(format, args...) \
-	DisplayLogComponentLevel(COMPONENT_ALL, __FILE__, \
-				 __LINE__,  __func__, \
-				 NIV_NULL, format, ## args)
-
-#define LogFatal(component, format, args...) \
-	DisplayLogComponentLevel(component, __FILE__, \
-				 __LINE__, \
-				 __func__, \
-				 NIV_FATAL, format, ## args)
-
-#define LogMajor(component, format, args...) \
-	do { \
-		if (likely(component_log_level[component] \
-		    >= NIV_MAJ)) \
-			DisplayLogComponentLevel(component,  __FILE__, \
-						 __LINE__, \
-						  __func__, \
-						 NIV_MAJ, format, ## args); \
-	} while (0)
-
-#define LogCrit(component, format, args...) \
-	do { \
-		if (likely(component_log_level[component] \
-		    >= NIV_CRIT)) \
-			DisplayLogComponentLevel(component,  __FILE__, \
-						 __LINE__, \
-						  __func__, \
-						 NIV_CRIT, format, ## args); \
-	} while (0)
-
-#define LogWarn(component, format, args...) \
-	do { \
-		if (likely(component_log_level[component] \
-		    >= NIV_WARN)) \
-			DisplayLogComponentLevel(component,  __FILE__, \
-						 __LINE__, \
-						  __func__, \
-						 NIV_WARN, format, ## args); \
-	} while (0)
-
-#define LogWarnOnce(component, format, args...) \
-	do { \
-		static bool warned; \
-		if (unlikely(!warned) && likely(component_log_level[component] \
-		    >= NIV_WARN)) { \
-			warned = true; \
-			DisplayLogComponentLevel(component,  __FILE__, \
-						 __LINE__, \
-						  __func__, \
-						 NIV_WARN, format, ## args); \
-		} \
-	} while (0)
-
-#define LogEvent(component, format, args...) \
-	do { \
-		if (likely(component_log_level[component] \
-		    >= NIV_EVENT)) \
-			DisplayLogComponentLevel(component,  __FILE__,\
-						 __LINE__, \
-						  __func__, \
-						 NIV_EVENT, format, ## args); \
-	} while (0)
-
-#define LogInfo(component, format, args...) \
-	do { \
-		if (unlikely(component_log_level[component] \
-		    >= NIV_INFO)) \
-			DisplayLogComponentLevel(component,  __FILE__,\
-						 __LINE__, \
-						  __func__, \
-						 NIV_INFO, format, ## args); \
-	} while (0)
-
-#define LogDebug(component, format, args...) \
-	do { \
-		if (unlikely(component_log_level[component] \
-		    >= NIV_DEBUG)) \
-			DisplayLogComponentLevel(component,  __FILE__,\
-						 __LINE__, \
-						  __func__, \
-						 NIV_DEBUG, format, ## args); \
-	} while (0)
-
-#define LogMidDebug(component, format, args...) \
-	do { \
-		if (unlikely(component_log_level[component] \
-		    >= NIV_MID_DEBUG)) \
-			DisplayLogComponentLevel(component,  __FILE__,\
-						 __LINE__, \
-						  __func__, \
-						 NIV_MID_DEBUG, \
-						 format, ## args); \
-	} while (0)
-
-#define LogFullDebug(component, format, args...) \
-	do { \
-		if (unlikely(component_log_level[component] \
-		    >= NIV_FULL_DEBUG)) \
-			DisplayLogComponentLevel(component,  __FILE__,\
-						 __LINE__, \
-						  __func__, \
-						 NIV_FULL_DEBUG, \
-						 format, ## args); \
-	} while (0)
-
-#define \
-LogFullDebugOpaque(component, format, buf_size, value, length, args...) \
-	do { \
-		if (unlikely(component_log_level[component] \
-		    >= NIV_FULL_DEBUG)) { \
-			char buf[buf_size]; \
-			struct display_buffer dspbuf = {buf_size, buf, buf}; \
-			\
-			(void) display_opaque_value(&dspbuf, value, length); \
-			\
-			DisplayLogComponentLevel(component,  __FILE__,\
-						 __LINE__, \
-						  __func__, \
-						 NIV_FULL_DEBUG, \
-						 format, buf, ## args); \
-		} \
-	} while (0)
-
-#define LogFullDebugBytes(component, format, buf_size, value, length, args...) \
-	do { \
-		if (unlikely(component_log_level[component] \
-		    >= NIV_FULL_DEBUG)) { \
-			char buf[buf_size]; \
-			struct display_buffer dspbuf = {buf_size, buf, buf}; \
-			\
-			(void) display_opaque_bytes(&dspbuf, value, length); \
-			\
-			DisplayLogComponentLevel(component,  __FILE__, \
-						 __LINE__, \
-						  __func__, \
-						 NIV_FULL_DEBUG, \
-						 format, buf, ## args); \
-		} \
-	} while (0)
-
-#define LogAtLevel(component, level, format, args...) \
-	do { \
-		if (unlikely(component_log_level[component] >= (level))) \
-			DisplayLogComponentLevel(component,  __FILE__,\
-						 __LINE__, \
-						  __func__, \
-						 level, format, ## args); \
-	} while (0)
-
-#define isLevel(component, level) \
-	(unlikely(component_log_level[component] >= level))
-
-#define isInfo(component) \
-	(unlikely(component_log_level[component] >= NIV_INFO))
-
-#define isDebug(component) \
-	(unlikely(component_log_level[component] >= NIV_DEBUG))
-
-#define isMidDebug(component) \
-	(unlikely(component_log_level[component] >= NIV_MID_DEBUG))
-
-#define isFullDebug(component) \
-	(unlikely(component_log_level[component] >= NIV_FULL_DEBUG))
-
-/* Use either the first component, or if it is not at least at level,
- * use the second component.
- */
-#define LogEventAlt(comp1, comp2, format, args...) \
-	do { \
-		if (unlikely(component_log_level[comp1] \
-		    >= NIV_EVENT) || \
-		    unlikely(component_log_level[comp2] \
-		    >= NIV_EVENT)) { \
-			log_components_t component = \
-			    component_log_level[comp1] \
-				>= NIV_EVENT ? comp1 : comp2; \
-			\
-			DisplayLogComponentLevel(component,  __FILE__, \
-						 __LINE__, \
-						 __func__, \
-						 NIV_EVENT, \
-						 format, ## args); \
-		} \
-	} while (0)
-
-#define LogInfoAlt(comp1, comp2, format, args...) \
-	do { \
-		if (unlikely(component_log_level[comp1] \
-		    >= NIV_INFO) || \
-		    unlikely(component_log_level[comp2] \
-		    >= NIV_INFO)) { \
-			log_components_t component = \
-			    component_log_level[comp1] \
-				>= NIV_INFO ? comp1 : comp2; \
-			\
-			DisplayLogComponentLevel(component,  __FILE__, \
-						 __LINE__, \
-						 __func__, \
-						 NIV_INFO, \
-						 format, ## args); \
-		} \
-	} while (0)
-
-#define LogDebugAlt(comp1, comp2, format, args...) \
-	do { \
-		if (unlikely(component_log_level[comp1] \
-		    >= NIV_DEBUG) || \
-		    unlikely(component_log_level[comp2] \
-		    >= NIV_DEBUG)) { \
-			log_components_t component = \
-			    component_log_level[comp1] \
-				>= NIV_DEBUG ? comp1 : comp2; \
-			\
-			DisplayLogComponentLevel(component,  __FILE__, \
-						 __LINE__, \
-						 __func__, \
-						 NIV_DEBUG, \
-						 format, ## args); \
-		} \
-	} while (0)
-
-#define LogMidDebugAlt(comp1, comp2, format, args...) \
-	do { \
-		if (unlikely(component_log_level[comp1] \
-		    >= NIV_MID_DEBUG) || \
-		    unlikely(component_log_level[comp2] \
-		    >= NIV_MID_DEBUG)) { \
-			log_components_t component = \
-			    component_log_level[comp1] \
-				>= NIV_MID_DEBUG ? comp1 : comp2; \
-			\
-			DisplayLogComponentLevel(component,  __FILE__, \
-						 __LINE__, \
-						 __func__, \
-						 NIV_MID_DEBUG, \
-						 format, ## args); \
-		} \
-	} while (0)
-
-#define LogFullDebugAlt(comp1, comp2, format, args...) \
-	do { \
-		if (unlikely(component_log_level[comp1] \
-		    >= NIV_FULL_DEBUG) || \
-		    unlikely(component_log_level[comp2] \
-		    >= NIV_FULL_DEBUG)) { \
-			log_components_t component = \
-			    component_log_level[comp1] \
-				>= NIV_FULL_DEBUG ? comp1 : comp2; \
-			\
-			DisplayLogComponentLevel(component,  __FILE__, \
-						 __LINE__, \
-						 __func__, \
-						 NIV_FULL_DEBUG, \
-						 format, ## args); \
-		} \
-	} while (0)
-
-/*
- *  Re-export component logging to TI-RPC internal logging
- */
-void rpc_warnx(/* const */ char *fmt, ...);
-
-#ifdef USE_DBUS
-extern struct gsh_dbus_interface log_interface;
-#endif
-
-/* Rate limited logging */
-struct ratelimit_state {
-	pthread_mutex_t mutex;
-	int interval;
-	int burst;
-	int printed;
-	int missed;
-	time_t begin;
-};
-bool _ratelimit(struct ratelimit_state *rs, int *missed);
-
-#define RATELIMIT_STATE_INIT(interval_init, burst_init) {         \
-		.mutex          = PTHREAD_MUTEX_INITIALIZER,      \
-		.interval       = interval_init,                  \
-		.burst          = burst_init,                     \
-	}
-
-#define DEFINE_RATELIMIT_STATE(name, interval_init, burst_init)   \
-	struct ratelimit_state name =                             \
-		RATELIMIT_STATE_INIT(interval_init, burst_init)   \
-
-#define DEFAULT_RATELIMIT_INTERVAL    30 /* 30 seconds */
-#define DEFAULT_RATELIMIT_BURST       2
-
-#define LogEventLimited(comp, fmt, args...) ({                             \
-	int missed;                                                        \
-									   \
-	static DEFINE_RATELIMIT_STATE(_rs,                                 \
-			DEFAULT_RATELIMIT_INTERVAL,                        \
-			DEFAULT_RATELIMIT_BURST);                          \
-	if (_ratelimit(&(_rs), &missed)) {                                    \
-		if (missed)                                                \
-			LogEvent(comp, "message missed %d times", missed); \
-		LogEvent(comp, fmt, ## args);                              \
-	}                                                                  \
-})
-
-#define LogWarnLimited(comp, fmt, args...) ({                             \
-	int missed;                                                       \
-									  \
-	static DEFINE_RATELIMIT_STATE(_rs,				  \
-		DEFAULT_RATELIMIT_INTERVAL,				  \
-		DEFAULT_RATELIMIT_BURST);				  \
-	if (_ratelimit(&(_rs), &missed)) {				  \
-		if (missed)						  \
-			LogWarn(comp, "message missed %d times", missed); \
-		LogWarn(comp, fmt, ## args);                              \
-	}								  \
-})
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
+#endif //UTILS_LOG_H

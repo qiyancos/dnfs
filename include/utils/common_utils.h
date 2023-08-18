@@ -74,4 +74,19 @@ const std::string format(const std::priority_queue<T1, T2, T3> &out_data);
 template<typename T1, typename T2>
 const std::string format(const std::pair<T1, T2> &out_data);
 
+/*切割字符串*/
+void split_str(const std::string &str, const std::string &split, std::vector<std::string> &result);
+
+/*判断字符串是不是纯数字*/
+bool judge_number(const std::string &judge_str);
+
+/*给非空指针设置信息*/
+void set_ptr_info(std::string *error_info, const std::string &error_content);
+
+/*转为小写*/
+void to_lower(std::string &str);
+
+/*转为大写*/
+void to_upper(std::string &str);
+
 #endif //UTILS_COMMON_UTILS_H
