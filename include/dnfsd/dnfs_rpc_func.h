@@ -16,6 +16,7 @@
 #ifndef DNFSD_DNFS_RPC_FUNC_H
 #define DNFSD_DNFS_RPC_FUNC_H
 
-struct svc_req *alloc_nfs_request(SVCXPRT *xprt, XDR *xdrs);
+/* 为一个新的dnfs请求申请空间并进行相关的初始化操作 */
+struct svc_req *alloc_dnfs_request(SVCXPRT *xprt, XDR *xdrs);
 
 #endif //DNFSD_DNFS_RPC_FUNC_H

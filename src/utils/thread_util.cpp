@@ -15,7 +15,7 @@
 
 #include <sstream>
 
-#include "utils/log_utils.h"
+#include "log/log.h"
 #include "utils/thread_utils.h"
 
 using namespace std;
@@ -27,16 +27,16 @@ void ThreadPool::set_thread_name(const string &name) {
     const thread::id tid = this_thread::get_id();
     if (thread_name_id_map.find(name) != thread_name_id_map.end()) {
         // 如果发现线程名称出现重复，则会直接触发异常
-        logger.log(MODULE_NAME, EXIT_ERROR,
+        LOG(MODULE_NAME, EXIT_ERROR,
                    "Thread named \"%s\" already exists", name.c_str());
     }
     thread_name_id_map[name] = tid;
     if (thread_id_name_map.find(tid) != thread_id_name_map.end()) {
-        logger.log(MODULE_NAME,D_INFO,
+        LOG(MODULE_NAME,D_INFO,
                    "Reset thread name from \"%s\" to \"%s\" for thread-%d",
                     thread_id_name_map[tid].c_str(), name.c_str(), tid)
     } else {
-        logger.log(MODULE_NAME,D_INFO,
+        LOG(MODULE_NAME,D_INFO,
                    "Set thread %d name as \"%s\"", tid, name.c_str());
     }
     thread_id_name_map[tid] = name;

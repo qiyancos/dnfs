@@ -15,7 +15,7 @@
 
 #include <exception>
 
-#include "utils/log_utils.h"
+#include "log/log.h"
 #include "utils/rpc_mem_utils.h"
 
 #define MODULE_NAME "rpc_mem"
@@ -25,7 +25,7 @@ using namespace std;
 // 用于ntirpc的警告信息输出和处理
 void rpc_warnx(const char* format, ...) {
     va_list args;
-    logger.log(MODULE_NAME, L_WARN, format, args);
+    LOG(MODULE_NAME, L_WARN, format, args);
 }
 
 // 该函数船体给tirpc，释放内存空间使用的函数
@@ -33,7 +33,7 @@ void rpc_free(void *p, size_t n __attribute__ ((unused))) {
     try {
         free(p);
     } catch (...) {
-        logger.log(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, L_ERROR,
                    "Failed to free rpc memeory");
     }
 }
@@ -43,7 +43,7 @@ void* rpc_malloc(size_t n, const char *file, int line, const char *function)
 {
     void *p = malloc(n);
     if (p == NULL) {
-        logger.log(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, L_ERROR,
                    "Error occurred in %s in file %s:%d from %s",
                    function, file, line, "gsh_malloc");
         abort();
@@ -59,7 +59,7 @@ void* rpc_malloc_aligned(size_t a, size_t n,
     if (posix_memalign(&p, a, n) != 0)
         p = NULL;
     if (p == NULL) {
-        logger.log(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, L_ERROR,
                    "Error occurred in %s in file %s:%d from %s",
                    function, file, line, "gsh_malloc_aligned");
         abort();
@@ -72,7 +72,7 @@ void* rpc_calloc(size_t n, size_t s, const char *file, int line, const char *fun
 {
     void *p = calloc(n, s);
     if (p == NULL) {
-        logger.log(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, L_ERROR,
                    "Error occurred in %s in file %s:%d from %s",
                    function, file, line, "gsh_calloc");
         abort();
@@ -85,7 +85,7 @@ void* rpc_realloc(void *p, size_t n, const char *file, int line, const char *fun
 {
     void *p2 = realloc(p, n);
     if (n != 0 && p2 == NULL) {
-        logger.log(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, L_ERROR,
                    "Error occurred in %s in file %s:%d from %s",
                    function, file, line, "gsh_realloc");
         abort();

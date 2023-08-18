@@ -1,8 +1,21 @@
-//
-// Created by jiaoyue on 2023/8/17.
-//
-#ifndef LOG_USE_LOG_FILE_H
-#define LOG_USE_LOG_FILE_H
+/*
+ *
+ * Copyright Reserved By All Project Contributors
+ * Contributor: Jiao Yue 3059497228@qq.com
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the MIT License; This program is
+ * distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the MIT lisence for
+ * more details. You should have received a copy of the MIT License
+ * along with this project.
+ *
+ */
+
+#ifndef LOG_LOG_FILE_H
+#define LOG_LOG_FILE_H
+
 #include <iostream>
 
 class LogFile {
@@ -51,6 +64,4 @@ public:
     int generate_data(const std::string &config_str,std::string *error_info);
 };
 
-
-
-#endif //LOG_USE_LOG_FILE_H
+#endif //LOG_LOG_FILE_H

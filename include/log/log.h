@@ -14,8 +14,8 @@
  *
  */
 
-#ifndef UTILS_LOG_H
-#define UTILS_LOG_H
+#ifndef LOG_LOG_H
+#define LOG_LOG_H
 
 #include <map>
 #include <string>
@@ -23,9 +23,12 @@
 #include <syslog.h>
 #include <atomic>
 #include <queue>
+
 #include "log_file.h"
+
 /*日志等级*/
 typedef enum LogLevel {
+    NOLOG,
     EXIT_EXCEPTION,
     EXIT_ERROR,
     L_ERROR,
@@ -41,7 +44,7 @@ typedef enum LogLevel {
 } log_level_t;
 
 /*不输出任何日志*/
-#define LNOLOG
+#define LNOLOG NOLOG
 /*只输出导致退出的日志*/
 #define LEXIT EXIT_ERROR
 /*输出普通日志以及退出日志*/
@@ -50,6 +53,26 @@ typedef enum LogLevel {
 #define LDEBUG D_INFO
 /*输出所有日志*/
 #define LALL LEVEL_COUNT
+
+#define LOG(module_name, log_level, format, args...) \
+    LOG(module_name,\
+            log_level,\
+            __FILE__,\
+            __LINE__, \
+            __func__,\
+            format,\
+            ## args)
+
+#define LOG_IF(log_flag, module_name, log_level, format, args...) \
+    if(log_flag) { \
+        LOG(module_name,\
+            log_level,\
+            __FILE__,\
+            __LINE__, \
+            __func__,\
+            format,\
+            ## args) \
+    }
 
 /*日志类*/
 class Logger {
@@ -194,14 +217,16 @@ public:
     int set_formatter(const std::string format_str, std::string *error_info);
 
     /*设置指定模块日志格式*/
-    int set_module_formatter(const std::string &module_name, const std::string format_str, std::string *error_info);
+    int set_module_formatter(const std::string &module_name, const std::string format_str,
+                             std::string *error_info);
 
     /*打印输出日志*/
-    void log(const std::string &module_name, const log_level_t log_level,
-             const std::string &format, ...);
+    void log(const std::string &module_name, log_level_t log_level,
+             const std::string &file, const int &line,
+             const std::string &func, const std::string &format, ...);
 };
 
 /*全局唯一日志实例*/
 extern Logger &logger;
 
-#endif //UTILS_LOG_H
+#endif //LOG_LOG_H

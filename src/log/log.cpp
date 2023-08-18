@@ -1,6 +1,17 @@
-//
-// Created by jiaoyue on 2023/8/15.
-//
+/*
+ *
+ * Copyright Reserved By All Project Contributors
+ * Contributor: Jiao Yue 3059497228@qq.com
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the MIT License; This program is
+ * distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the MIT lisence for
+ * more details. You should have received a copy of the MIT License
+ * along with this project.
+ *
+ */
 
 #include <utility>
 #include <iostream>
@@ -8,8 +19,9 @@
 #include <cstdint>
 #include <algorithm>
 #include <cmath>
+
 #include "log/log.h"
-#include "until/untils.h"
+#include "utils/common_utils.h"
 
 /*建立日志实例*/
 Logger &logger = Logger::get_instance();

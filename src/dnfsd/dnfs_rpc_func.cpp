@@ -14,18 +14,12 @@
  */
 
 #include "rpc/svc.h"
+#include "log/log.h"
 #include "dnfsd/dnfs_meta_data.h"
 #include "dnfsd/dnfs_rpc_func.h"
 
-/**
- * @brief Allocate a new request
- *
- * @param[in] xprt Transport to use
- * @param[in] xdrs XDR to use
- *
- * @return New svc request
- */
-struct svc_req *alloc_nfs_request(SVCXPRT *xprt, XDR *xdrs)
+/* 为一个新的dnfs请求申请空间并进行相关的初始化操作 */
+struct svc_req *alloc_dnfs_request(SVCXPRT *xprt, XDR *xdrs)
 {
     nfs_request_t *reqdata = reinterpret_cast<nfs_request_t *>(
             calloc(1, sizeof(nfs_request_t)));

@@ -26,7 +26,7 @@
 #include <experimental/filesystem>
 
 #include "rpc/svc.h"
-#include "utils/log_utils.h"
+#include "log/log.h"
 #include "dnfsd/dnfs_init.h"
 #include "dnfsd/dnfs_rpc_func.h"
 #include "utils/common_utils.h"
@@ -45,18 +45,18 @@ static void init_default_config(const string& config_file_path) {
     string config_dir = config_file_path.substr(
             config_file_path.find_last_of('/'));
     if (! experimental::filesystem::create_directories(config_dir)) {
-        logger.log(MODULE_NAME, EXIT_ERROR,
+        LOG(MODULE_NAME, EXIT_ERROR,
                    "Failed to create directory \"%s\" for config file.",
                    config_dir.c_str());
     }
     int config_fd = open(config_file_path.c_str(), O_WRONLY);
     if (config_fd == -1) {
-        logger.log(MODULE_NAME, EXIT_ERROR,
+        LOG(MODULE_NAME, EXIT_ERROR,
                    "Failed to create default config file \"%s\"",
                    config_file_path.c_str());
     }
     if (write(config_fd, default_config, strlen(default_config)) == -1) {
-        logger.log(MODULE_NAME, EXIT_ERROR,
+        LOG(MODULE_NAME, EXIT_ERROR,
                    "Failed to write default config to config file \"%s\"",
                    config_file_path.c_str());
     }
@@ -92,7 +92,7 @@ int config_get(T& out, const YAML::Node& config,
                             is_same<T, map<string, long long>>::value or
                             is_same<T, map<string, float>>::value or
                             is_same<T, map<string, long double>>::value)) {
-                        logger.log(MODULE_NAME, L_WARN,
+                        LOG(MODULE_NAME, L_WARN,
                                    "Config file node for %s cannot be"
                                    " interpreted as normal map class",
                                    format(key_list).c_str());
@@ -111,7 +111,7 @@ int config_get(T& out, const YAML::Node& config,
                             is_same<T, vector<long long>>::value or
                             is_same<T, vector<float>>::value or
                             is_same<T, vector<long double>>::value)) {
-                        logger.log(MODULE_NAME, L_WARN,
+                        LOG(MODULE_NAME, L_WARN,
                                    "Config file node for %s cannot be"
                                    " interpreted as normal vector class",
                                    format(key_list).c_str());
@@ -121,7 +121,7 @@ int config_get(T& out, const YAML::Node& config,
                         return 0;
                     }
                 } else {
-                    logger.log(MODULE_NAME, L_WARN,
+                    LOG(MODULE_NAME, L_WARN,
                                "List type config node can not be "
                                "indexed by \"%s(%d)\" in %s)",
                                key.c_str(), i, format(key_list).c_str());
@@ -135,7 +135,7 @@ int config_get(T& out, const YAML::Node& config,
                           is_same<T, long long>::value or
                           is_same<T, float>::value or
                           is_same<T, long double>::value)) {
-                        logger.log(MODULE_NAME, L_WARN,
+                        LOG(MODULE_NAME, L_WARN,
                                    "Config file node for %s cannot be"
                                    " interpreted as normal value type",
                                    format(key_list).c_str());
@@ -145,19 +145,19 @@ int config_get(T& out, const YAML::Node& config,
                         return 0;
                     }
                 } else {
-                    logger.log(MODULE_NAME, L_WARN,
+                    LOG(MODULE_NAME, L_WARN,
                                "Value type config node can not be "
                                "indexed by \"%s(%d)\" in %s)",
                                key.c_str(), i, format(key_list).c_str());
                     return 1;
                 }
             case YAML::NodeType::Null:
-                logger.log(MODULE_NAME, L_WARN,
+                LOG(MODULE_NAME, L_WARN,
                            "Unknown config node %s(%d) in %s",
                            key.c_str(), i, format(key_list).c_str());
                 return 1;
             default:
-                logger.log(MODULE_NAME, L_WARN,
+                LOG(MODULE_NAME, L_WARN,
                            "Unknown config node type %d @%s(%d) in %s",
                            type, key.c_str(), i, format(key_list).c_str());
                 return 1;
@@ -204,7 +204,7 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
     if (!detach_flag) {
         /* 只检查log_path部分的合法性 */
         if (logger.set_log_output(L_INFO, log_path + ":stdout:syslog", &temp)) {
-            logger.log(MODULE_NAME, EXIT_ERROR, temp);
+            LOG(MODULE_NAME, EXIT_ERROR, temp);
         }
         logger.set_log_output({EXIT_EXCEPTION, EXIT_ERROR, L_ERROR, L_WARN},
                               log_path + ":stderr:syslog", nullptr);
@@ -213,7 +213,7 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
     } else {
         /* 只检查log_path部分的合法性 */
         if (logger.set_log_output(log_path, &temp)) {
-            logger.log(MODULE_NAME, EXIT_ERROR, temp);
+            LOG(MODULE_NAME, EXIT_ERROR, temp);
         }
         logger.set_log_output(L_INFO, log_path + ":syslog", nullptr);
         logger.set_log_output({EXIT_EXCEPTION, EXIT_ERROR, L_ERROR, L_WARN},
@@ -222,7 +222,7 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
     if (config_get(temp, dnfs_config, {"log", "formatter"})) {
         string error_info;
         if (logger.set_formatter(temp, &error_info)) {
-            logger.log(MODULE_NAME, EXIT_ERROR, error_info);
+            LOG(MODULE_NAME, EXIT_ERROR, error_info);
         }
     }
     Logger::set_default_attr_from(MODULE_NAME, nullptr);
@@ -231,7 +231,7 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
 /* 崩溃信号默认处理函数 */
 static void crash_handler(int signo, [[maybe_unused]] siginfo_t *info,
                           [[maybe_unused]] void *ctx) {
-    logger.log("Crash Handler", L_BACKTRACE, "");
+    LOG("Crash Handler", L_BACKTRACE, "");
     /* re-raise the signal for the default signal handler to dump core */
     raise(signo);
 }
@@ -257,7 +257,7 @@ static void install_sighandler(int signo, void (*handler)(int, siginfo_t *, void
      * 第三个参数oldact指向的对象用来保存原来对相应信号的处理，可指定oldact为NULL。*/
     ret = sigaction(signo, &sa, NULL);
     if (ret) {
-        logger.log(MODULE_NAME, L_WARN,
+        LOG(MODULE_NAME, L_WARN,
                 "Install handler for signal (%s) failed",
                 strsignal(signo));
     }
@@ -284,7 +284,7 @@ void init_check_malloc() {
 
     p = malloc(0);
     if (p == NULL) {
-        logger.log(MODULE_NAME, EXIT_ERROR,
+        LOG(MODULE_NAME, EXIT_ERROR,
                  "DNFS's assumption that malloc(0) returns a non-NULL pointer"
                  " is not true, Ganesha can not work with the memory allocator in use. Aborting.");
     }
@@ -292,7 +292,7 @@ void init_check_malloc() {
 
     p = calloc(0, 0);
     if (p == NULL) {
-        logger.log(MODULE_NAME, EXIT_ERROR,
+        LOG(MODULE_NAME, EXIT_ERROR,
                  "Ganesha's assumption that calloc(0, 0) returns a non-NULL pointer"
                  " is not true, Ganesha can not work with the memory allocator in use. Aborting.");
     }
@@ -313,7 +313,7 @@ int init_thread_signal_mask() {
     /* SIGPIPE 终止进程 向一个没有读进程的管道写数据 */
     sigaddset(&signals_to_block, SIGPIPE);
     if (pthread_sigmask(SIG_BLOCK, &signals_to_block, NULL) != 0) {
-        logger.log(MODULE_NAME, EXIT_ERROR,
+        LOG(MODULE_NAME, EXIT_ERROR,
                  "Could not start nfs daemon, pthread_sigmask failed");
         return -1;
     }
@@ -332,7 +332,7 @@ static void dnfs_init_svc(void)
     int ix;
     int code;
 
-    logger.log(MODULE_NAME, L_INFO, "DNFS INIT: using TIRPC");
+    LOG(MODULE_NAME, L_INFO, "DNFS INIT: using TIRPC");
 
     memset(&svc_params, 0, sizeof(svc_params));
 

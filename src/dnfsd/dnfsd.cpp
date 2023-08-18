@@ -22,7 +22,7 @@
 #include "rpc/rpc.h"
 #include "utils/thread_utils.h"
 #include "utils/rpc_mem_utils.h"
-#include "utils/log_utils.h"
+#include "log/log.h"
 #include "dnfsd/dnfsd.h"
 #include "dnfsd/dnfs_init.h"
 
@@ -235,7 +235,7 @@ int main(int argc, char ** argv)
 
     // 注册tirpc的处理操作参数
     if (!tirpc_control(TIRPC_PUT_PARAMETERS, &ntirpc_pp)) {
-        logger.log(MODULE_NAME, EXIT_ERROR,
+        LOG(MODULE_NAME, EXIT_ERROR,
                    "Setting nTI-RPC parameters failed");
     }
 
@@ -248,7 +248,7 @@ int main(int argc, char ** argv)
          * 当nochdir为零时，将当前目录变为根目录，否则不变，当noclose为零时，标准输入、
          * 标准输出和错误输出重导向为/dev/null不输出任何信息，否则照样输出。 */
         if (daemon(0, 0)) {
-            logger.log(MODULE_NAME, L_ERROR,
+            LOG(MODULE_NAME, L_ERROR,
                      "Error detaching process from parent: %s",
                      strerror(errno));
         }
