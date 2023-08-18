@@ -54,7 +54,7 @@ typedef enum LogLevel {
 #define LALL LEVEL_COUNT
 
 #define LOG(module_name, log_level, format, args...) \
-    LOG(module_name,\
+    logger.log(module_name,\
             log_level,\
             __FILE__,\
             __LINE__, \
@@ -64,13 +64,13 @@ typedef enum LogLevel {
 
 #define LOG_IF(log_flag, module_name, log_level, format, args...) \
     if(log_flag) { \
-        LOG(module_name,\
+        logger.log(module_name,\
             log_level,\
             __FILE__,\
             __LINE__, \
             __func__,\
             format,\
-            ## args) \
+            ## args); \
     }
 
 /*日志类*/

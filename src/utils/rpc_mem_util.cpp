@@ -18,7 +18,7 @@
 #include "log/log.h"
 #include "utils/rpc_mem_utils.h"
 
-#define MODULE_NAME "rpc_mem"
+#define MODULE_NAME "rpc"
 
 using namespace std;
 

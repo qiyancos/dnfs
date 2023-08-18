@@ -18,13 +18,16 @@
 #include "dnfsd/dnfs_meta_data.h"
 #include "dnfsd/dnfs_rpc_func.h"
 
+#define MODULE_NAME "rpc"
+
 /* 为一个新的dnfs请求申请空间并进行相关的初始化操作 */
 struct svc_req *alloc_dnfs_request(SVCXPRT *xprt, XDR *xdrs)
 {
     nfs_request_t *reqdata = reinterpret_cast<nfs_request_t *>(
             calloc(1, sizeof(nfs_request_t)));
 
-    logger.log_if()
+    LOG_IF(reqdata == NULL, MODULE_NAME, EXIT_ERROR,
+           "Failed to allocate memory for dnfs_request");
 
     if (!xprt) {
         LogFatal(COMPONENT_DISPATCH,
