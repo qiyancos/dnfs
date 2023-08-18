@@ -39,8 +39,20 @@ typedef enum LogLevel {
     D_BACKTRACE,
     D_INFO,
     LEVEL_COUNT,
-    NONE = -1,
 } log_level_t;
+
+#define LOG_LEVEL_DICT_INIT { \
+{L_INFO,      {"LOG_INFO",        LOG_INFO}}, \
+{L_WARN,      {"LOG_WARN",        LOG_WARNING}}, \
+{L_ERROR,     {"LOG_ERROR",       LOG_ERR}}, \
+{L_BACKTRACE, {"LOG_BACKTRACE",   LOG_ERR}}, \
+{D_ERROR,     {"DEBUG_ERROR",     LOG_ERR}}, \
+{D_WARN,      {"DEBUG_WARN",      LOG_WARNING}}, \
+{D_BACKTRACE, {"DEBUG_BACKTRACE", LOG_ERR}}, \
+{D_INFO,      {"DEBUG_INFO",      LOG_INFO}}, \
+{EXIT_ERROR,  {"EXIT_ERROR",      LOG_ALERT}}, \
+{NOLOG,       {"NOLOG",           LOG_EMERG}}, \
+}
 
 /*不输出任何日志*/
 #define LNOLOG NOLOG
@@ -54,7 +66,7 @@ typedef enum LogLevel {
 #define LALL LEVEL_COUNT
 
 #define LOG(module_name, log_level, format, args...) \
-    logger.log(module_name,\
+    logger.__log(module_name,\
             log_level,\
             __FILE__,\
             __LINE__, \
@@ -64,7 +76,7 @@ typedef enum LogLevel {
 
 #define LOG_IF(log_flag, module_name, log_level, format, args...) \
     if(log_flag) { \
-        logger.log(module_name,\
+        logger.__log(module_name,\
             log_level,\
             __FILE__,\
             __LINE__, \
@@ -140,23 +152,7 @@ private:
 
 private:
     /*初始化日志等级对照字典*/
-    const std::map<log_level_t, std::pair<std::string, int>> log_level_info_dict = {
-            {L_INFO,      {"LOG_INFO",        LOG_INFO}},
-            {L_WARN,      {"LOG_WARN",        LOG_WARNING}},
-            {L_ERROR,     {"LOG_ERROR",       LOG_ERR}},
-            {L_BACKTRACE, {"LOG_BACKTRACE",   LOG_ERR}},
-            {D_ERROR,     {"DEBUG_ERROR",     LOG_ERR}},
-            {D_WARN,      {"DEBUG_WARN",      LOG_WARNING}},
-            {D_BACKTRACE, {"DEBUG_BACKTRACE", LOG_ERR}},
-            {D_INFO,      {"DEBUG_INFO",      LOG_INFO}},
-            {EXIT_ERROR,  {"EXIT_ERROR",      LOG_ALERT}},
-    };
-
-    /*不同模块的日志属性*/
-    std::map<std::string, LoggerAttr> module_attr;
-
-    /*设置创建时间*/
-    time_t init_time =time(nullptr);
+    static std::map<log_level_t, std::pair<std::string, int>> log_level_info_dict;
 
     /*默认日志属性，新建日志默认使用该属性*/
     static LoggerAttr default_attr;
@@ -166,6 +162,13 @@ private:
 
     /*退出函数退出码*/
     static int exit_code;
+
+    /*不同模块的日志属性*/
+    std::map<std::string, LoggerAttr> module_attr;
+
+    /*设置创建时间*/
+    time_t init_time = time(nullptr);
+
 private:
     /*默认构造函数*/
     Logger();
@@ -251,9 +254,13 @@ public:
                              std::string *error_info);
 
     /*打印输出日志*/
-    void log(const std::string &module_name, log_level_t log_level,
-             const std::string &file, const int &line,
-             const std::string &func, const std::string &format, ...);
+    void __log(const std::string &module_name, log_level_t log_level,
+               const std::string &file, const int &line,
+               const std::string &func, const std::string &format, ...);
+
+    /*判断模块日志debug开没开*/
+    bool is_module_debug_on(const std::string &module_name);
+
 };
 
 /*全局唯一日志实例*/

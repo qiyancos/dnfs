@@ -1,6 +1,5 @@
 #include <iostream>
 #include "log/log.h"
-#include <time.h>
 using namespace std;
 void exit_t(int code) {
     cout << "错误退出" << endl;
@@ -14,8 +13,10 @@ int main() {
     /*设置全局属性*/
     Logger::init("xx", "xx");
 
+    int in_s=Logger::decode_log_level("DEBUG_INFO");
+
     /*解析日志类别*/
-    cout << Logger::decode_log_level("DEBUG_INFO") << endl;
+    cout << in_s << endl;
 
     /*测试建立模板和设置默认模板*/
     string w;
