@@ -71,5 +71,15 @@ int main() {
                                          log_level_list,
                                          "stderr:syslog:/tmp/no/@(time,MINUTE,30):/tmp/dasdad/",
                                          s) << ":" << *s << endl;
+
+    /*设置所有模块的日志等级，高于该等级的才可以输出*/
+    cout << "设置所有模块的日志等级，高于该等级的才可以输出:" << endl;
+    logger.set_log_level(L_INFO);
+
+    /*设置指定模块日志等级，高于该等级的才可以输出*/
+    cout << "设置指定模块日志等级，高于该等级的才可以输出:" << endl;
+    logger.set_module_log_level("no", D_INFO);
+
+
     return 0;
 }

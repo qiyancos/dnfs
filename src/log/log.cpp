@@ -225,6 +225,27 @@ int Logger::set_module_log_output(const string &module_name,
     return 0;
 }
 
+/*设置所有模块的日志等级，高于该等级的才可以输出*/
+void Logger::set_log_level(const log_level_t &log_level) {
+    /*遍历所有属性进行设置*/
+    for (auto &md: module_attr) {
+        md.second.log_level = log_level;
+    }
+}
+
+/*设置指定模块日志等级，高于该等级的才可以输出*/
+void Logger::set_module_log_level(const string &module_name,
+                                  const log_level_t &log_level) {
+    /*如果模块不存在，创建默认的模板数据*/
+    if (!judge_module_attr_exist(module_name)) {
+        module_attr.insert(pair<string, LoggerAttr>(module_name, default_attr));
+    }
+    /*更改属性设置*/
+    module_attr[module_name].log_level = log_level;
+
+}
+
+
 /*日志输出属性名默认构造函数*/
 Logger::LogOutputAttr::LogOutputAttr() = default;
 

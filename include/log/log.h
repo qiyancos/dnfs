@@ -241,11 +241,11 @@ public:
                               std::string *error_info);
 
     /*设置所有模块的日志等级，高于该等级的才可以输出*/
-    void set_log_level(const log_level_t log_level);
+    void set_log_level(const log_level_t &log_level);
 
     /*设置指定模块日志等级，高于该等级的才可以输出*/
     void set_module_log_level(const std::string &module_name,
-                              const log_level_t log_level);
+                              const log_level_t &log_level);
 
     /*设置所有模块日志格式*/
     int set_formatter(const std::string format_str, std::string *error_info);
