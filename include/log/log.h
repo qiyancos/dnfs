@@ -85,7 +85,7 @@ enum LogFormatter {
 #define LALL LEVEL_COUNT
 
 #define LOG(module_name, log_level, format, args...) \
-    logger.__log(module_name,\
+    logger._log(module_name,\
             log_level,\
             __FILE__,\
             __LINE__, \
@@ -95,7 +95,7 @@ enum LogFormatter {
 
 #define LOG_IF(log_flag, module_name, log_level, format, args...) \
     if(log_flag) { \
-        logger.__log(module_name,\
+        logger._log(module_name,\
             log_level,\
             __FILE__,\
             __LINE__, \
@@ -297,15 +297,15 @@ public:
                              std::string *error_info);
 
     /*根据格式字符串，建立日志格式,供设置日志格式调用*/
-    int __init_log_formatter(const std::string &format_str,
+    int _init_log_formatter(const std::string &format_str,
                              std::string *error_info,std::vector<bool> &log_formatter_select);
 
     /*打印输出日志*/
-    void __log(const std::string &module_name, log_level_t log_level,
+    void _log(const std::string &module_name, log_level_t log_level,
                const std::string &file, const int &line,
                const std::string &func, const std::string &format, ...);
 
-    /*判断模块日志debug开没开*/
+    /*判断模块日志debug状态*/
     bool is_module_debug_on(const std::string &module_name);
 
 };

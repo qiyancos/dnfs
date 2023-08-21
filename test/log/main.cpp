@@ -88,5 +88,8 @@ int main() {
     cout << "设置所有模块日志格式:" << logger.set_module_formatter("yes"," %(program_name)/%(process)/%(modulename)", s) << ":"
          << *s << endl;
 
+    /*判断模块日志debug状态*/
+    cout << "判断模块日志debug状态:" << logger.is_module_debug_on("yes")<<endl;
+
     return 0;
 }

@@ -252,7 +252,7 @@ Logger::set_formatter(const std::string &format_str, std::string *error_info) {
     std::vector<bool> log_formatter_select;
 
     /*建立日志格式*/
-    if (__init_log_formatter(format_str, error_info, log_formatter_select) !=
+    if (_init_log_formatter(format_str, error_info, log_formatter_select) !=
         0) {
         return 1;
     }
@@ -275,7 +275,7 @@ int Logger::set_module_formatter(const string &module_name,
     std::vector<bool> log_formatter_select;
 
     /*建立日志格式*/
-    if (__init_log_formatter(format_str, error_info, log_formatter_select) !=
+    if (_init_log_formatter(format_str, error_info, log_formatter_select) !=
         0) {
         return 1;
     }
@@ -295,8 +295,8 @@ int Logger::set_module_formatter(const string &module_name,
 
 /*根据格式字符串，建立日志格式,供设置日志格式调用*/
 int
-Logger::__init_log_formatter(const string &format_str, std::string *error_info,
-                             vector<bool> &log_formatter_select) {
+Logger::_init_log_formatter(const string &format_str, std::string *error_info,
+                            vector<bool> &log_formatter_select) {
     /*用来判定是否设置了格式，没有设置至少一个格式报错*/
     bool set_formatter = false;
     /*循环判定是否有关键字*/
@@ -334,6 +334,23 @@ Logger::__init_log_formatter(const string &format_str, std::string *error_info,
         return 1;
     }
     return 0;
+}
+
+/*打印输出日志*/
+void Logger::_log(const string &module_name, log_level_t log_level,
+                  const string &file, const int &line, const string &func,
+                  const string &format, ...) {
+
+}
+
+/*判断模块日志debug状态*/
+bool Logger::is_module_debug_on(const string &module_name) {
+    /*如果模块不存在，直接返回false*/
+    if (!judge_module_attr_exist(module_name)) {
+        return false;
+    }
+    /*返回debug状态*/
+    return module_attr[module_name].debug_on;
 }
 
 
