@@ -230,6 +230,9 @@ void Logger::set_log_level(const log_level_t &log_level) {
     /*遍历所有属性进行设置*/
     for (auto &md: module_attr) {
         md.second.log_level = log_level;
+
+        /*判断debug模式*/
+        _judge_debug(md.second, log_level);
     }
 }
 
@@ -242,8 +245,22 @@ void Logger::set_module_log_level(const string &module_name,
     }
     /*更改属性设置*/
     module_attr[module_name].log_level = log_level;
-
+    /*判断debug模式*/
+    _judge_debug(module_attr[module_name], log_level);
 }
+
+/*判断debug模式*/
+void Logger::_judge_debug(Logger::LoggerAttr &log_attr, log_level_t log_level) {
+    /*进行debug模式判定,如果包含DEBUG,设置为true*/
+    if (log_level_info_dict.at(log_level).first.find("DEBUG") !=
+        string::npos) {
+        log_attr.debug_on = true;
+    } else {
+        /*清空之前的设置*/
+        log_attr.debug_on = false;
+    }
+}
+
 
 /*设置所有模块日志格式*/
 int

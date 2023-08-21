@@ -288,6 +288,9 @@ public:
     void set_module_log_level(const std::string &module_name,
                               const log_level_t &log_level);
 
+    /*判断debug模式*/
+    void _judge_debug(LoggerAttr &log_attr,log_level_t log_level);
+
     /*设置所有模块日志格式*/
     int set_formatter(const std::string &format_str, std::string *error_info);
 
