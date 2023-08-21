@@ -245,6 +245,97 @@ void Logger::set_module_log_level(const string &module_name,
 
 }
 
+/*设置所有模块日志格式*/
+int
+Logger::set_formatter(const std::string &format_str, std::string *error_info) {
+    /*格式化字段选择,选中为true,未选中为false*/
+    std::vector<bool> log_formatter_select;
+
+    /*建立日志格式*/
+    if (__init_log_formatter(format_str, error_info, log_formatter_select) !=
+        0) {
+        return 1;
+    }
+
+    /*遍历所有模块进行创建*/
+    for (auto &md_attr: module_attr) {
+        /*设置格式*/
+        md_attr.second.formatter = format_str;
+        /*设置格式开关*/
+        md_attr.second.log_formatter_select = log_formatter_select;
+    }
+    return 0;
+}
+
+/*设置指定模块日志格式*/
+int Logger::set_module_formatter(const string &module_name,
+                                 const std::string &format_str,
+                                 std::string *error_info) {
+    /*格式化字段选择,选中为true,未选中为false*/
+    std::vector<bool> log_formatter_select;
+
+    /*建立日志格式*/
+    if (__init_log_formatter(format_str, error_info, log_formatter_select) !=
+        0) {
+        return 1;
+    }
+
+    /*如果模块不存在，创建默认的模板数据*/
+    if (!judge_module_attr_exist(module_name)) {
+        module_attr.insert(pair<string, LoggerAttr>(module_name, default_attr));
+    }
+
+    /*设置格式*/
+    module_attr[module_name].formatter = format_str;
+    /*设置格式开关*/
+    module_attr[module_name].log_formatter_select = log_formatter_select;
+
+    return 0;
+}
+
+/*根据格式字符串，建立日志格式,供设置日志格式调用*/
+int
+Logger::__init_log_formatter(const string &format_str, std::string *error_info,
+                             vector<bool> &log_formatter_select) {
+    /*用来判定是否设置了格式，没有设置至少一个格式报错*/
+    bool set_formatter = false;
+    /*循环判定是否有关键字*/
+    for (auto &log_formate: log_formatter_dict) {
+        /*如果查找到了关键字*/
+        if (format_str.find(log_formate.second.first) != string::npos) {
+            /*设置字段选中*/
+            log_formatter_select.push_back(true);
+            /*设置了格式*/
+            set_formatter = true;
+        } else {
+            log_formatter_select.push_back(false);
+        }
+    }
+    /*如果没有设置格式*/
+    if (!set_formatter) {
+        /*设置错误信息*/
+        set_ptr_info(error_info,
+                     "the formatter need select from the list:\n"
+                     "        * %(program_name) the program name\n"
+                     "        * %(hostname) the host name\n"
+                     "        * %(levelno) the number of log level\n"
+                     "        * %(pathname) the complete path for the module what use log\n"
+                     "        * %(filename) the file name what for the module what use log\n"
+                     "        * %(modulename) the module name\n"
+                     "        * %(funcName) the function name for the module what use log\n"
+                     "        * %(lineno) the line number for the module what use log\n"
+                     "        * %(created) now time (UNIX float)\n"
+                     "        * %(relativeCreated) the ms from log build\n"
+                     "        * %(asctime) the time formatter default is 2023-08-18 11:18:45998\n"
+                     "        * %(thread) the thread id\n"
+                     "        * %(threadName) the thread name\n"
+                     "        * %(process) the progress id\n"
+                     "        * %(message) the log message");
+        return 1;
+    }
+    return 0;
+}
+
 
 /*日志输出属性名默认构造函数*/
 Logger::LogOutputAttr::LogOutputAttr() = default;

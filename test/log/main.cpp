@@ -80,6 +80,13 @@ int main() {
     cout << "设置指定模块日志等级，高于该等级的才可以输出:" << endl;
     logger.set_module_log_level("no", D_INFO);
 
+    /*设置所有模块日志格式*/
+    cout << "设置所有模块日志格式:" << logger.set_formatter(" %(program_name)/%(process)", s) << ":"
+         << *s << endl;
+
+    /*设置所有模块日志格式*/
+    cout << "设置所有模块日志格式:" << logger.set_module_formatter("yes"," %(program_name)/%(process)/%(modulename)", s) << ":"
+         << *s << endl;
 
     return 0;
 }

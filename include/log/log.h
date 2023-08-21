@@ -41,6 +41,25 @@ typedef enum LogLevel {
     LEVEL_COUNT,
 } log_level_t;
 
+enum LogFormatter {
+    PG_NAME,
+    HOST_NAME,
+    LEVEL_NO,
+    PATH_NAME,
+    FILE_NAME,
+    MD_NAME,
+    FUNC_NAME,
+    LINE_NO,
+    WHEN_CREATED,
+    RELATE_CREATED,
+    ASC_TIME,
+    THREAD_ID,
+    THREAD_NAME,
+    PROCESS_ID,
+    LOG_MESSAGE,
+    FORMATTER_COUNT,
+};
+
 #define LOG_LEVEL_DICT_INIT { \
 {L_INFO,      {"LOG_INFO",        LOG_INFO}}, \
 {L_WARN,      {"LOG_WARN",        LOG_WARNING}}, \
@@ -141,6 +160,9 @@ private:
         log_level_t log_level = NOLOG;
         /*是不是debug*/
         bool debug_on = false;
+
+        /*格式化字段选择,选中为true,未选中为false*/
+        std::vector<bool> log_formatter_select;
     };
 
     /*日志等级对照结构体*/
@@ -168,6 +190,25 @@ private:
 
     /*设置创建时间*/
     time_t init_time = time(nullptr);
+
+    /*存储格式字段和结构下标对应*/
+    const std::map<LogFormatter, std::pair<std::string, LogFormatter>> log_formatter_dict = {
+            {PG_NAME,        {"%(program_name)",    PG_NAME}},
+            {HOST_NAME,      {"%(hostname)",        HOST_NAME}},
+            {LEVEL_NO,       {"%(levelno)",         LEVEL_NO}},
+            {PATH_NAME,      {"%(pathname)",        PATH_NAME}},
+            {FILE_NAME,      {"%(filename)",        FILE_NAME}},
+            {MD_NAME,        {"%(modulename)",      MD_NAME}},
+            {FUNC_NAME,      {"%(funcName)",        FUNC_NAME}},
+            {LINE_NO,        {"%(lineno)",          LINE_NO}},
+            {WHEN_CREATED,   {"%(created)",         WHEN_CREATED}},
+            {RELATE_CREATED, {"%(relativeCreated)", RELATE_CREATED}},
+            {ASC_TIME,       {"%(asctime)",         ASC_TIME}},
+            {THREAD_ID,      {"%(thread)",          THREAD_ID}},
+            {THREAD_NAME,    {"%(threadName)",      THREAD_NAME}},
+            {PROCESS_ID,     {"%(process)",         PROCESS_ID}},
+            {LOG_MESSAGE,    {"%(message)",         LOG_MESSAGE}},
+    };
 
 private:
     /*默认构造函数*/
@@ -248,12 +289,16 @@ public:
                               const log_level_t &log_level);
 
     /*设置所有模块日志格式*/
-    int set_formatter(const std::string format_str, std::string *error_info);
+    int set_formatter(const std::string &format_str, std::string *error_info);
 
     /*设置指定模块日志格式*/
     int set_module_formatter(const std::string &module_name,
-                             const std::string format_str,
+                             const std::string &format_str,
                              std::string *error_info);
+
+    /*根据格式字符串，建立日志格式,供设置日志格式调用*/
+    int __init_log_formatter(const std::string &format_str,
+                             std::string *error_info,std::vector<bool> &log_formatter_select);
 
     /*打印输出日志*/
     void __log(const std::string &module_name, log_level_t log_level,
