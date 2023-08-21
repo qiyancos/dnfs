@@ -15,7 +15,8 @@
 
 #include <sstream>
 #include <algorithm>
-#include <regex>
+#include <sys/stat.h>
+#include <iostream>
 
 #include "utils/common_utils.h"
 
@@ -186,7 +187,9 @@ void split_str(const string &str, const string &split, vector<string> &result) {
         string temp = strs.substr(0, pos);
 
         /*结果保存*/
-        result.push_back(temp);
+        if (!temp.empty()) {
+            result.push_back(temp);
+        }
 
         /*去掉已分割的字符串,在剩下的字符串中进行分割*/
         strs = strs.substr(pos + step, strs.size());
@@ -197,11 +200,9 @@ void split_str(const string &str, const string &split, vector<string> &result) {
 }
 
 /*判断字符串是不是纯数字*/
-bool judge_number(const string &judge_str) {
-    /*出数字正则表达式*/
-    regex regexStr("\\d+");
+bool judge_regex(const string &judge_str, const regex &regex_expression) {
     /*返回匹配结果*/
-    return regex_match(judge_str, regexStr);
+    return regex_match(judge_str, regex_expression);
 }
 
 /*给非空指针设置信息*/
@@ -223,4 +224,53 @@ void to_lower(string &str) {
 void to_upper(string &str) {
     /*全转为小写*/
     transform(str.begin(), str.end(), str.begin(), ::toupper);
+}
+
+/*判断文件目录是否存在*/
+int judge_directory_exist(const string &judge_dir) {
+    struct stat info{};
+    if (stat(judge_dir.c_str(), &info) != 0) {
+        /*不存在返回-1*/
+        return -1;
+    } else if (info.st_mode & S_IFDIR) {
+        /*是文件夹返回0*/
+        return 0;
+    } else {
+        /*不是文件目录返回-2*/
+        return -2;
+    }
+}
+
+/*递归创建文件目录*/
+int mkdir_recursion(const string &dir_path) {
+    /*设置结果保存*/
+    vector<string> result;
+    /*切割路径*/
+    split_str(dir_path, "/", result);
+    /*从头开始递归创建*/
+    string recursion_path="/";
+    /*遍历添加路径*/
+    for(string &path:result){
+        /*判断目录字符数是否满足命名要求,目录名需小于255字符*/
+        if(path.size()>254){
+            return -3;
+        }
+        /*拼接路径*/
+        recursion_path+=path;
+        /*添加分割符*/
+        recursion_path+="/";
+
+        /*判断目是否存在*/
+        int judge_code=judge_directory_exist(recursion_path);
+        /*如果不是文件目录返回*/
+        if(judge_code==-2){
+            return -2;
+        }else if(judge_code==0){
+            /*存在接着操作*/
+            continue;
+        }
+        /*不存在目录进行创建*/
+        mkdir(recursion_path.c_str(),777);
+    }
+    return 0;
 }

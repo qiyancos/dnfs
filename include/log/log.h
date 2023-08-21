@@ -138,7 +138,7 @@ private:
         /*每一个日志级别可以对应单独的输出日志文件*/
         LogOutputAttr log_level_output[LEVEL_COUNT];
         /*日志等级开关，比他小的都可以输出*/
-        log_level_t log_level = LEVEL_COUNT;
+        log_level_t log_level = NOLOG;
         /*是不是debug*/
         bool debug_on = false;
     };
@@ -202,7 +202,7 @@ public:
     /*使用默认日志属性初始化一个模块日志*/
     void init_module(const std::string &module_name);
 
-    /*设置指定模块的日志属性*/
+    /*复制日志模板*/
     int copy_module_attr_from(const std::string &target_module_name,
                               const std::string &src_module_name,
                               std::string *error_info);
@@ -210,10 +210,10 @@ public:
     /*判断模块日志设置存不存在*/
     bool judge_module_attr_exist(const std::string &module_name);
 
-    /*设置所有模块日志等级日志文件路径*/
+    /*设置所有模块日志等级日志文件属性*/
     int set_log_output(const std::string &log_path, std::string *error_info);
 
-    /*设置指定模块日志等级日志文件路径*/
+    /*设置指定模块日志等级日志文件属性*/
     int set_module_log_output(const std::string &module_name,
                               const std::string &log_path,
                               std::string *error_info);

@@ -18,6 +18,7 @@
 
 #include <iostream>
 #include <vector>
+#include "log.h"
 
 /*日志信息对象，存放了单词输出的日志信息结构*/
 class LogMessage {
@@ -30,9 +31,12 @@ private:
     std::string module_name;
     /*记录时间戳,用来同一个文件写入时排序*/
     int record_time;
+    /*记录日志级别*/
+    LogLevel log_level = NOLOG;
 public:
     /*初始化参数*/
-    LogMessage(std::string &formatter, std::string module_name, std::vector<std::string> args);
+    LogMessage(std::string &formatter, std::string module_name,
+               std::vector<std::string> args);
 
     /*解析数据得到日志写入内容*/
     std::string message();

@@ -28,6 +28,7 @@ Logger &logger = Logger::get_instance();
 /*判单日志级别是否合法，并且返回日志级别*/
 log_level_t Logger::decode_log_level(const string &log_level_str) {
 
+    /*遍历字典进行判定*/
     for (const auto &item: log_level_info_dict) {
         if (log_level_str == item.second.first) {
             return item.first;
@@ -52,8 +53,8 @@ Logger::Logger() = default;
 
 /*注册退出函数,和退出状态码*/
 void Logger::set_exit_func(int e_code, void (*exit_f)(int)) {
-    Logger::exit_func = exit_f;
-    Logger::exit_code = e_code;
+    exit_func = exit_f;
+    exit_code = e_code;
 }
 
 /*对默认日志属性的设置*/
@@ -71,7 +72,7 @@ Logger::set_default_attr_from(const string &module_name, string *error_info) {
     return 0;
 }
 
-/*设置指定模块的日志属性*/
+/*复制日志模板*/
 int Logger::copy_module_attr_from(const string &target_module_name,
                                   const string &src_module_name,
                                   string *error_info) {
@@ -94,8 +95,6 @@ int Logger::copy_module_attr_from(const string &target_module_name,
         module_attr[target_module_name] = module_attr[src_module_name];
     }
     LogOutputAttr s = LogOutputAttr();
-    s.generate_config("stderr:syslog:/tmp/a.log@(time,MINUTE,30):/tmp/b.log",
-                      error_info);
     return 0;
 }
 
@@ -113,24 +112,37 @@ Logger &Logger::get_instance() {
     return logger;
 }
 
-/*设置所有模块日志等级日志文件路径*/
+/*设置所有模块日志等级日志文件属性*/
 int Logger::set_log_output(const string &log_path, string *error_info) {
 
     /*先构造一个日志输出对象，用来生成日志路径*/
-    LogOutputAttr generate_attr = LogOutputAttr();
+    LogOutputAttr generate_output_attr = LogOutputAttr();
     /*解析配置*/
-    generate_attr.generate_config(log_path, error_info);
+    generate_output_attr.generate_config(log_path, error_info);
 
-    /*获取遍历对象*/
-    map<string, LoggerAttr>::iterator it;
     /*遍历判定更改数据*/
-    for (it = module_attr.begin(); it != module_attr.end(); it++) {
-        /*遍历每个日志级别的数据*/
-        for (int i = 0; i < LEVEL_COUNT; ++i) {
-            /*设置日志路径*/
-//            it->second.log_level_output[i].log_files = vector<LogFile>
+    for (auto &attr: module_attr) {
+        /*遍历更改每个日志级别的数据*/
+        for (auto &level: attr.second.log_level_output) {
+            level.log_files = generate_output_attr.log_files;
         }
     }
+    return 0;
+}
+
+/*设置指定模块日志等级日志文件属性*/
+int
+Logger::set_module_log_output(const string &module_name, const string &log_path,
+                              std::string *error_info) {
+    /*如果模块不存在*/
+    if (!judge_module_attr_exist(module_name)) {
+        /*设置错误信息*/
+        set_ptr_info(error_info,
+                     "do not get module log attr must set it before use");
+        return 1;
+    }
+    /*设置日志文件属性*/
+
     return 0;
 }
 
@@ -149,28 +161,24 @@ int Logger::LogOutputAttr::generate_config(const string &log_out_attr_str,
     /*切割配置字符串*/
     split_str(log_out_attr_str, ":", split_result);
 
-    /*遍历进行参数配置*/
-    vector<string>::iterator it;
-    for (it = split_result.begin(); it != split_result.end(); it++) {
-        /*如果长度为空则继续*/
-        if (it[0].empty()) continue;
+    for (string &param: split_result) {
         /*判断输出流开关*/
-        if (it[0] == "stderr") {
+        if (param == "stderr") {
             stderr_on = true;
-        } else if (it[0] == "syslog") {
+        } else if (param == "syslog") {
             syslog_on = true;
-        } else if (it[0] == "stdout_on") {
+        } else if (param == "stdout_on") {
             stdout_on = true;
         } else {
             /*先建立文件属性对象*/
             LogFile log_file = LogFile();
             /*建立属性*/
-            int result_code = log_file.generate_data(it[0], error_info);
+            int result_code = log_file.generate_data(param, error_info);
             /*有错误就返回*/
             if (result_code != 0) {
                 return result_code;
             }
-
+            log_files.push_back(log_file);
         }
     }
     return 0;
