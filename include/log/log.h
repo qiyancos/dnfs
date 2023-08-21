@@ -182,7 +182,8 @@ public:
 
 public:
     /*初始化全局日志类*/
-    void init(const std::string &program_name_in, const std::string &hostname_in);
+    void
+    init(const std::string &program_name_in, const std::string &hostname_in);
 
     /*判断日志级别*/
     log_level_t decode_log_level(const std::string &log_level_str);
@@ -194,7 +195,7 @@ public:
     /*设置退出函数,和退出状态码*/
     void set_exit_func(int e_code, void (*exit_f)(int));
 
-    /*得到单例模式*/
+    /*得到单例对象*/
     static Logger &get_instance();
 
 public:
@@ -213,27 +214,29 @@ public:
     /*设置所有模块日志等级日志文件属性*/
     int set_log_output(const std::string &log_path, std::string *error_info);
 
-    /*设置指定模块日志等级日志文件属性*/
-    int set_module_log_output(const std::string &module_name,
-                              const std::string &log_path,
-                              std::string *error_info);
+    /*设置指定日志等级日志文件路径*/
+    int
+    set_log_output(const log_level_t &log_level, const std::string &log_path,
+                   std::string *error_info);
 
     /*设置所有模块多个日志等级日志文件路径*/
     int set_log_output(const std::vector<log_level_t> &log_level_list,
                        const std::string &log_path, std::string *error_info);
 
-    /*设置多个日志等级日志文件路径*/
+    /*设置指定模块日志等级日志文件属性*/
     int set_module_log_output(const std::string &module_name,
-                              const std::vector<log_level_t> &log_level_list,
                               const std::string &log_path,
                               std::string *error_info);
 
     /*设置指定日志等级日志文件路径*/
-    int set_log_output(const log_level_t log_level, const std::string &log_path,
-                       std::string *error_info);
+    int set_module_log_output(const std::string &module_name,
+                              const log_level_t &log_level,
+                              const std::string &log_path,
+                              std::string *error_info);
 
-    /*设置指定日志等级日志文件路径*/
-    int set_module_log_output(const log_level_t log_level,
+    /*设置多个日志等级日志文件路径*/
+    int set_module_log_output(const std::string &module_name,
+                              const std::vector<log_level_t> &log_level_list,
                               const std::string &log_path,
                               std::string *error_info);
 

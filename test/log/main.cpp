@@ -16,7 +16,7 @@ int main() {
     logger.init("xx", "xx");
 
     /*解析日志级别*/
-    cout << "测试解析日志级别:" << logger.decode_log_level("DEBUG_INFO")
+    cout << "解析日志级别:" << logger.decode_log_level("DEBUG_INFO")
          << endl;
 
     /*建立模板*/
@@ -25,16 +25,51 @@ int main() {
     logger.init_module("test");
 
     /*设置默认模板*/
-    cout << "测试设置默认模板:" << logger.set_default_attr_from("test", s)
+    cout << "设置默认模板:" << logger.set_default_attr_from("test", s)
          << ":" << *s << endl;
 
     /*复制日志模板*/
-    cout << "测试复制日志模板:"
+    cout << "复制日志模板:"
          << logger.copy_module_attr_from("yes", "test", s) << ":" << *s << endl;
 
     /*设置所有模块日志等级日志文件路径*/
     cout << "设置所有模块日志等级日志文件属性:" << logger.set_log_output(
             "stderr:syslog:/tmp/@(time,MINUTE,30):/tmp/dasdad/", s) << ":" << *s
          << endl;
+
+    /*设置所有模块多个日志等级日志文件路径*/
+    /*单个模式更改*/
+    vector<log_level_t> log_level_list = {EXIT_ERROR};
+    cout << "设置所有模块多个日志等级日志文件路径:"
+         << logger.set_log_output(log_level_list,
+                                  "stderr:syslog:/tmp/yes/@(time,MINUTE,30):/tmp/dasdad/",
+                                  s) << ":" << *s << endl;
+
+    /*设置指定日志等级日志文件路径*/
+    /*设置全模式更改*/
+    cout << "设置指定日志等级日志文件路径:"
+         << logger.set_log_output(L_ERROR,
+                                  "stderr:syslog:/tmp/all/@(time,MINUTE,30):/tmp/dasdad/",
+                                  s) << ":" << *s << endl;
+
+    /*设置指定模块日志等级日志文件属性*/
+    cout << "设置指定模块日志等级日志文件属性:"
+         << logger.set_module_log_output("yes",
+                                         "stderr:syslog:/tmp/test/@(time,MINUTE,30):/tmp/dasdad/",
+                                         s) << ":" << *s << endl;
+
+    /*设置指定日志等级日志文件路径*/
+    cout << "设置指定日志等级日志文件路径:"
+         << logger.set_module_log_output("yes",
+                                         L_ERROR,
+                                         "stderr:syslog:/tmp/single/@(time,MINUTE,30):/tmp/dasdad/",
+                                         s) << ":" << *s << endl;
+
+    /*设置多个日志等级日志文件路径*/
+    cout << "设置多个日志等级日志文件路径:"
+         << logger.set_module_log_output("yes",
+                                         log_level_list,
+                                         "stderr:syslog:/tmp/no/@(time,MINUTE,30):/tmp/dasdad/",
+                                         s) << ":" << *s << endl;
     return 0;
 }
