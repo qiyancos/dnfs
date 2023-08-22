@@ -13,10 +13,35 @@
  *
  */
 
-#ifndef UTILS_RPC_MEM_UTIL_H
-#define UTILS_RPC_MEM_UTIL_H
+#ifndef DNFSD_DNFS_NTIRPC_H
+#define DNFSD_DNFS_NTIRPC_H
 
-#include <stdlib.h>
+#include "rpc/svc.h"
+
+/* Allow much more space than we really need for a sock name. An IPV4 address
+ * embedded in IPv6 could use 45 bytes and then if we add a port, that would be
+ * an additional 6 bytes (:65535) for a total of 51, and then one more for NUL
+ * termination. We could use 64 instead of 128.
+ */
+#define SOCK_NAME_MAX 128
+
+enum evchan {
+    UDP_UREG_CHAN,		/*< Put UDP on a dedicated channel */
+    TCP_UREG_CHAN,		/*< Accepts new TCP connections */
+#ifdef _USE_NFS_RDMA
+    RDMA_UREG_CHAN,		/*< Accepts new RDMA connections */
+#endif
+    EVCHAN_SIZE
+};
+#define N_TCP_EVENT_CHAN  3	/*< We don't really want to have too many,
+				   relative to the number of available cores. */
+#define N_EVENT_CHAN (N_TCP_EVENT_CHAN + EVCHAN_SIZE)
+
+/* TIRPC的全局操作处理函数 */
+extern tirpc_pkg_params ntirpc_pp;
+
+/* 注册tirpc的处理操作参数 */
+void init_ntirpc_settings();
 
 // 用于ntirpc的警告信息输出和处理
 void rpc_warnx(const char* format, ...);
@@ -37,4 +62,10 @@ void* rpc_calloc(size_t n, size_t s, const char *file, int line, const char *fun
 // 根据新的大小对之前已经分配的内存区域进行重新分配，新的区域会复制之前区域的数据
 void* rpc_realloc(void *p, size_t n, const char *file, int line, const char *function);
 
-#endif //UTILS_RPC_MEM_UTIL_H
+/* 为一个新的dnfs请求申请空间并进行相关的初始化操作 */
+struct svc_req *alloc_dnfs_request(SVCXPRT *xprt, XDR *xdrs);
+
+/* 释放请求数据结构体对应的内存空间并执行其他销毁操作 */
+void free_dnfs_request(struct svc_req *req, enum xprt_stat stat);
+
+#endif //DNFSD_DNFS_NTIRPC_H

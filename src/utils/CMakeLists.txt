@@ -1,5 +1,4 @@
 add_library(utils
         thread_util.cpp
-        rpc_mem_util.cpp
         common_utils.cpp
         )

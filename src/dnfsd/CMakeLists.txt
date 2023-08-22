@@ -5,7 +5,7 @@ include_directories(${YAML_INCLUDE_DIRS})
 add_executable(dnfsd
         dnfsd.cpp
         dnfs_init.cpp
-        dnfs_rpc_func.cpp)
+        dnfs_ntirpc.cpp dnfs_config.cpp)
 
 target_link_libraries(dnfsd
     PRIVATE

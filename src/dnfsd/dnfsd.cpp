@@ -19,11 +19,11 @@
 #include <string>
 #include <iostream>
 
-#include "rpc/rpc.h"
-#include "utils/thread_utils.h"
-#include "utils/rpc_mem_utils.h"
 #include "log/log.h"
+#include "utils/thread_utils.h"
 #include "dnfsd/dnfsd.h"
+#include "dnfsd/dnfs_ntirpc.h"
+#include "dnfsd/dnfs_config.h"
 #include "dnfsd/dnfs_init.h"
 
 using namespace std;
@@ -35,7 +35,7 @@ static const char options[] = "v@L:N:f:p:FRTE:ChI:x";
 
 // 服务帮助信息
 static const char usage[] =
-	"Usage: %s [-hd][-L <logfile>][-N <dbg_lvl>][-f <config_file>]\n"
+    "Usage: %s [-hd][-L <logfile>][-N <dbg_lvl>][-f <config_file>]\n"
 	"\t[-v]                display version information\n"
 	"\t[-L <logfile>]      set the default logfile for the daemon\n"
 	"\t[-N <dbg_lvl>]      set the verbosity level\n"
@@ -54,30 +54,26 @@ static const char usage[] =
 	"SIGTERM    : Cleanly terminate the program\n"
 	"------------- Default Values -------------\n"
 	"LogFile    : SYSLOG\n"
-	"PidFile    : " GANESHA_PIDFILE_PATH "\n"
-	"DebugLevel : NIV_EVENT\n" "ConfigFile : " GANESHA_CONFIG_PATH " \n";
-
-// 服务启动配置信息
-static nfs_start_info_t nfs_start_info = {
-        .dump_default_config = false,
-        .lw_mark_trigger = false,
-        .drop_caps = true
-};
+	"PidFile    : " DNFSD_PIDFILE_PATH "\n"
+	"DebugLevel : NIV_EVENT\n" "ConfigFile : " DNFSD_CONFIG_PATH " \n";
 
 // 默认的配置文件路径
-string nfs_config_path = GANESHA_CONFIG_PATH;
+string nfs_config_path = DNFSD_CONFIG_PATH;
 
 // 默认的PID文件路径
-[[maybe_unused]] string nfs_pidfile_path = GANESHA_PIDFILE_PATH;
+[[maybe_unused]] string nfs_pidfile_path = DNFSD_PIDFILE_PATH;
 
-// TODO
-time_t nfs_ServerEpoch = 0;
+/* TODO */
+[[maybe_unused]] time_t nfs_ServerEpoch;
 
-// debug日志的级别 todo
+// debug日志的级别
 log_level_t debug_level = LNOLOG;
 
 // 是否常驻后台的形式运行
 bool detach_flag = true;
+
+/* 针对配置文件严重错误是否退出进程 */
+[[maybe_unused]] bool config_errors_fatal;
 
 // 是否打印过程日志信息
 bool dump_trace = false;
@@ -90,22 +86,6 @@ string nfs_host_name = "localhost";
 
 // 日志文件完整路径
 string log_path;
-
-/* 全局唯一的配置文件结构体 */
-YAML::Node dnfs_config;
-
-// tirpc的控制参数集合
-tirpc_pkg_params ntirpc_pp = {
-    TIRPC_DEBUG_FLAG_DEFAULT,
-    0,
-    ThreadPool::set_thread_name,
-    rpc_warnx,
-    rpc_free,
-    rpc_malloc,
-    rpc_malloc_aligned,
-    rpc_calloc,
-    rpc_realloc, // 根据新的大小对之前已经分配的内存区域进行重新分配，新的区域会复制之前区域的数据
-};
 
 // 主程序运行参数解析
 static void arg_parser(int argc, char** argv) {
@@ -131,7 +111,7 @@ static void arg_parser(int argc, char** argv) {
         switch (c) {
             case 'v':
             case '@':
-                printf("NFS-Ganesha Release = V%s\n", GANESHA_VERSION);
+                printf("NFS-Ganesha Release = V%s\n", DNFSD_VERSION);
                 /* A little backdoor to keep track of binary versions */
                 printf("%s compiled on %s at %s\n", exec_name.c_str(),
                        __DATE__, __TIME__);
@@ -147,7 +127,7 @@ static void arg_parser(int argc, char** argv) {
 
             case 'N':
                 /* debug level */
-                debug_level = Logger::decode_log_level(optarg);
+                debug_level = logger.decode_log_level(optarg);
                 break;
 
             case 'f':
@@ -168,7 +148,8 @@ static void arg_parser(int argc, char** argv) {
             case 'R':
                 /* Shall we manage  RPCSEC_GSS ? */
                 fprintf(stderr,
-                        "\n\nThe -R flag is deprecated, use this syntax in the configuration file instead:\n\n");
+                        "\n\nThe -R flag is deprecated, use this syntax"
+                        " in the configuration file instead:\n\n");
                 fprintf(stderr, "NFS_KRB5\n");
                 fprintf(stderr, "{\n");
                 fprintf(stderr,
@@ -200,7 +181,8 @@ static void arg_parser(int argc, char** argv) {
                 exit(0);
 
             default: /* '?' */
-                fprintf(stderr, "Try '%s -h' for usage\n", exec_name.c_str());
+                fprintf(stderr, "Try '%s -h' for usage\n",
+                        exec_name.c_str());
                 exit(1);
         }
     }
@@ -224,7 +206,7 @@ int main(int argc, char ** argv)
     init_config(nfs_config_path);
 
     // 初始化日志
-    Logger::set_exit_func(-1, exit_process);
+    logger.set_exit_func(-1, exit_process);
     init_logging(exec_name, nfs_host_name, debug_level,
                  detach_flag, log_path);
 
@@ -234,10 +216,7 @@ int main(int argc, char ** argv)
     }
 
     // 注册tirpc的处理操作参数
-    if (!tirpc_control(TIRPC_PUT_PARAMETERS, &ntirpc_pp)) {
-        LOG(MODULE_NAME, EXIT_ERROR,
-                   "Setting nTI-RPC parameters failed");
-    }
+    init_ntirpc_settings();
 
     /* 检查malloc功能的可用性 */
     init_check_malloc();

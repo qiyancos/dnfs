@@ -89,4 +89,9 @@ void to_lower(std::string &str);
 /*转为大写*/
 void to_upper(std::string &str);
 
+/* 从一个结构体成员变量指针推断出结构体本身的地址 */
+#define get_parent_struct_addr(addr, type, member) ({			\
+	const typeof(((type *) 0)->member) * __mptr = (addr);	\
+	(type *)((char *) __mptr - offsetof(type, member)); })
+
 #endif //UTILS_COMMON_UTILS_H

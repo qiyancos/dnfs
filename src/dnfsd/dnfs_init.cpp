@@ -16,20 +16,18 @@
  */
 
 #include <unistd.h>
-#include <libgen.h>
 #include <fcntl.h>
 #include <string.h>
 #include <signal.h>
 #include <sys/stat.h>
 
-#include <fstream>
 #include <experimental/filesystem>
 
 #include "rpc/svc.h"
 #include "log/log.h"
+#include "dnfsd/dnfs_config.h"
 #include "dnfsd/dnfs_init.h"
-#include "dnfsd/dnfs_rpc_func.h"
-#include "utils/common_utils.h"
+#include "dnfsd/dnfs_ntirpc.h"
 
 using namespace std;
 
@@ -74,99 +72,6 @@ void init_config(const string& config_file_path) {
     /*TODO*/
 }
 
-/* 该函数用于快速从配置文件中获取指定层级的数据，并将结果按照指定格式写入到变量中，返回成功标志 */
-template<typename T>
-int config_get(T& out, const YAML::Node& config,
-               const vector<string>& key_list) {
-    int key_size = key_list.size();
-    YAML::Node next_node = const_cast<YAML::Node&>(config);
-    for (int i = 0; i < key_size; i++) {
-        const string& key = key_list[i];
-        YAML::NodeType::value type = config[key].Type();
-        switch (type) {
-            case YAML::NodeType::Map:
-                if (i == key_size - 1) {
-                    if (!(is_same<T, map<string, string>>::value or
-                            is_same<T, map<string, char>>::value or
-                            is_same<T, map<string, int>>::value or
-                            is_same<T, map<string, long long>>::value or
-                            is_same<T, map<string, float>>::value or
-                            is_same<T, map<string, long double>>::value)) {
-                        LOG(MODULE_NAME, L_WARN,
-                                   "Config file node for %s cannot be"
-                                   " interpreted as normal map class",
-                                   format(key_list).c_str());
-                        return 1;
-                    } else {
-                        out = next_node[key].as<T>();
-                        return 0;
-                    }
-                }
-                break;
-            case YAML::NodeType::Sequence:
-                if (i == key_size - 1) {
-                    if (!(is_same<T, vector<string>>::value or
-                            is_same<T, vector<char>>::value or
-                            is_same<T, vector<int>>::value or
-                            is_same<T, vector<long long>>::value or
-                            is_same<T, vector<float>>::value or
-                            is_same<T, vector<long double>>::value)) {
-                        LOG(MODULE_NAME, L_WARN,
-                                   "Config file node for %s cannot be"
-                                   " interpreted as normal vector class",
-                                   format(key_list).c_str());
-                        return 1;
-                    } else {
-                        out = next_node[key].as<T>();
-                        return 0;
-                    }
-                } else {
-                    LOG(MODULE_NAME, L_WARN,
-                               "List type config node can not be "
-                               "indexed by \"%s(%d)\" in %s)",
-                               key.c_str(), i, format(key_list).c_str());
-                    return 1;
-                }
-            case YAML::NodeType::Scalar:
-                if (i == key_size - 1) {
-                    if (!(is_same<T, string>::value or
-                          is_same<T, char>::value or
-                          is_same<T, int>::value or
-                          is_same<T, long long>::value or
-                          is_same<T, float>::value or
-                          is_same<T, long double>::value)) {
-                        LOG(MODULE_NAME, L_WARN,
-                                   "Config file node for %s cannot be"
-                                   " interpreted as normal value type",
-                                   format(key_list).c_str());
-                        return 1;
-                    } else {
-                        out = next_node[key].as<T>();
-                        return 0;
-                    }
-                } else {
-                    LOG(MODULE_NAME, L_WARN,
-                               "Value type config node can not be "
-                               "indexed by \"%s(%d)\" in %s)",
-                               key.c_str(), i, format(key_list).c_str());
-                    return 1;
-                }
-            case YAML::NodeType::Null:
-                LOG(MODULE_NAME, L_WARN,
-                           "Unknown config node %s(%d) in %s",
-                           key.c_str(), i, format(key_list).c_str());
-                return 1;
-            default:
-                LOG(MODULE_NAME, L_WARN,
-                           "Unknown config node type %d @%s(%d) in %s",
-                           type, key.c_str(), i, format(key_list).c_str());
-                return 1;
-        }
-        next_node = next_node[key];
-    }
-    /* Should never reach here */
-    return 1;
-}
 
 /* 初始化日志相关的配置 */
 void init_logging(const string& exec_name, const string& nfs_host_name,
@@ -175,7 +80,7 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
     /* 日志路径 */
     string log_path = arg_log_path;
     /*初始化日志管理器*/
-    Logger::init(exec_name, nfs_host_name);
+    logger.init(exec_name, nfs_host_name);
     /*初始化主程序日志*/
     logger.init_module(MODULE_NAME);
     /*初始化日志等级*/
@@ -206,7 +111,7 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
         if (logger.set_log_output(L_INFO, log_path + ":stdout:syslog", &temp)) {
             LOG(MODULE_NAME, EXIT_ERROR, temp);
         }
-        logger.set_log_output({EXIT_EXCEPTION, EXIT_ERROR, L_ERROR, L_WARN},
+        logger.set_log_output({EXIT_ERROR, L_ERROR, L_WARN},
                               log_path + ":stderr:syslog", nullptr);
         logger.set_log_output(D_INFO, log_path + ":stdout", nullptr);
         logger.set_log_output({D_ERROR, D_WARN}, log_path += ":stderr", nullptr);
@@ -216,7 +121,7 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
             LOG(MODULE_NAME, EXIT_ERROR, temp);
         }
         logger.set_log_output(L_INFO, log_path + ":syslog", nullptr);
-        logger.set_log_output({EXIT_EXCEPTION, EXIT_ERROR, L_ERROR, L_WARN},
+        logger.set_log_output({EXIT_ERROR, L_ERROR, L_WARN},
                               log_path + ":syslog", nullptr);
     }
     if (config_get(temp, dnfs_config, {"log", "formatter"})) {
@@ -225,7 +130,7 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
             LOG(MODULE_NAME, EXIT_ERROR, error_info);
         }
     }
-    Logger::set_default_attr_from(MODULE_NAME, nullptr);
+    logger.set_default_attr_from(MODULE_NAME, nullptr);
 }
 
 /* 崩溃信号默认处理函数 */
@@ -237,7 +142,8 @@ static void crash_handler(int signo, [[maybe_unused]] siginfo_t *info,
 }
 
 /* 将处理函数挂载到对应的信号处理上 */
-static void install_sighandler(int signo, void (*handler)(int, siginfo_t *, void *)) {
+static void install_sighandler(int signo,
+                               void (*handler)(int, siginfo_t *, void *)) {
     struct sigaction sa = {};
     int ret;
 
@@ -320,14 +226,19 @@ int init_thread_signal_mask() {
     return 0;
 }
 
-/* 用于打印当前系统使用的配置信息 */
-static void dump_config() {
-    /*TODO*/
-}
+/**
+ * TI-RPC event channels.  Each channel is a thread servicing an event
+ * demultiplexer.
+ */
+
+struct rpc_evchan {
+    uint32_t chan_id;	/*< Channel ID */
+};
+
+static struct rpc_evchan rpc_evchan[EVCHAN_SIZE];
 
 /* 初始化nfs服务相关的接口注册操作 */
-static void dnfs_init_svc(void)
-{
+static void dnfs_init_svc(void) {
     svc_init_params svc_params;
     int ix;
     int code;
@@ -336,12 +247,16 @@ static void dnfs_init_svc(void)
 
     memset(&svc_params, 0, sizeof(svc_params));
 
-    /* New TI-RPC package init function */
+    /* 对rpc连接断开，创建连接分配请求资源和结束连接释放请求资源三个操作设置相应的callback函数 */
     svc_params.disconnect_cb = NULL;
-    svc_params.alloc_cb = alloc_nfs_request;
-    svc_params.free_cb = free_nfs_request;
+    svc_params.alloc_cb = alloc_dnfs_request;
+    svc_params.free_cb = free_dnfs_request;
+
+    /* 设置RPC的运行模式标签 */
     svc_params.flags = SVC_INIT_EPOLL;	/* use EPOLL event mgmt */
     svc_params.flags |= SVC_INIT_NOREG_XPRTS; /* don't call xprt_register */
+
+    /* 能够同时存在的连接个数 */
     svc_params.max_connections = nfs_param.core_param.rpc.max_connections;
     svc_params.max_events = 1024;	/* length of epoll event queue */
     svc_params.ioq_send_max =
@@ -359,8 +274,9 @@ static void dnfs_init_svc(void)
             nfs_param.core_param.rpc.gss.max_gc;
 
     /* Only after TI-RPC allocators, log channel are setup */
-    if (!svc_init(&svc_params))
-        LogFatal(COMPONENT_INIT, "SVC initialization failed");
+    if (!svc_init(&svc_params)) {
+        LOG(MODULE_NAME, EXIT_ERROR, "SVC initialization failed");
+    }
 
     for (ix = 0; ix < EVCHAN_SIZE; ++ix) {
         rpc_evchan[ix].chan_id = 0;
@@ -393,7 +309,6 @@ static void dnfs_init_svc(void)
 	 * and NFS_V4. Note that v4 servers are not required to register with
 	 * rpcbind, so we don't fail to start if only that fails.
 	 */
-#ifdef _USE_NFS3
 	if (NFS_options & CORE_OPTION_NFSV3) {
 		Register_program(P_NFS, NFS_V3);
 		Register_program(P_MNT, MOUNT_V1);
@@ -407,19 +322,6 @@ static void dnfs_init_svc(void)
 			Register_program(P_NFSACL, NFSACL_V3);
 #endif
 	}
-#endif /* _USE_NFS3 */
-
-	/* v4 registration is optional */
-	if (NFS_options & CORE_OPTION_NFSV4)
-		__Register_program(P_NFS, NFS_V4);
-
-#ifdef _USE_RQUOTA
-	if (nfs_param.core_param.enable_RQUOTA &&
-	    (NFS_options & CORE_OPTION_ALL_NFS_VERS)) {
-		Register_program(P_RQUOTA, RQUOTAVERS);
-		Register_program(P_RQUOTA, EXT_RQUOTAVERS);
-	}
-#endif
 }
 
 void nfs_Init_admin_thread(void) {
