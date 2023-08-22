@@ -17,28 +17,32 @@
 #define DNFS_DNFSD_H
 
 #include <stdbool.h>
-#include <yaml-cpp/yaml.h>
 
-#include "rpc/types.h"
-
+/* 主机名称的最大长度 */
 #define MAXHOSTNAMELEN	64
-#define GANESHA_PIDFILE_PATH "/var/run/ganesha/ganesha.pid"
-#define GANESHA_CONFIG_PATH "/etc/ganesha/ganesha.conf"
 
-#define GANESHA_VERSION "5.4"
-#define VERSION_COMMENT "GANESHA file server is 64 bits compliant and supports NFS v3,4.0,4.1 (pNFS) and 9P"
+/* 默认的DNFSD的PID文件记录路径，该文件用于标记服务进程，可用于判断服务启动状态和关闭服务 */
+#define DNFSD_PIDFILE_PATH "/var/run/dnfsd/main.pid"
+
+/* 默认的DNFSD的主配置文件路径 */
+#define DNFSD_CONFIG_PATH "/etc/dnfsd/main.conf"
+
+/* 当前的DNFSD的版本 */
+#define DNFSD_VERSION "5.4"
+
+/* 当前DNFSD的版本信息支持说明 */
+#define VERSION_COMMENT "DNFSD file server is 64 bits compliant and supports NFS v3"
+
+/* 当前的git提交版本hash */
 #define _GIT_HEAD_COMMIT "4f8c484b4ad2672e7e7ffb122b67fc34d96dc799"
+
+/* 当前最新提交的版本描述信息 */
 #define _GIT_DESCRIBE "V5.4-0-g4f8c484b4"
 
-typedef struct __nfs_start_info {
-    int dump_default_config;
-    int lw_mark_trigger;
-    bool drop_caps;
-} nfs_start_info_t;
+/* TODO */
+[[maybe_unused]] extern time_t nfs_ServerEpoch;
 
-extern time_t nfs_ServerEpoch;
-extern bool config_errors_fatal;
-extern tirpc_pkg_params ntirpc_pp;
-extern YAML::Node dnfs_config;
+/* 针对配置文件严重错误是否退出进程 */
+[[maybe_unused]] extern bool config_errors_fatal;
 
 #endif //DNFS_DNFSD_H

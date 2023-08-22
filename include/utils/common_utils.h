@@ -126,5 +126,9 @@ int creat_directory(const std::string &judge_dir, std::string *error_info);
  * return: 转化完成的日期字符串
  * */
 std::string get_record_time(const time_t &timeStamp, const std::string &format);
+/* 从一个结构体成员变量指针推断出结构体本身的地址 */
+#define get_parent_struct_addr(addr, type, member) ({			\
+	const typeof(((type *) 0)->member) * __mptr = (addr);	\
+	(type *)((char *) __mptr - offsetof(type, member)); })
 
 #endif //UTILS_COMMON_UTILS_H

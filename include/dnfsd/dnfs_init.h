@@ -17,26 +17,24 @@
 #define DNFSD_DNFS_INIT_H
 
 #include <string>
-#include <yaml-cpp/yaml.h>
-
-#include "dnfsd/dnfsd.h"
 
 /* 初始化配置文件 */
 void init_config(const std::string& config_file_path);
-/* 该函数用于快速从配置文件中获取指定层级的数据，并将结果按照指定格式写入到变量中，返回成功标志 */
-template<typename T>
-int config_get(T& out, const YAML::Node& config,
-               const std::vector<std::string>& key_list);
+
 /* 初始化日志相关的配置 */
 void init_logging(const std::string& exec_name, const std::string& nfs_host_name,
                   const log_level_t debug_level, const bool detach_flag,
                   const std::string& arg_log_path);
+
 /* 初始化错误信号的处理函数 */
 void init_crash_handlers();
+
 /* 检查malloc功能的可用性 */
 void init_check_malloc();
+
 /* 初始化线程对信号的处理操作 */
 int init_thread_signal_mask();
+
 /* dnfs启动处理函数 */
 void dnfs_start(nfs_start_info_t *p_start_info);
 
