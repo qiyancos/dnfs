@@ -1,9 +1,23 @@
 #include <iostream>
 #include "log/log.h"
+#include <cstdarg>
 using namespace std;
+
 void exit_t(int code) {
     cout << "错误退出" << endl;
     exit(code);
+}
+
+void test(const char *format, ...){
+    char wd[100];
+    va_list arguments;
+
+    va_start(arguments, format);
+
+    vsnprintf(wd, 100, format,arguments);
+    cout<<wd<<endl;
+
+    va_end(arguments);
 }
 
 int main() {
@@ -13,20 +27,80 @@ int main() {
     /*设置全局属性*/
     logger.init("xx", "xx");
 
-    int in_s=logger.decode_log_level("DEBUG_INFO");
+    /*解析日志级别*/
+    cout << "解析日志级别:" << logger.decode_log_level("DEBUG_INFO")
+         << endl;
 
-    /*解析日志类别*/
-    cout << in_s << endl;
-
-    /*测试建立模板和设置默认模板*/
+    /*建立模板*/
     string w;
     string *s = &w;
     logger.init_module("test");
-    cout << logger.set_default_attr_from("test", s) << endl;
-    cout << *s << endl;
 
-    /*赋值模块日志模板*/
-    cout << logger.copy_module_attr_from("yes", "test", s) << endl;
-    cout << *s << endl;
+    /*设置默认模板*/
+    cout << "设置默认模板:" << logger.set_default_attr_from("test", s)
+         << ":" << *s << endl;
+
+    /*复制日志模板*/
+    cout << "复制日志模板:"
+         << logger.copy_module_attr_from("yes", "test", s) << ":" << *s << endl;
+
+    /*设置所有模块日志等级日志文件路径*/
+    cout << "设置所有模块日志等级日志文件属性:" << logger.set_log_output(
+            "stderr:syslog:/tmp/@(time,MINUTE,30):/tmp/dasdad/", s) << ":" << *s
+         << endl;
+
+    /*设置所有模块多个日志等级日志文件路径*/
+    /*单个模式更改*/
+    vector<log_level_t> log_level_list = {EXIT_ERROR};
+    cout << "设置所有模块多个日志等级日志文件路径:"
+         << logger.set_log_output(log_level_list,
+                                  "stderr:syslog:/tmp/yes/@(time,MINUTE,30):/tmp/dasdad/",
+                                  s) << ":" << *s << endl;
+
+    /*设置指定日志等级日志文件路径*/
+    /*设置全模式更改*/
+    cout << "设置指定日志等级日志文件路径:"
+         << logger.set_log_output(L_ERROR,
+                                  "stderr:syslog:/tmp/all/@(time,MINUTE,30):/tmp/dasdad/",
+                                  s) << ":" << *s << endl;
+
+    /*设置指定模块日志等级日志文件属性*/
+    cout << "设置指定模块日志等级日志文件属性:"
+         << logger.set_module_log_output("yes",
+                                         "stderr:syslog:/tmp/test/@(time,MINUTE,30):/tmp/dasdad/",
+                                         s) << ":" << *s << endl;
+
+    /*设置指定日志等级日志文件路径*/
+    cout << "设置指定日志等级日志文件路径:"
+         << logger.set_module_log_output("yes",
+                                         L_ERROR,
+                                         "stderr:syslog:/tmp/single/@(time,MINUTE,30):/tmp/dasdad/",
+                                         s) << ":" << *s << endl;
+
+    /*设置多个日志等级日志文件路径*/
+    cout << "设置多个日志等级日志文件路径:"
+         << logger.set_module_log_output("yes",
+                                         log_level_list,
+                                         "stderr:syslog:/tmp/no/@(time,MINUTE,30):/tmp/dasdad/",
+                                         s) << ":" << *s << endl;
+
+    /*设置所有模块的日志等级，高于该等级的才可以输出*/
+    cout << "设置所有模块的日志等级，高于该等级的才可以输出:" << endl;
+    logger.set_log_level(L_INFO);
+
+    /*设置指定模块日志等级，高于该等级的才可以输出*/
+    cout << "设置指定模块日志等级，高于该等级的才可以输出:" << endl;
+    logger.set_module_log_level("yes", D_INFO);
+
+    /*设置所有模块日志格式*/
+    cout << "设置所有模块日志格式:" << logger.set_formatter(" %(program_name)/%(process)", s) << ":"
+         << *s << endl;
+
+    /*设置所有模块日志格式*/
+    cout << "设置所有模块日志格式:" << logger.set_module_formatter("yes"," %(program_name)/%(process)/%(modulename)", s) << ":"
+         << *s << endl;
+
+    /*判断模块日志debug状态*/
+    cout << "判断模块日志debug状态:" << logger.is_module_debug_on("yes")<<endl;
     return 0;
 }

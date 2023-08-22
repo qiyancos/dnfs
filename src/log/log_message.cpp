@@ -14,6 +14,7 @@
  */
 
 #include "log/log_message.h"
+
 using namespace std;
 
 /*将时间戳转化为字符串*/
@@ -32,4 +33,30 @@ string LogMessage::get_record_time(const time_t &timeStamp) {
     strftime(time_buffer, 30, "%Y-%m-%d %H:%M:%S", info);
 
     return time_buffer;
+}
+
+/*初始化参数
+ * params module_name:模块名
+ * params log_level:日志级别
+ * params file:调用文件完整路径
+ * params line:调用行号
+ * params func:调用方法名
+ * params format:用户信息日志格式
+ * params args:用户信息参数，需对应format
+ * */
+LogMessage::LogMessage(const std::string &module_name,
+                       const LogLevel &log_level,
+                       const std::string &file, const int &line,
+                       const std::string &func, const char *format,
+                       va_list args) {
+    /*格式化字符串*/
+    vsnprintf(log_message, 200, format, args);
+
+    /*参数赋值*/
+    this->module_name = module_name;
+    this->log_level = log_level;
+    file_path = file;
+    line_no = line;
+    func_name = func;
+    record_time = time(nullptr);
 }

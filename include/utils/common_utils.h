@@ -28,6 +28,7 @@
 #include <unordered_set>
 #include <string>
 #include <set>
+#include <regex>
 
 /* 该函数用于设置format的格式，设置为True则会追加缩进和换行 */
 void set_print_beauty(const bool beauty);
@@ -36,11 +37,11 @@ void set_print_beauty(const bool beauty);
 [[maybe_unused]] void set_print_indent(int indent);
 
 template<typename T>
-inline const std::string format(const T& out_data) {
+inline const std::string format(const T &out_data) {
     return std::to_string(out_data);
 }
 
-inline const std::string format(const std::string& out_data) {
+inline const std::string format(const std::string &out_data) {
     return out_data;
 }
 
@@ -51,11 +52,17 @@ const std::string format(const Type<T>& out_data);
 
 /* 对常见的迭代器类别进行声明生成 */
 AUTO_DECL_GEN1(std::vector, "[", "]")
+
 AUTO_DECL_GEN1(std::set, "(", ")")
+
 AUTO_DECL_GEN1(std::unordered_set, "(", ")")
+
 AUTO_DECL_GEN1(std::list, "[", "]")
+
 AUTO_DECL_GEN1(std::queue, "[", "]")
+
 AUTO_DECL_GEN1(std::deque, "[", "]")
+
 AUTO_DECL_GEN1(std::stack, "[", "]")
 
 /* 对输入的指定类型进行格式化，返回一个格式化后的字符串 */
@@ -65,6 +72,7 @@ const std::string format (const Type<T1, T2> &out_data);
 
 /* 对常见的迭代器类别进行声明生成 */
 AUTO_DECL_GEN2(std::map, "{", "}")
+
 AUTO_DECL_GEN2(std::unordered_map, "{", "}")
 
 /* 对输入的指定类型进行格式化，返回一个格式化后的字符串 */
@@ -75,10 +83,12 @@ template<typename T1, typename T2>
 const std::string format(const std::pair<T1, T2> &out_data);
 
 /*切割字符串*/
-void split_str(const std::string &str, const std::string &split, std::vector<std::string> &result);
+void split_str(const std::string &str, const std::string &split,
+               std::vector<std::string> &result);
 
-/*判断字符串是不是纯数字*/
-bool judge_number(const std::string &judge_str);
+/*验证字符串是否满足正则表达式*/
+bool
+judge_regex(const std::string &judge_str, const std::regex &regex_expression);
 
 /*给非空指针设置信息*/
 void set_ptr_info(std::string *error_info, const std::string &error_content);

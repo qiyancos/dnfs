@@ -26,6 +26,8 @@ private:
         TIME,
         SIZE
     } rotate_type_t;
+
+    /*截断日志判定类型*/
     rotate_type_t rotate_type = NOT;
 
     /*如果按照时间进行日志更新，具体的日志更新时间*/
@@ -38,7 +40,9 @@ private:
         MIDNIGHT,
         WEEK
     } rotate_when_t;
-    rotate_when_t when=NEVER;
+
+    /*按时间截断，时间间隔*/
+    rotate_when_t when = NEVER;
 
     /*具体的更新时间间隔或文件大小*/
     union {
@@ -51,17 +55,22 @@ private:
     int backup_count = 0;
 
     /*设置文件限制大小*/
-    uint32_t limit_size=102400;
+    uint32_t limit_size = 102400;
 
-    /*日志文件的完整路径*/
-    std::string log_file_path;
+    /*日志文件的保存目录*/
+    std::string log_directory_path;
 
-    /*TODO 其他状态信息*/
+    /*记录已经生成的日志数目*/
+    int log_files = 0;
 public:
     /*默认构造函数*/
     LogFile();
-    /*解析建立数据*/
-    int generate_data(const std::string &config_str,std::string *error_info);
+
+    /*解析建立数据
+     * params config_str:日志文件配置信息
+     * params error_info:错误信息
+     * */
+    int generate_data(const std::string &config_str, std::string *error_info);
 };
 
 #endif //LOG_LOG_FILE_H
