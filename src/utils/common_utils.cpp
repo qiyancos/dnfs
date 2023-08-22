@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <sys/stat.h>
 #include <iostream>
+#include <experimental/filesystem>
 
 #include "utils/common_utils.h"
 
@@ -199,13 +200,21 @@ void split_str(const string &str, const string &split, vector<string> &result) {
     }
 }
 
-/*判断字符串是不是纯数字*/
+/*验证字符串是否满足正则表达式
+ * params judge_str:验证的字符串
+ * params judge_str:验证的正则表达式
+ * return: true 匹配成功 false 匹配失败
+ * */
 bool judge_regex(const string &judge_str, const regex &regex_expression) {
     /*返回匹配结果*/
     return regex_match(judge_str, regex_expression);
 }
 
-/*给非空指针设置信息*/
+/*给非空指针设置信息
+ * params error_info:字符串指针
+ * params error_content:设置的信息
+ * return
+ * */
 void set_ptr_info(string *error_info, const string &error_content) {
     /*如果不是空指针，赋值错误信息*/
     if (error_info != nullptr) {
@@ -213,64 +222,96 @@ void set_ptr_info(string *error_info, const string &error_content) {
     }
 }
 
-/*转为小写*/
+/*转为小写
+ * params str:需转换的字符串
+ * return
+ * */
 void to_lower(string &str) {
     /*全转为小写*/
     transform(str.begin(), str.end(), str.begin(), ::tolower);
 }
 
 
-/*转为大写*/
+/*转为大写
+ * params str:需转换的字符串
+ * return
+ * */
 void to_upper(string &str) {
     /*全转为小写*/
     transform(str.begin(), str.end(), str.begin(), ::toupper);
 }
 
-/*判断文件目录是否存在*/
-int judge_directory_exist(const string &judge_dir) {
+/*判断文件目录是否存在
+ * params judge_dir:验证的路径
+ * params error_info:错误信息
+ * return: 状态码 0 生成成功 其他 生成失败
+ * */
+int creat_directory(const string &judge_dir, string *error_info) {
     struct stat info{};
     if (stat(judge_dir.c_str(), &info) != 0) {
-        /*不存在返回-1*/
-        return -1;
+        try {
+            /*递归创建文件夹*/
+            experimental::filesystem::create_directories(judge_dir);
+            /*创建成功*/
+            return 0;
+        } catch (experimental::filesystem::filesystem_error &e) {
+            /*添加错误信息*/
+            set_ptr_info(error_info, e.what());
+            /*创建错误返回失败*/
+            return 1;
+        }
     } else if (info.st_mode & S_IFDIR) {
-        /*是文件夹返回0*/
+        /*目录存在*/
         return 0;
     } else {
-        /*不是文件目录返回-2*/
-        return -2;
+        /*设置错误信息*/
+        set_ptr_info(error_info, "the path for saving log is not a directory");
+        /*不是文件目录返回错误*/
+        return 1;
     }
 }
 
-/*递归创建文件目录*/
-int mkdir_recursion(const string &dir_path) {
-    /*设置结果保存*/
-    vector<string> result;
-    /*切割路径*/
-    split_str(dir_path, "/", result);
-    /*从头开始递归创建*/
-    string recursion_path="/";
-    /*遍历添加路径*/
-    for(string &path:result){
-        /*判断目录字符数是否满足命名要求,目录名需小于255字符*/
-        if(path.size()>254){
-            return -3;
-        }
-        /*拼接路径*/
-        recursion_path+=path;
-        /*添加分割符*/
-        recursion_path+="/";
+/*将时间戳转化为日志
+ * params timeStamp:转化的时间戳
+ * params format:转化的日期格式
+ * return: 转化完成的日期字符串
+ * */
+string get_record_time(const time_t &timeStamp, const string &format) {
 
-        /*判断目是否存在*/
-        int judge_code=judge_directory_exist(recursion_path);
-        /*如果不是文件目录返回*/
-        if(judge_code==-2){
-            return -2;
-        }else if(judge_code==0){
-            /*存在接着操作*/
-            continue;
-        }
-        /*不存在目录进行创建*/
-        mkdir(recursion_path.c_str(),777);
+    /*%Y-%m-%d %H:%M:%S*/
+
+    /*默认的日志时间格式*/
+    const char *default_time_format = "%Y-%m-%d %H:%M:%S";
+    /*默认的毫秒格式*/
+    const char *default_msec_format = "%s,%03d";
+
+    /*保存转化时间*/
+    char time_buffer[30] = {0};
+
+    /*构建时间存储结构*/
+    struct tm *info;
+
+    /*将时间戳转化为为时间存储结构*/
+    info = localtime(&timeStamp);
+
+    /*如果设置了日期格式*/
+    if(!format.empty())
+    {
+        /*转化时间格式*/
+        strftime(time_buffer, 30, format.c_str(), info);
+    }else{
+        /*使用默认的格式*/
+        strftime(time_buffer, 30, default_time_format, info);
+
+        /*获取系统当前时间*/
+        auto now = chrono::system_clock::now();
+
+        /*通过不同精度获取相差的毫秒数*/
+        uint64_t dis_millseconds = chrono::duration_cast<chrono::milliseconds>(now.time_since_epoch()).count()
+                                   - chrono::duration_cast<chrono::seconds>(now.time_since_epoch()).count() * 1000;
+        /*添加毫秒数据*/
+        sprintf(time_buffer,default_msec_format,time_buffer,(int)dis_millseconds);
     }
-    return 0;
+
+    return time_buffer;
 }

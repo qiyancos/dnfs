@@ -28,6 +28,7 @@ LogFile::LogFile() = default;
 /*解析建立数据
  * params config_str:日志文件配置信息
  * params error_info:错误信息
+ * return: 状态码 0 生成成功 其他 生成失败
  * */
 int LogFile::generate_data(const string &config_str, string *error_info) {
     /*先判断有没有文件设置参数
@@ -155,29 +156,11 @@ int LogFile::generate_data(const string &config_str, string *error_info) {
                      "the directory for saving log must a absolutely path what start and end with / and just contain the number alphabet _");
         return 1;
     }
-    /*查看路径是否存在，不存在创建*/
-    int judge_code = judge_directory_exist(dir_path);
-    /*创建文件目录状态码*/
-    int mk_code = 0;
-    /*不存在路径直接创建*/
-    if (judge_code == -1) {
-        /*递归创建目录*/
-        mk_code = mkdir_recursion(dir_path);
-        /*命名长度超过255*/
-        if (mk_code == -3) {
-            set_ptr_info(error_info,
-                         "the path for saving log every part length must smaller than 255");
-            return 1;
-        }
-    }
-    /*如果判断或者创建状态码为2，说明不为目录路径*/
-    if (judge_code == -2 or mk_code) {
-        /*不是目录路径直接返回*/
-        set_ptr_info(error_info,
-                     "the path for saving log is not a directory");
+    /*查看路径是否存在，不存在创建,创建错误直接返回*/
+    if (creat_directory(dir_path, error_info) != 0) {
         return 1;
     }
     /*路径赋值*/
-    log_directory_path=dir_path;
+    log_directory_path = dir_path;
     return 0;
 }

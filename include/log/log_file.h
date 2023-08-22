@@ -69,6 +69,7 @@ public:
     /*解析建立数据
      * params config_str:日志文件配置信息
      * params error_info:错误信息
+     * return: 状态码 0 生成成功 其他 生成失败
      * */
     int generate_data(const std::string &config_str, std::string *error_info);
 };

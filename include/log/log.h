@@ -118,6 +118,7 @@ private:
          * params error_info:错误信息
          * 比如 "stderr:syslog:/tmp/a.log@(time,midnight,30):/tmp/b.log"
          * 比如 "stderr:syslog:/tmp/a.log@(size,10MB,30):/tmp/b.log"
+         * return: 状态码 0 生成成功 其他 生成失败
          * */
         int generate_config(const std::string &log_out_attr_str,
                             std::string *error_info);
@@ -168,6 +169,24 @@ private:
         /*日志等级开关，比他小的都可以输出*/
         log_level_t log_level = NOLOG;
 
+        /*设置时间格式
+         *     %Y  Year with century as a decimal number.
+         *     %m  Month as a decimal number [01,12].
+         *     %d  Day of the month as a decimal number [01,31].
+         *     %H  Hour (24-hour clock) as a decimal number [00,23].
+         *     %M  Minute as a decimal number [00,59].
+         *     %S  Second as a decimal number [00,61].
+         *     %z  Time zone offset from UTC.
+         *     %a  Locale's abbreviated weekday name.
+         *     %A  Locale's full weekday name.
+         *     %b  Locale's abbreviated month name.
+         *     %B  Locale's full month name.
+         *     %c  Locale's appropriate date and time representation.
+         *     %I  Hour (12-hour clock) as a decimal number [01,12].
+         *     %p  Locale's equivalent of either AM or PM.
+         * */
+        std::string date_format;
+
         /*是不是debug*/
         bool debug_on = false;
 
@@ -176,10 +195,22 @@ private:
 
         /*根据formatter得到日志信息
          * params log_message:根据设置的formatter生成的日志消息
+         * params log_le:输出的日志级别
+         * params file:调用文件完整路径
+         * params line:调用行号
+         * params func:调用方法名
+         * params file_name:调用文件名
+         * params record_time:创建时间
          * params message:用户打印的消息
+         * return
          * */
         void
-        get_log_message(std::string &log_message, const std::string &message);
+        get_log_message(std::string &log_message, log_level_t log_le,
+                        const std::string &file,
+                        const int &line, const std::string &func,
+                        const std::string &file_name,
+                        const time_t &record_time,
+                        const std::string &message);
     };
 
     /*日志等级对照结构体*/
@@ -239,7 +270,9 @@ public:
     std::string program_name = "Unknown";
 
 public:
-    /*得到日志单例对象*/
+    /*得到日志单例对象
+     * return: 日志对象
+     * */
     static Logger &get_instance();
 
 public:
@@ -252,12 +285,14 @@ public:
 
     /*判断日志级别
      * params log_level_str:需要判定的日志级别
+     * return: 日志级别
      * */
     log_level_t decode_log_level(const std::string &log_level_str);
 
     /*对默认日志属性的设置
      * params module_name:模块名
      * params error_info:错误信息
+     * return: 状态码 0 生成成功 其他 生成失败
      * */
     int set_default_attr_from(const std::string &module_name,
                               std::string *error_info);
@@ -270,6 +305,7 @@ public:
 
     /*使用默认日志属性初始化一个模块日志
      * params module_name:模块名
+     * return
      * */
     void init_module(const std::string &module_name);
 
@@ -277,6 +313,7 @@ public:
      * params target_module_name:目标模块名
      * params src_module_name:源模块名
      * params error_info:错误信息
+     * return: 状态码 0 生成成功 其他 生成失败
      * */
     int copy_module_attr_from(const std::string &target_module_name,
                               const std::string &src_module_name,
@@ -284,74 +321,88 @@ public:
 
     /*判断模块日志设置存不存在
      * params module_name:模块名
+     * return: true 存在 false 不存在
      * */
     bool judge_module_attr_exist(const std::string &module_name);
 
-    /*设置所有模块日志等级日志文件属性
-     * params log_path:日志文件配置信息
+    /*设置所有模块日志等级日志文件配置
+     * params log_file_config:日志文件配置信息
      * params error_info:错误信息
-     * */
-    int set_log_output(const std::string &log_path, std::string *error_info);
-
-    /*设置指定日志等级日志文件路径
-     * params log_level:日志级别
-     * params log_path:日志文件配置信息
-     * params error_info:错误信息
+     * return: 状态码 0 生成成功 其他 生成失败
      * */
     int
-    set_log_output(const log_level_t &log_level, const std::string &log_path,
+    set_log_output(const std::string &log_file_config, std::string *error_info);
+
+    /*设置所有模块单个日志等级文件配置
+     * params log_level:日志级别
+     * params log_file_config:日志文件配置信息
+     * params error_info:错误信息
+     * return: 状态码 0 生成成功 其他 生成失败
+     * */
+    int
+    set_log_output(const log_level_t &log_level,
+                   const std::string &log_file_config,
                    std::string *error_info);
 
-    /*设置所有模块多个日志等级日志文件路径
+    /*设置所有模块多个日志等级日志文件配置
      * params log_level_list:需设置的日志等级列表
-     * params log_path:日志文件配置信息
+     * params log_file_config:日志文件配置信息
      * params error_info:错误信息
+     * return: 状态码 0 生成成功 其他 生成失败
      * */
     int set_log_output(const std::vector<log_level_t> &log_level_list,
-                       const std::string &log_path, std::string *error_info);
+                       const std::string &log_file_config,
+                       std::string *error_info);
 
-    /*设置指定模块日志等级日志文件属性
+    /*设置指定模块日志等级日志文件配置
      * params module_name:模块名
-     * params log_path:日志文件配置信息
+     * params log_file_config:日志文件配置信息
      * params error_info:错误信息
+     * return: 状态码 0 生成成功 其他 生成失败
      * */
     int set_module_log_output(const std::string &module_name,
-                              const std::string &log_path,
+                              const std::string &log_file_config,
                               std::string *error_info);
 
-    /*设置指定日志等级日志文件路径
+    /*设置指定模块日志等级日志文件配置
      * params module_name:模块名
      * params log_level:指定的日志等级
-     * params log_path:日志文件配置信息
+     * params log_file_config:日志文件配置信息
      * params error_info:错误信息
+     * return: 状态码 0 生成成功 其他 生成失败
      * */
     int set_module_log_output(const std::string &module_name,
                               const log_level_t &log_level,
-                              const std::string &log_path,
+                              const std::string &log_file_config,
                               std::string *error_info);
 
-    /*设置多个日志等级日志文件路径
+    /*设置指定模块多个日志等级日志文件配置
      * params module_name:模块名
      * params log_level_list:指定的日志等级列表
-     * params log_path:日志文件配置信息
+     * params log_file_config:日志文件配置信息
      * params error_info:错误信息
+     * return: 状态码 0 生成成功 其他 生成失败
      * */
     int set_module_log_output(const std::string &module_name,
                               const std::vector<log_level_t> &log_level_list,
-                              const std::string &log_path,
+                              const std::string &log_file_config,
                               std::string *error_info);
 
     /*设置所有模块的日志等级，高于该等级的才可以输出
      * params log_level:指定的日志等级
+     * return
      * */
     void set_log_level(const log_level_t &log_level);
 
     /*设置指定模块日志等级，高于该等级的才可以输出
      * params module_name:模块名
      * params log_level:指定的日志等级
+     * params error_info:错误信息
+     * return: 状态码 0 生成成功 其他 生成失败
      * */
-    void set_module_log_level(const std::string &module_name,
-                              const log_level_t &log_level);
+    int set_module_log_level(const std::string &module_name,
+                             const log_level_t &log_level,
+                             std::string *error_info);
 
     /*判断debug模式
      * params log_attr:需要判定的日志属性结构体对象，直接更改其属性
@@ -362,6 +413,7 @@ public:
     /*设置所有模块日志格式
      * params format_str:格式化字符串
      * params error_info:错误信息
+     * return: 状态码 0 生成成功 其他 生成失败
      * */
     int set_formatter(const std::string &format_str, std::string *error_info);
 
@@ -369,6 +421,7 @@ public:
      * params module_name:模块名
      * params format_str:格式化字符串
      * params error_info:错误信息
+     * return: 状态码 0 生成成功 其他 生成失败
      * */
     int set_module_formatter(const std::string &module_name,
                              const std::string &format_str,
@@ -378,10 +431,27 @@ public:
      * params format_str:格式化字符串
      * params error_info:错误信息
      * params log_formatter_select:生成的日志格式化字段选择列表
+     * return: 状态码 0 生成成功 其他 生成失败
      * */
     int _init_log_formatter(const std::string &format_str,
                             std::string *error_info,
                             std::vector<bool> &log_formatter_select);
+
+    /*设置所有模块的日期打印格式
+     * params date_format:日期打印格式
+     * return
+     * */
+    void set_data_format(const std::string &date_format);
+
+    /*设置指定模块的日期打印格式
+     * params module_name:指定的模块名
+     * params date_format:日期打印格式
+     * params error_info:错误信息
+     * return: 状态码 0 生成成功 其他 生成失败
+     * */
+    int set_module_data_format(const std::string &module_name,
+                               const std::string &date_format,
+                               std::string *error_info);
 
     /*打印输出日志
      * params module_name:模型名
@@ -398,6 +468,7 @@ public:
 
     /*判断模块日志debug状态
      * params module_name:模型名
+     * return: true 开启debug false 关闭debug
      * */
     bool is_module_debug_on(const std::string &module_name);
 

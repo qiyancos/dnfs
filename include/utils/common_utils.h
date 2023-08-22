@@ -86,23 +86,45 @@ const std::string format(const std::pair<T1, T2> &out_data);
 void split_str(const std::string &str, const std::string &split,
                std::vector<std::string> &result);
 
-/*验证字符串是否满足正则表达式*/
+/*验证字符串是否满足正则表达式
+ * params judge_str:验证的字符串
+ * params judge_str:验证的正则表达式
+ * return: true 匹配成功 false 匹配失败
+ * */
 bool
 judge_regex(const std::string &judge_str, const std::regex &regex_expression);
 
-/*给非空指针设置信息*/
+/*给非空指针设置信息
+ * params error_info:字符串指针
+ * params error_content:设置的信息
+ * return
+ * */
 void set_ptr_info(std::string *error_info, const std::string &error_content);
 
-/*转为小写*/
+/*转为小写
+ * params str:需转换的字符串
+ * return
+ * */
 void to_lower(std::string &str);
 
-/*转为大写*/
+/*转为大写
+ * params str:需转换的字符串
+ * return
+ * */
 void to_upper(std::string &str);
 
-/*判断文件目录是否存在*/
-int judge_directory_exist(const std::string &judge_dir);
+/*判断文件目录是否存在
+ * params judge_dir:验证的路径
+ * params error_info:错误信息
+ * return: 状态码 0 生成成功 其他 生成失败
+ * */
+int creat_directory(const std::string &judge_dir, std::string *error_info);
 
-/*递归创建文件目录*/
-int mkdir_recursion(const std::string &dir_path);
+/*将时间戳转化为日志
+ * params timeStamp:转化的时间戳
+ * params format:转化的日期格式
+ * return: 转化完成的日期字符串
+ * */
+std::string get_record_time(const time_t &timeStamp, const std::string &format);
 
 #endif //UTILS_COMMON_UTILS_H
