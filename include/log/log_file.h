@@ -26,6 +26,8 @@ private:
         TIME,
         SIZE
     } rotate_type_t;
+
+    /*截断日志判定类型*/
     rotate_type_t rotate_type = NOT;
 
     /*如果按照时间进行日志更新，具体的日志更新时间*/
@@ -38,6 +40,8 @@ private:
         MIDNIGHT,
         WEEK
     } rotate_when_t;
+
+    /*按时间截断，时间间隔*/
     rotate_when_t when = NEVER;
 
     /*具体的更新时间间隔或文件大小*/
@@ -62,7 +66,10 @@ public:
     /*默认构造函数*/
     LogFile();
 
-    /*解析建立数据*/
+    /*解析建立数据
+     * params config_str:日志文件配置信息
+     * params error_info:错误信息
+     * */
     int generate_data(const std::string &config_str, std::string *error_info);
 };
 

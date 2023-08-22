@@ -1,11 +1,23 @@
 #include <iostream>
 #include "log/log.h"
-
+#include <cstdarg>
 using namespace std;
 
 void exit_t(int code) {
     cout << "错误退出" << endl;
     exit(code);
+}
+
+void test(const char *format, ...){
+    char wd[100];
+    va_list arguments;
+
+    va_start(arguments, format);
+
+    vsnprintf(wd, 100, format,arguments);
+    cout<<wd<<endl;
+
+    va_end(arguments);
 }
 
 int main() {
@@ -90,6 +102,5 @@ int main() {
 
     /*判断模块日志debug状态*/
     cout << "判断模块日志debug状态:" << logger.is_module_debug_on("yes")<<endl;
-
     return 0;
 }

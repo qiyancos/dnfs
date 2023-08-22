@@ -24,22 +24,39 @@
 class LogMessage {
 private:
     /*日志的记录内容的格式*/
-    std::string formatter;
-    /*匹配formatter的参数列表*/
-    std::vector<std::string> args;
+    char log_message[200]{};
+
     /*模块名，用来查询默认的日志格式*/
     std::string module_name;
+
+    /*调用的文件完成路径*/
+    std::string file_path;
+
+    /*调用行号*/
+    int line_no;
+
+    /*调用方法名*/
+    std::string func_name;
+
     /*记录时间戳,用来同一个文件写入时排序*/
-    int record_time;
+    time_t record_time;
+
     /*记录日志级别*/
     LogLevel log_level = NOLOG;
 public:
-    /*初始化参数*/
-    LogMessage(std::string &formatter, std::string module_name,
-               std::vector<std::string> args);
-
-    /*解析数据得到日志写入内容*/
-    std::string message();
+    /*初始化参数
+     * params module_name:模块名
+     * params log_level:日志级别
+     * params file:调用文件完整路径
+     * params line:调用行号
+     * params func:调用方法名
+     * params format:用户信息日志格式
+     * params args:用户信息参数，需对应format
+     * */
+    LogMessage(const std::string &module_name,
+               const LogLevel &log_level,
+               const std::string &file, const int &line,
+               const std::string &func, const char *format, va_list args);
 
     /*获取日志记录时间*/
     static std::string get_record_time(const time_t &timeStamp);

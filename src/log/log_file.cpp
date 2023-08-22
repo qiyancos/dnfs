@@ -25,7 +25,10 @@ using namespace std;
 /*默认构造函数*/
 LogFile::LogFile() = default;
 
-/*解析建立数据*/
+/*解析建立数据
+ * params config_str:日志文件配置信息
+ * params error_info:错误信息
+ * */
 int LogFile::generate_data(const string &config_str, string *error_info) {
     /*先判断有没有文件设置参数
      * 获取参数切割下标*/
