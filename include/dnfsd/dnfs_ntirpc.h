@@ -61,4 +61,8 @@ struct svc_req *alloc_dnfs_request(SVCXPRT *xprt, XDR *xdrs);
 /* 释放请求数据结构体对应的内存空间并执行其他销毁操作 */
 void free_dnfs_request(struct svc_req *req, enum xprt_stat stat);
 
+/* Dispatch after rendezvous，该函数用于在接收到指定协议的UDP数据，如NFSV23的RPC请求后
+ * 执行该函数进行二次分发，分发给实际RPC对应的处理函数执行处理操作并返回数据 */
+enum xprt_stat nfs_rpc_dispatch_udp_NFS(SVCXPRT *xprt);
+
 #endif //DNFSD_DNFS_NTIRPC_H
