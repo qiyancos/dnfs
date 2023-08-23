@@ -579,7 +579,11 @@ Logger::LoggerAttr::LoggerAttr() = default;
  * params file:调用文件完整路径
  * params line:调用行号
  * params func:调用方法名
+ * params file_name:调用文件名
+ * params record_time:创建时间
+ * params tid:线程id
  * params message:用户打印的消息
+ * return
  * */
 void
 Logger::LoggerAttr::get_log_message(string &log_message, log_level_t log_le,
@@ -587,13 +591,16 @@ Logger::LoggerAttr::get_log_message(string &log_message, log_level_t log_le,
                                     const int &line, const string &func,
                                     const string &file_name,
                                     const time_t &record_time,
+                                    const thread::id &tid,
                                     const string &message) {
     /*获取设置的日志格式进行判断替换*/
     log_message = formatter;
+
     /*循环判定选中的格式，选中就替换*/
-    for (auto &&i: log_formatter_select) {
+    for (int i=0;i<log_formatter_select.size();i++) {
         /*如果选择了*/
-        if (i) {
+        if (log_formatter_select[i]) {
+
             /*直接判定进行正则替换*/
             switch (i) {
                 case 0:
@@ -655,15 +662,17 @@ Logger::LoggerAttr::get_log_message(string &log_message, log_level_t log_le,
                                                 get_record_time(record_time,
                                                                 date_format));
                 case 11:
-                    /*打印线程id todo*/
+                    /*打印线程id*/
+                    /*将pid转化为字符串*/
                     log_message = regex_replace(log_message,
                                                 std::regex("%(thread)"),
-                                                to_string(record_time));
-//                case 12:
-//                    /*打印线程名 todo*/
-//                    log_message = regex_replace(log_message,
-//                                                std::regex("%(threadName)"),
-//                                                ThreadPool::get_target_thread_name(1));
+                                                pid_to_string(tid));
+                case 12:
+                    /*打印线程名*/
+                    log_message = regex_replace(log_message,
+                                                std::regex("%(threadName)"),
+                                                ThreadPool::get_target_thread_name(
+                                                        tid));
                 case 13:
                     /*打印进程id todo*/
                     log_message = regex_replace(log_message,

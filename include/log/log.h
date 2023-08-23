@@ -23,6 +23,7 @@
 #include <syslog.h>
 #include <atomic>
 #include <queue>
+#include <thread>
 
 #include "log_file.h"
 
@@ -201,6 +202,7 @@ private:
          * params func:调用方法名
          * params file_name:调用文件名
          * params record_time:创建时间
+         * params tid:线程id
          * params message:用户打印的消息
          * return
          * */
@@ -210,6 +212,7 @@ private:
                         const int &line, const std::string &func,
                         const std::string &file_name,
                         const time_t &record_time,
+                        const std::thread::id &tid,
                         const std::string &message);
     };
 

@@ -19,6 +19,7 @@
 
 #include <iostream>
 #include <vector>
+#include <thread>
 #include "log.h"
 
 /*日志信息对象，存放了单词输出的日志信息结构*/
@@ -47,6 +48,9 @@ private:
 
     /*记录日志级别*/
     LogLevel log_level = NOLOG;
+
+    /*线程id*/
+    std::thread::id tid;
 public:
     /*初始化参数
      * params module_name:模块名

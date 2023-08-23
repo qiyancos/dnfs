@@ -124,7 +124,10 @@ int main() {
     /*获取日期*/
     cout<<get_record_time(time(nullptr),"")<<endl;
 
-    test("%s","1234232321");
+    thread::id tid=this_thread::get_id();
+    cout<<any_to_string(tid)<<endl;
+    vector<int> wd={1,2,3};
+    cout<<format(wd)<<endl;
     return 0;
 }
 

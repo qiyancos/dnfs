@@ -35,28 +35,28 @@ LogMessage::LogMessage(const std::string &module_name,
                        va_list args) {
 
     /*建立临时缓存存储数据*/
-    char temporary[100];
+    char temporary[1024];
 
     /*格式化字符串*/
-    int message_len = vsnprintf(temporary, 100, format, args);
+    int message_len = vsnprintf(temporary, 1024, format, args);
 
     /*判断数据大小*/
-    if(message_len>100){
-        if(100<=message_len<MAX_BUFFER){
+    if (message_len > 100) {
+        if (1024 <= message_len < MAX_BUFFER) {
             /*动态申请内存*/
-            log_message= (char *)malloc(message_len);
-        }else{
+            log_message = (char *) malloc(message_len);
+        } else {
             /*动态申请内存*/
-            log_message= (char *)malloc(MAX_BUFFER);
+            log_message = (char *) malloc(MAX_BUFFER);
             /*打印日志超出警告日志*/
         }
-        int result=vsnprintf(log_message, 100, format, args);
+        int result = vsnprintf(log_message, 100, format, args);
         /*如果添加失败*/
-        if(result<0){
-           /*todo 打印日志错误日志*/
+        if (result < 0) {
+            /*todo 打印日志错误日志*/
         }
-    }else{
-        log_message=temporary;
+    } else {
+        log_message = temporary;
     }
 
 
@@ -72,6 +72,9 @@ LogMessage::LogMessage(const std::string &module_name,
     vector<string> path_split;
     split_str(file, "/", path_split);
     file_name = path_split[path_split.size() - 1];
+
+    /*获取线程id*/
+    tid = this_thread::get_id();
 }
 
 /*析构函数*/

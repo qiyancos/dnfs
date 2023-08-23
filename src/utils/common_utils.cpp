@@ -13,7 +13,6 @@
  *
  */
 
-#include <sstream>
 #include <algorithm>
 #include <sys/stat.h>
 #include <iostream>
@@ -23,13 +22,13 @@
 
 using namespace std;
 
-static bool _beauty = false;
-static int _indent = 4;
-static string _indent_str = "    ";
-static map<const void *, int> print_depth;
+bool _beauty = false;
+int _indent = 4;
+string _indent_str = "    ";
+map<const void *, int> print_depth;
 
 /* 该函数用于设置format的格式，设置为True则会追加缩进和换行 */
-void set_print_beauty(const bool beauty) {
+void set_print_beauty(bool beauty) {
     _beauty = beauty;
 }
 
@@ -38,135 +37,6 @@ void set_print_beauty(const bool beauty) {
     _indent = indent;
     _indent_str = string(indent, ' ');
 }
-
-/* 对输入的指定类型进行格式化，返回一个格式化后的字符串 */
-#define AUTO_DEF_GEN1(Type, Left_Bracket, Right_Bracket) \
-template<typename T>\
-const string format(const Type<T>& out_data) {\
-    stringstream out;\
-    string out_value;\
-    const void * hash_key = static_cast<const void*>(&out_data);\
-    int indent = 0;\
-    if (_beauty && print_depth.find(hash_key) != print_depth.end()) {\
-        indent = print_depth[hash_key];\
-    }\
-    string indent_str(indent * _indent, ' ');\
-    if (out_data.size() == 0) {\
-        out << Left_Bracket << Right_Bracket;            \
-        out >> out_value;                                \
-        return out_value;\
-    }\
-    int index = 0;\
-    for (auto item = out_data.begin();item != out_data.end(); item++){\
-        string line_str = "";\
-        if (item == out_data.begin()) {\
-            line_str += _beauty ? Left_Bracket"\n" : Left_Bracket;\
-        }\
-        line_str += _beauty ? indent_str + _indent_str: "";\
-        out << line_str;\
-        \
-        const void* sub_item_hash_key = static_cast<const void*>(&item);\
-        print_depth[sub_item_hash_key] = indent + 1;\
-        out << format(*item);\
-        print_depth.erase(sub_item_hash_key);\
-        \
-        if (index == out_data.size() - 1) {\
-            line_str = string() + (_beauty ? "\n" : "") + indent_str + Right_Bracket;\
-        } else {\
-            line_str = _beauty ? ",\n" : ", ";\
-        }\
-        out << line_str;\
-        index++;\
-    }\
-    out >> out_value;                                    \
-    return out_value;\
-}
-
-AUTO_DEF_GEN1(vector, "[", "]")
-
-AUTO_DEF_GEN1(set, "(", ")")
-
-AUTO_DEF_GEN1(unordered_set, "(", ")")
-
-AUTO_DEF_GEN1(list, "[", "]")
-
-AUTO_DEF_GEN1(queue, "[", "]")
-
-AUTO_DEF_GEN1(deque, "[", "]")
-
-AUTO_DEF_GEN1(stack, "[", "]")
-
-#define AUTO_DEF_GEN2(Type, Left_Bracket, Right_Bracket) \
-template<typename T1, typename T2>\
-const string format (const Type<T1, T2> &out_data) {     \
-    stringstream out;\
-    string out_value;\
-    const void* hash_key = static_cast<const void*>(&out_data);\
-    int indent = 0;\
-    if (_beauty && print_depth.find(hash_key) != print_depth.end()) {\
-        indent = print_depth[hash_key];\
-    }\
-    string indent_str(indent * _indent, ' ');\
-    if (out_data.size() == 0) {\
-        out << Left_Bracket << Right_Bracket;\
-        out >> out_value;                                \
-        return out_value;\
-    }\
-    int index = 0;\
-    for (auto item = out_data.begin();item != out_data.end(); item++){\
-        string line_str = "";\
-        if (item == out_data.begin()) {\
-            line_str += _beauty ? Left_Bracket"\n" : Left_Bracket;\
-        }\
-        line_str += _beauty ? indent_str + _indent_str : "";\
-        out << line_str;\
-        \
-        const T1& key = item->first;\
-        bool old_beauty = _beauty;\
-        set_print_beauty(false);\
-        out << format(key) << ": ";\
-        set_print_beauty(old_beauty);\
-        \
-        const T2& value = item->second;\
-        const void* sub_item_hash_key = static_cast<const void*>(&value);\
-        print_depth[sub_item_hash_key] = indent + 1;\
-        out << format(value);\
-        print_depth.erase(sub_item_hash_key);\
-        \
-        if (index == out_data.size() - 1) {\
-            line_str = string("") + (_beauty ? "\n" : "") + indent_str + Right_Bracket;\
-        } else {\
-            line_str = _beauty ? ",\n" : ", ";\
-        }\
-        out << line_str;\
-        index++;\
-    }\
-    out >> out_value;                                \
-    return out_value;\
-}
-
-AUTO_DEF_GEN2(map, "{", "}")
-
-AUTO_DEF_GEN2(unordered_map, "{", "}")
-
-template<typename T1, typename T2, typename T3>
-const string format(const priority_queue<T1, T2, T3> &out_data) {
-    vector<T1> content;
-    priority_queue<T1, T2, T3> out_data_copy = out_data;
-    while (!out_data_copy.empty()) {
-        content.push_back(out_data_copy.top());
-        out_data_copy.pop();
-    }
-    return format(content);
-}
-
-template<typename T1, typename T2>
-const string format(const pair<T1, T2> &out_data) {
-    map<T1, T2> content;
-    content[out_data.first] = out_data.second;
-    return format(content);
-}
-
 
 /*切割字符串*/
 void split_str(const string &str, const string &split, vector<string> &result) {
@@ -295,11 +165,10 @@ string get_record_time(const time_t &timeStamp, const string &format) {
     info = localtime(&timeStamp);
 
     /*如果设置了日期格式*/
-    if(!format.empty())
-    {
+    if (!format.empty()) {
         /*转化时间格式*/
         strftime(time_buffer, 30, format.c_str(), info);
-    }else{
+    } else {
         /*使用默认的格式*/
         strftime(time_buffer, 30, default_time_format, info);
 
@@ -307,11 +176,27 @@ string get_record_time(const time_t &timeStamp, const string &format) {
         auto now = chrono::system_clock::now();
 
         /*通过不同精度获取相差的毫秒数*/
-        uint64_t dis_millseconds = chrono::duration_cast<chrono::milliseconds>(now.time_since_epoch()).count()
-                                   - chrono::duration_cast<chrono::seconds>(now.time_since_epoch()).count() * 1000;
+        uint64_t dis_millseconds = chrono::duration_cast<chrono::milliseconds>(
+                now.time_since_epoch()).count()
+                                   - chrono::duration_cast<chrono::seconds>(
+                now.time_since_epoch()).count() * 1000;
         /*添加毫秒数据*/
-        sprintf(time_buffer,default_msec_format,time_buffer,(int)dis_millseconds);
+        sprintf(time_buffer, default_msec_format, time_buffer,
+                (int) dis_millseconds);
     }
 
     return time_buffer;
+}
+
+/*将pid转为字符串
+ * params t:任意类型字符串
+ * return: 转化完成的字符串
+ * */
+string pid_to_string(const thread::id &t) {
+/*建立操作实例*/
+    std::stringstream s_stream;
+/*将数据输入操作实例*/
+    s_stream << t;
+/*返回结果*/
+    return s_stream.str();
 }

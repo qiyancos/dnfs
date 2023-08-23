@@ -29,58 +29,157 @@
 #include <string>
 #include <set>
 #include <regex>
+#include <sstream>
+#include <thread>
+
+extern bool _beauty;
+extern int _indent;
+extern std::string _indent_str;
+extern std::map<const void *, int> print_depth;
 
 /* 该函数用于设置format的格式，设置为True则会追加缩进和换行 */
-void set_print_beauty(const bool beauty);
+void set_print_beauty(bool beauty);
 
 /* 设置美化输出情况下自动所进的空格数量，默认为4 */
 [[maybe_unused]] void set_print_indent(int indent);
 
 template<typename T>
-inline const std::string format(const T &out_data) {
+inline std::string format(const T &out_data) {
     return std::to_string(out_data);
 }
 
-inline const std::string format(const std::string &out_data) {
+inline std::string format(const std::string &out_data) {
     return out_data;
 }
 
+/*将pid转为字符串
+ * params t:任意类型字符串
+ * return: 转化完成的字符串
+ * */
+std::string pid_to_string(const std::thread::id &t);
+
 /* 对输入的指定类型进行格式化，返回一个格式化后的字符串 */
-#define AUTO_DECL_GEN1(Type, Left_Bracket, Right_Bracket) \
+#define AUTO_DEF_GEN1(Type, Left_Bracket, Right_Bracket) \
 template<typename T>\
-const std::string format(const Type<T>& out_data);
+std::string format(const Type<T>& out_data) {\
+    std::stringstream out;\
+    const void * hash_key = static_cast<const void*>(&out_data);\
+    int indent = 0;\
+    if (_beauty && print_depth.find(hash_key) != print_depth.end()) {\
+        indent = print_depth[hash_key];\
+    }\
+    std::string indent_str(indent * _indent, ' ');\
+    if (out_data.empty()) {\
+        out << Left_Bracket << Right_Bracket;            \
+        return out.str();\
+    }\
+    int index = 0;\
+    for (auto item = out_data.begin();item != out_data.end(); item++){\
+        std::string line_str;\
+        if (item == out_data.begin()) {\
+            line_str += _beauty ? Left_Bracket"\n" : Left_Bracket;\
+        }\
+        line_str += _beauty ? indent_str + _indent_str: "";\
+        out << line_str;\
+        \
+        const void* sub_item_hash_key = static_cast<const void*>(&item);\
+        print_depth[sub_item_hash_key] = indent + 1;\
+        out << format(*item);\
+        print_depth.erase(sub_item_hash_key);\
+        \
+        if (index == out_data.size() - 1) {\
+            line_str = std::string() + (_beauty ? "\n" : "") + indent_str + Right_Bracket;\
+        } else {\
+            line_str = _beauty ? ",\n" : ", ";\
+        }\
+        out << line_str;\
+        index++;                                         \
+    }\
+    return out.str();\
+}
 
-/* 对常见的迭代器类别进行声明生成 */
-AUTO_DECL_GEN1(std::vector, "[", "]")
+AUTO_DEF_GEN1(std::vector, "[", "]")
 
-AUTO_DECL_GEN1(std::set, "(", ")")
+AUTO_DEF_GEN1(std::set, "(", ")")
 
-AUTO_DECL_GEN1(std::unordered_set, "(", ")")
+AUTO_DEF_GEN1(std::unordered_set, "(", ")")
 
-AUTO_DECL_GEN1(std::list, "[", "]")
+AUTO_DEF_GEN1(std::list, "[", "]")
 
-AUTO_DECL_GEN1(std::queue, "[", "]")
+AUTO_DEF_GEN1(std::queue, "[", "]")
 
-AUTO_DECL_GEN1(std::deque, "[", "]")
+AUTO_DEF_GEN1(std::deque, "[", "]")
 
-AUTO_DECL_GEN1(std::stack, "[", "]")
+AUTO_DEF_GEN1(std::stack, "[", "]")
 
-/* 对输入的指定类型进行格式化，返回一个格式化后的字符串 */
-#define AUTO_DECL_GEN2(Type, Left_Bracket, Right_Bracket) \
+#define AUTO_DEF_GEN2(Type, Left_Bracket, Right_Bracket) \
 template<typename T1, typename T2>\
-const std::string format (const Type<T1, T2> &out_data);
+std::string format (const Type<T1, T2> &out_data) {     \
+    std::stringstream out;\
+    const void* hash_key = static_cast<const void*>(&out_data);\
+    int indent = 0;\
+    if (_beauty && print_depth.find(hash_key) != print_depth.end()) {\
+        indent = print_depth[hash_key];\
+    }\
+    std::string indent_str(indent * _indent, ' ');\
+    if (out_data.size() == 0) {\
+        out << Left_Bracket << Right_Bracket;\
+        return out.str();\
+    }\
+    int index = 0;\
+    for (auto item = out_data.begin();item != out_data.end(); item++){\
+        std::string line_str;\
+        if (item == out_data.begin()) {\
+            line_str += _beauty ? Left_Bracket"\n" : Left_Bracket;\
+        }\
+        line_str += _beauty ? indent_str + _indent_str : "";\
+        out << line_str;\
+        \
+        const T1& key = item->first;\
+        bool old_beauty = _beauty;\
+        set_print_beauty(false);\
+        out << format(key) << ": ";\
+        set_print_beauty(old_beauty);\
+        \
+        const T2& value = item->second;\
+        const void* sub_item_hash_key = static_cast<const void*>(&value);\
+        print_depth[sub_item_hash_key] = indent + 1;\
+        out << format(value);\
+        print_depth.erase(sub_item_hash_key);\
+        \
+        if (index == out_data.size() - 1) {\
+            line_str = std::string("") + (_beauty ? "\n" : "") + indent_str + Right_Bracket;\
+        } else {\
+            line_str = _beauty ? ",\n" : ", ";\
+        }\
+        out << line_str;\
+        index++;\
+    }\
+    return out.str();\
+}
 
-/* 对常见的迭代器类别进行声明生成 */
-AUTO_DECL_GEN2(std::map, "{", "}")
 
-AUTO_DECL_GEN2(std::unordered_map, "{", "}")
+AUTO_DEF_GEN2(std::map, "{", "}")
 
-/* 对输入的指定类型进行格式化，返回一个格式化后的字符串 */
+AUTO_DEF_GEN2(std::unordered_map, "{", "}")
+
 template<typename T1, typename T2, typename T3>
-const std::string format(const std::priority_queue<T1, T2, T3> &out_data);
+std::string format(const std::priority_queue<T1, T2, T3> &out_data) {
+    std::vector<T1> content;
+    std::priority_queue<T1, T2, T3> out_data_copy = out_data;
+    while (!out_data_copy.empty()) {
+        content.push_back(out_data_copy.top());
+        out_data_copy.pop();
+    }
+    return format(content);
+}
 
 template<typename T1, typename T2>
-const std::string format(const std::pair<T1, T2> &out_data);
+std::string format(const std::pair<T1, T2> &out_data) {
+    std::map<T1, T2> content;
+    content[out_data.first] = out_data.second;
+    return format(content);
+}
 
 /*切割字符串*/
 void split_str(const std::string &str, const std::string &split,
@@ -126,9 +225,11 @@ int creat_directory(const std::string &judge_dir, std::string *error_info);
  * return: 转化完成的日期字符串
  * */
 std::string get_record_time(const time_t &timeStamp, const std::string &format);
+
 /* 从一个结构体成员变量指针推断出结构体本身的地址 */
 #define get_parent_struct_addr(addr, type, member) ({			\
 	const typeof(((type *) 0)->member) * __mptr = (addr);	\
 	(type *)((char *) __mptr - offsetof(type, member)); })
 
 #endif //UTILS_COMMON_UTILS_H
+
