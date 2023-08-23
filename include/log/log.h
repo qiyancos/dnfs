@@ -65,8 +65,6 @@
 
 /*日志类*/
 class Logger {
-    friend class LoggerAttr;
-
 private:
 
     /*默认日志属性，新建日志默认使用该属性*/
@@ -92,6 +90,7 @@ private:
 
 public:
     friend class LogMessage;
+    friend class LoggerAttr;
 
     /*设置主机名*/
     std::string hostname = "localhost";
@@ -263,7 +262,7 @@ public:
      * params log_formatter_select:生成的日志格式化字段选择列表
      * return: 状态码 0 生成成功 其他 生成失败
      * */
-    static int _init_log_formatter(const std::string &format_str,
+    int _init_log_formatter(const std::string &format_str,
                             std::string *error_info,
                             std::vector<bool> &log_formatter_select);
 

@@ -38,30 +38,28 @@ LogMessage::LogMessage(const string &module_name,
                        va_list args) {
 
     /*建立临时缓存存储数据*/
-    char temporary[1024];
+    log_message = (char *) malloc(1024);
 
     /*格式化字符串*/
-    int message_len = vsnprintf(temporary, 1024, format, args);
+    int message_len = vsnprintf(log_message, 1024, format, args);
 
     /*判断数据大小*/
-    if (message_len > 100) {
-        if (1024 <= message_len < MAX_BUFFER) {
+    if (message_len >= 1024) {
+
+        if (message_len < MAX_BUFFER) {
             /*动态申请内存*/
-            log_message = (char *) malloc(message_len);
+            log_message = (char *) realloc(log_message, message_len);
         } else {
             /*动态申请内存*/
-            log_message = (char *) malloc(MAX_BUFFER);
+            log_message = (char *) realloc(log_message, MAX_BUFFER);
             /*todo 打印日志超出警告日志*/
         }
-        int result = vsnprintf(log_message, 100, format, args);
+        int result = vsnprintf(log_message, message_len, format, args);
         /*如果添加失败*/
         if (result < 0) {
             /*todo 打印日志错误日志*/
         }
-    } else {
-        log_message = temporary;
     }
-
 
     /*参数赋值*/
     this->module_name = module_name;
@@ -84,7 +82,7 @@ LogMessage::LogMessage(const string &module_name,
 /*析构函数*/
 LogMessage::~LogMessage() {
     /*释放指针*/
-    if (log_message) {
+    if (log_message != nullptr) {
         free(log_message);
     }
 }
@@ -97,7 +95,7 @@ LogMessage::~LogMessage() {
 int
 LogMessage::grnarate_log_message(string &format_message,
                                  std::string *error_info) {
-    
+
     /*生成日志信息，并判断是否生成成功*/
     if (logger.format_module_log(module_name, format_message, log_level,
                                  file_path, line_no, func_name, file_name,
