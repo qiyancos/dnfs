@@ -48,13 +48,13 @@ void ThreadPool::set_thread_name(const string &name) {
 }
 
 // 设置当前现成的名称与线程id绑定
-void ThreadPool::set_thread_name(const char* name) {
+[[maybe_unused]] void ThreadPool::set_thread_name(const char* name) {
     const string name_str = name;
     set_thread_name(name_str);
 }
 
 // 获取当前线程的线程名称，如果没有设置返回id
-const string ThreadPool::get_thread_name(){
+[[maybe_unused]] const string ThreadPool::get_thread_name(){
     const thread::id tid = this_thread::get_id();
     return get_target_thread_name(tid);
 }

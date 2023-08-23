@@ -116,7 +116,7 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
     if (!detach_flag) {
         /* 只检查log_path部分的合法性 */
         if (logger.set_log_output(L_INFO, log_path + ":stdout:syslog", &temp)) {
-            LOG(MODULE_NAME, EXIT_ERROR, temp);
+            LOG(MODULE_NAME, EXIT_ERROR, temp.c_str());
         }
         logger.set_log_output({EXIT_ERROR, L_ERROR, L_WARN},
                               log_path + ":stderr:syslog", nullptr);
@@ -125,7 +125,7 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
     } else {
         /* 只检查log_path部分的合法性 */
         if (logger.set_log_output(log_path, &temp)) {
-            LOG(MODULE_NAME, EXIT_ERROR, temp);
+            LOG(MODULE_NAME, EXIT_ERROR, temp.c_str());
         }
         logger.set_log_output(L_INFO, log_path + ":syslog", nullptr);
         logger.set_log_output({EXIT_ERROR, L_ERROR, L_WARN},
@@ -134,7 +134,7 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
     if (config_get(temp, dnfs_config, {"log", "formatter"})) {
         string error_info;
         if (logger.set_formatter(temp, &error_info)) {
-            LOG(MODULE_NAME, EXIT_ERROR, error_info);
+            LOG(MODULE_NAME, EXIT_ERROR, error_info.c_str());
         }
     }
     logger.set_default_attr_from(MODULE_NAME, nullptr);
@@ -323,8 +323,6 @@ static int alloc_socket_setopts() {
 
 /* 为DNFS分配socket套接字 */
 static int allocate_sockets(void) {
-    int rc = 0;
-
     LOG(MODULE_NAME, D_INFO, "Allocation of the sockets");
 
     udp_socket = tcp_socket = -1;
@@ -391,7 +389,7 @@ static int setup_ntirpc_params() {
     svc_params.gss_max_gc =
             nfs_param.core_param.rpc.gss.max_gc;
 
-    /* Only after TI-RPC allocators, log channel are setup */
+    /* Only after TI-RPC allocators, log channel are set up */
     if (!svc_init(&svc_params)) {
         LOG(MODULE_NAME, L_ERROR, "SVC initialization failed");
         return -1;
@@ -433,7 +431,7 @@ static void bind_udp_sockets() {
                     &nfs_param.core_param.bind_addr)->
                     sin_addr.s_addr;
     pdatap->sinaddr_udp.sin_port =
-            htons(nfs_param.core_param.port[p]);
+            htons(nfs_param.core_param.port);
 
     pdatap->netbuf_udp6.maxlen =
             sizeof(pdatap->sinaddr_udp);
@@ -482,7 +480,7 @@ static void bind_tcp_sockets() {
             ((struct sockaddr_in *)
                     &nfs_param.core_param.bind_addr)->sin_addr.s_addr;
     pdatap->sinaddr_tcp.sin_port =
-            htons(nfs_param.core_param.port[p]);
+            htons(nfs_param.core_param.port);
 
     pdatap->netbuf_tcp6.maxlen =
             sizeof(pdatap->sinaddr_tcp);
@@ -556,6 +554,7 @@ void create_svcxprts() {
     udp_xprt = svc_dg_create(udp_socket,
                              nfs_param.core_param.rpc.max_send_buffer_size,
                              nfs_param.core_param.rpc.max_recv_buffer_size);
+
     if (udp_xprt == NULL) {
         LOG(MODULE_NAME, EXIT_ERROR, "Cannot allocate UDP SVCXPRT");
     }
@@ -564,30 +563,47 @@ void create_svcxprts() {
 
     /* Hook xp_free_user_data (finalize/free private data) */
     (void)SVC_CONTROL(udp_xprt, SVCSET_XP_FREE_USER_DATA,
-                      nfs_rpc_free_user_data);
+                      (void *)nfs_rpc_free_user_data);
 
     (void)svc_rqst_evchan_reg(rpc_evchan[UDP_UREG_CHAN].chan_id,
-                              udp_xprt[prot],
+                              udp_xprt,
                               SVC_RQST_FLAG_XPRT_UREG);
 
     /* 创建TCP相关的XPRT */
-    tcp_xprt[prot] =
-            svc_vc_ncreatef(tcp_socket[prot],
+    tcp_xprt = svc_vc_ncreatef(tcp_socket,
                             nfs_param.core_param.rpc.max_send_buffer_size,
                             nfs_param.core_param.rpc.max_recv_buffer_size,
                             SVC_CREATE_FLAG_CLOSE | SVC_CREATE_FLAG_LISTEN);
-    if (tcp_xprt[prot] == NULL)
-        LogFatal(COMPONENT_DISPATCH, "Cannot allocate %s/TCP SVCXPRT",
-                 tags[prot]);
+    if (tcp_xprt == NULL) {
+        LOG(MODULE_NAME, EXIT_ERROR, "Cannot allocate TCP SVCXPRT");
+    }
 
-    tcp_xprt[prot]->xp_dispatch.rendezvous_cb = tcp_dispatch[prot];
+    tcp_xprt->xp_dispatch.rendezvous_cb = nfs_rpc_dispatch_tcp_NFS;
 
     /* Hook xp_free_user_data (finalize/free private data) */
-    (void)SVC_CONTROL(tcp_xprt[prot], SVCSET_XP_FREE_USER_DATA,
-                      nfs_rpc_free_user_data);
+    (void)SVC_CONTROL(tcp_xprt, SVCSET_XP_FREE_USER_DATA,
+                      (void*) nfs_rpc_free_user_data);
 
     (void)svc_rqst_evchan_reg(rpc_evchan[TCP_UREG_CHAN].chan_id,
-                              tcp_xprt[prot], SVC_RQST_FLAG_XPRT_UREG);
+                              tcp_xprt, SVC_RQST_FLAG_XPRT_UREG);
+}
+
+/* 调用rpcbind服务绑定当前的函数到RPC调用操作上 */
+static void register_rpc_program() {
+    LOG(MODULE_NAME, D_INFO, "Registering V3/UDP");
+
+    /* XXXX fix svc_register! */
+    if (!svc_reg(udp_xprt, nfs_param.core_param.program[P_NFS], (u_long) NFS_V3,
+            nfs_rpc_dispatch_dummy, netconfig_udpv4)) {
+        LOG(MODULE_NAME, EXIT_ERROR, "Cannot register V%d on UDP", (int)NFS_V3);
+    }
+
+    LOG(MODULE_NAME, D_INFO, "Registering V%d/TCP", (int)NFS_V3);
+
+    if (!svc_reg(tcp_xprt, nfs_param.core_param.program[P_NFS], (u_long) NFS_V3,
+            nfs_rpc_dispatch_dummy, netconfig_tcpv4)) {
+        LOG(MODULE_NAME, EXIT_ERROR, "Cannot register %s V%d on TCP", (int)NFS_V3);
+    }
 }
 
 /* 初始化nfs服务相关的接口注册操作 */
@@ -618,36 +634,19 @@ static void dnfs_init_svc(void) {
     bind_tcp_sockets();
     LOG(MODULE_NAME, L_INFO, "Bind sockets successful");
 
-    /* Unregister from portmapper/rpcbind */
+    /* 从portmapper/rpcbind中取消当前已有rpc程序的绑定关系以便进行新的绑定 */
     unregister_rpc();
 
-    /* Set up well-known xprt handles */
-    Create_SVCXPRTs();
+    /* 初始化网络传输的xprt句柄 */
+    create_svcxprts();
 
-    /*
-	 * Perform all the RPC registration, for UDP and TCP, on both NFS_V3
-	 * and NFS_V4. Note that v4 servers are not required to register with
-	 * rpcbind, so we don't fail to start if only that fails.
-	 */
-	if (NFS_options & CORE_OPTION_NFSV3) {
-		Register_program(P_NFS, NFS_V3);
-		Register_program(P_MNT, MOUNT_V1);
-		Register_program(P_MNT, MOUNT_V3);
-	}
-}
-
-void nfs_Init_admin_thread(void) {
-    PTHREAD_MUTEX_init(&admin_control_mtx, NULL);
-    PTHREAD_COND_init(&admin_control_cv, NULL);
-#ifdef USE_DBUS
-    gsh_dbus_register_path("admin", admin_interfaces);
-#endif                /* USE_DBUS */
-    LogEvent(COMPONENT_NFS_CB, "Admin thread initialized");
+    /* 对RPC的程序进行正式的注册，包括UDP和TCP，一旦完成注册，就可以开始接受rpc请求了 */
+    register_rpc_program();
 }
 
 /* dnfs启动处理函数 */
-void dnfs_start(nfs_start_info_t *nfs_start_info) {
-    if (nfs_start_info->dump_default_config == true) {
+void dnfs_start() {
+    if (nfs_start_info.dump_default_config) {
         dump_config();
         exit(0);
     }
@@ -658,30 +657,9 @@ void dnfs_start(nfs_start_info_t *nfs_start_info) {
     /* RPC Initialisation - exits on failure */
     dnfs_init_svc();
 
-    LOG(MODULE_NAME, L_INFO, "RPC resources successfully initialized");
-
-    /* Admin initialisation */
-    nfs_Init_admin_thread();
-
-    nfs_Start_threads(); /* Spawns service threads */
-
-    nfs_init_complete();
-
-    LogEvent(COMPONENT_INIT,
-             "-------------------------------------------------");
-    LogEvent(COMPONENT_INIT, "             NFS SERVER INITIALIZED");
-    LogEvent(COMPONENT_INIT,
-             "-------------------------------------------------");
-
-    /* Wait for dispatcher to exit */
-    LogDebug(COMPONENT_THREAD, "Wait for admin thread to exit");
-    pthread_join(admin_thrid, NULL);
-
-    /* Regular exit */
-    LogEvent(COMPONENT_MAIN, "NFS EXIT: regular exit");
-
-    nfs_init_cleanup();
-
-    Cleanup();
-    /* let main return 0 to exit */
+    LOG(MODULE_NAME, L_INFO,
+        "-------------------------------------------------");
+    LOG(MODULE_NAME, L_INFO, "             NFS SERVER INITIALIZED");
+    LOG(MODULE_NAME, L_INFO,
+        "-------------------------------------------------");
 }

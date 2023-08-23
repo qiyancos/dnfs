@@ -26,8 +26,8 @@
 /* DNFS的启动配置信息，存放了相关的数据信息 */
 typedef struct __nfs_start_info {
     int dump_default_config;
-    int lw_mark_trigger;
-    bool drop_caps;
+//    int lw_mark_trigger;
+//    bool drop_caps;
 } nfs_start_info_t;
 
 /* DNFSD默认配置文件的结构体 */
