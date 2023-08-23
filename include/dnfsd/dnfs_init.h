@@ -16,7 +16,11 @@
 #ifndef DNFSD_DNFS_INIT_H
 #define DNFSD_DNFS_INIT_H
 
+#include <netinet/in.h>
+
 #include <string>
+
+#include "rpc/types.h"
 
 /* 初始化配置文件 */
 void init_config(const std::string& config_file_path);
@@ -37,5 +41,21 @@ int init_thread_signal_mask();
 
 /* dnfs启动处理函数 */
 void dnfs_start(nfs_start_info_t *p_start_info);
+
+typedef struct proto_data {
+    struct sockaddr_in sinaddr_udp;
+    struct sockaddr_in sinaddr_tcp;
+    struct sockaddr_in6 sinaddr_udp6;
+    struct sockaddr_in6 sinaddr_tcp6;
+    struct netbuf netbuf_udp6;
+    struct netbuf netbuf_tcp6;
+    struct t_bind bindaddr_udp6;
+    struct t_bind bindaddr_tcp6;
+    struct __rpc_sockinfo si_udp6;
+    struct __rpc_sockinfo si_tcp6;
+} proto_data;
+
+/* NFSV3的socket绑定信息 */
+extern proto_data nfsv3_sock_info;
 
 #endif //DNFSD_DNFS_INIT_H

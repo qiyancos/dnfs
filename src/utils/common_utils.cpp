@@ -12,10 +12,13 @@
  * along with this project.
  *
  */
+#include <sys/stat.h>
+#include <sys/un.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
 
 #include <sstream>
 #include <algorithm>
-#include <sys/stat.h>
 #include <iostream>
 
 #include "utils/common_utils.h"
@@ -26,6 +29,40 @@ static bool _beauty = false;
 static int _indent = 4;
 static string _indent_str = "    ";
 static map<const void *, int> print_depth;
+
+/* 将二进制的socket地址转化为可读的字符串 */
+const std::string format(const sockaddr_storage &out_data) {
+    int port = 0;
+    const char *name = NULL;
+    char ipname[SOCK_NAME_MAX];
+
+    switch (out_data.ss_family) {
+        case AF_INET:
+            name = inet_ntop(out_data.ss_family,
+                             &(((struct sockaddr_in *)&out_data)->sin_addr),
+                             ipname,
+                             sizeof(ipname));
+            port = ntohs(((struct sockaddr_in *)&out_data)->sin_port);
+            break;
+
+        case AF_INET6:
+            name = inet_ntop(out_data.ss_family,
+                             &(((struct sockaddr_in6 *)&out_data)->sin6_addr),
+                             ipname,
+                             sizeof(ipname));
+            port = ntohs(((struct sockaddr_in6 *)&out_data)->sin6_port);
+            break;
+
+        case AF_LOCAL:
+            return ((struct sockaddr_un *)&out_data)->sun_path;
+    }
+
+    if (name == NULL) {
+        return "<unknown>";
+    } else {
+        return string(name) + to_string(port);
+    }
+}
 
 /* 该函数用于设置format的格式，设置为True则会追加缩进和换行 */
 void set_print_beauty(const bool beauty) {

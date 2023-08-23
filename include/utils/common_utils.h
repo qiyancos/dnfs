@@ -16,6 +16,8 @@
 #ifndef UTILS_COMMON_UTILS_H
 #define UTILS_COMMON_UTILS_H
 
+#include <sys/socket.h>
+
 #include <string>
 #include <vector>
 #include <queue>
@@ -30,11 +32,12 @@
 #include <set>
 #include <regex>
 
-/* 该函数用于设置format的格式，设置为True则会追加缩进和换行 */
-void set_print_beauty(const bool beauty);
-
-/* 设置美化输出情况下自动所进的空格数量，默认为4 */
-[[maybe_unused]] void set_print_indent(int indent);
+/* Allow much more space than we really need for a sock name. An IPV4 address
+ * embedded in IPv6 could use 45 bytes and then if we add a port, that would be
+ * an additional 6 bytes (:65535) for a total of 51, and then one more for NUL
+ * termination. We could use 64 instead of 128.
+ */
+#define SOCK_NAME_MAX 128
 
 template<typename T>
 inline const std::string format(const T &out_data) {
@@ -44,6 +47,14 @@ inline const std::string format(const T &out_data) {
 inline const std::string format(const std::string &out_data) {
     return out_data;
 }
+
+const std::string format(const sockaddr_storage &out_data);
+
+/* 该函数用于设置format的格式，设置为True则会追加缩进和换行 */
+void set_print_beauty(const bool beauty);
+
+/* 设置美化输出情况下自动所进的空格数量，默认为4 */
+[[maybe_unused]] void set_print_indent(int indent);
 
 /* 对输入的指定类型进行格式化，返回一个格式化后的字符串 */
 #define AUTO_DECL_GEN1(Type, Left_Bracket, Right_Bracket) \
@@ -68,7 +79,7 @@ AUTO_DECL_GEN1(std::stack, "[", "]")
 /* 对输入的指定类型进行格式化，返回一个格式化后的字符串 */
 #define AUTO_DECL_GEN2(Type, Left_Bracket, Right_Bracket) \
 template<typename T1, typename T2>\
-const std::string format (const Type<T1, T2> &out_data);
+const std::string format(const Type<T1, T2> &out_data);
 
 /* 对常见的迭代器类别进行声明生成 */
 AUTO_DECL_GEN2(std::map, "{", "}")

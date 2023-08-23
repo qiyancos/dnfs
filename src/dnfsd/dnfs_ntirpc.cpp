@@ -14,7 +14,6 @@
  */
 
 #include <assert.h>
-#include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 
@@ -156,40 +155,10 @@ struct svc_req *alloc_dnfs_request(SVCXPRT *xprt, XDR *xdrs) {
 /* 从原始的地址数据中获取地址和端口号信息并转化为字符串表示 */
 static string format_xprt_addr(SVCXPRT *xprt) {
     sockaddr_storage addr;
-    const char *name = NULL;
-    char ipname[SOCK_NAME_MAX];
-    int port = 0;
-
     struct netbuf *phostaddr = svc_getcaller_netbuf(xprt);
     assert(phostaddr->len <= sizeof(sockaddr_storage) && phostaddr->buf != NULL);
     memcpy(&addr, phostaddr->buf, phostaddr->len);
-
-    switch (addr.ss_family) {
-        case AF_INET:
-            name = inet_ntop(addr.ss_family,
-                             &(((struct sockaddr_in *)&addr)->sin_addr),
-                             ipname,
-                             sizeof(ipname));
-            port = ntohs(((struct sockaddr_in *)&addr)->sin_port);
-            break;
-
-        case AF_INET6:
-            name = inet_ntop(addr.ss_family,
-                             &(((struct sockaddr_in6 *)&addr)->sin6_addr),
-                             ipname,
-                             sizeof(ipname));
-            port = ntohs(((struct sockaddr_in6 *)&addr)->sin6_port);
-            break;
-
-        case AF_LOCAL:
-            return ((struct sockaddr_un *)&addr)->sun_path;
-    }
-
-    if (name == NULL) {
-        return "<unknown>";
-    } else {
-        return string(name) + to_string(port);
-    }
+    return format(addr);
 }
 
 const char *xprt_stat_s[XPRT_DESTROYED + 1] = {
@@ -225,3 +194,4 @@ void free_dnfs_request(struct svc_req *req, enum xprt_stat stat) {
 
     SVC_RELEASE(xprt, SVC_REF_FLAG_NONE);
 }
+
