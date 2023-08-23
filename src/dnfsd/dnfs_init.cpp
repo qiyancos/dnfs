@@ -24,9 +24,12 @@
 
 #include <experimental/filesystem>
 
+#include "nfs/nfs23.h"
+#include "nfs/nfsv41.h"
 #include "rpc/rpc.h"
 #include "rpc/svc.h"
 #include "rpc/svc_rqst.h"
+#include "rpc/rpcb_clnt.h"
 #include "log/log.h"
 #include "utils/common_utils.h"
 #include "dnfsd/dnfs_config.h"
@@ -450,33 +453,18 @@ static void bind_udp_sockets() {
             errno, strerror(errno));
     }
 
-    if (isInfo(COMPONENT_DISPATCH)) {
-        char str[LOG_BUFF_LEN] = "\0";
-        struct display_buffer dbuf = {
-                sizeof(str), str, str};
+    LOG(MODULE_NAME, D_INFO, "Binding UDP socket to address %s",
+        format(*((sockaddr_storage*)pdatap->bindaddr_udp6.addr.buf)).c_str());
 
-        display_sockaddr(
-                &dbuf,
-                (sockaddr_t *)
-                        pdatap->bindaddr_udp6.addr.buf);
-
-        LogInfo(COMPONENT_DISPATCH,
-                "Binding UDP socket to address %s for %s",
-                str, tags[p]);
-    }
-
-    rc = bind(udp_socket[p],
+    int rc = bind(udp_socket,
               (struct sockaddr *)
                       pdatap->bindaddr_udp6.addr.buf,
               (socklen_t) pdatap->si_udp6.si_alen);
     if (rc == -1) {
-        LogWarn(COMPONENT_DISPATCH,
-                "Cannot bind %s udp6 socket, error %d (%s)",
-                tags[p], errno,
-                strerror(errno));
-        return -1;
+        LOG(MODULE_NAME, EXIT_ERROR,
+            "Cannot bind udp6 socket, error %d (%s)",
+            errno, strerror(errno));
     }
-
 }
 
 /* 将已经申请到的套接字绑定到指定的端口号上 */
@@ -504,47 +492,102 @@ static void bind_tcp_sockets() {
     pdatap->bindaddr_tcp6.qlen = SOMAXCONN;
     pdatap->bindaddr_tcp6.addr = pdatap->netbuf_tcp6;
 
-    if (!__rpc_fd2sockinfo(tcp_socket[p],
+    if (!__rpc_fd2sockinfo(tcp_socket,
                            &pdatap->si_tcp6)) {
-        LogWarn(COMPONENT_DISPATCH,
-                "V4 : Cannot get %s socket info for tcp socket error %d(%s)",
-                tags[p], errno, strerror(errno));
-        return -1;
+        LOG(MODULE_NAME, EXIT_ERROR,
+            "V4 : Cannot get socket info for tcp socket error %d(%s)",
+            errno, strerror(errno));
     }
 
-    if (isInfo(COMPONENT_DISPATCH)) {
-        char str[LOG_BUFF_LEN] = "\0";
-        struct display_buffer dbuf = {
-                sizeof(str), str, str};
+    LOG(MODULE_NAME, D_INFO, "Binding TCP socket to address %s",
+        format(*((sockaddr_storage*)pdatap->bindaddr_tcp6.addr.buf)).c_str());
 
-        display_sockaddr(
-                &dbuf,
-                (sockaddr_t *)
-                        pdatap->bindaddr_tcp6.addr.buf);
-
-        LogInfo(COMPONENT_DISPATCH,
-                "Binding TCP socket to address %s for %s",
-                str, tags[p]);
-    }
-
-    rc = bind(tcp_socket[p],
+    int rc = bind(tcp_socket,
               (struct sockaddr *)
                       pdatap->bindaddr_tcp6.addr.buf,
               (socklen_t) pdatap->si_tcp6.si_alen);
     if (rc == -1) {
-        LogWarn(COMPONENT_DISPATCH,
-                "Cannot bind %s tcp socket, error %d(%s)",
-                tags[p], errno, strerror(errno));
-        return -1;
+        LOG(MODULE_NAME, EXIT_ERROR,
+            "Cannot bind tcp socket, error %d(%s)",
+            errno, strerror(errno));
+    }
+}
+
+struct netconfig *netconfig_udpv4;
+struct netconfig *netconfig_tcpv4;
+
+/* 使用rpcbind取消当前rpc的绑定关系，以便绑定新的内容 */
+static void unregister_rpc(void)
+{
+    const rpcprog_t& prog = nfs_param.core_param.program[P_NFS];
+    const rpcvers_t vers1 = NFS_V3;
+    const rpcvers_t vers2 = NFS_V4;
+
+    rpcvers_t vers;
+
+    for (vers = vers1; vers <= vers2; vers++) {
+        rpcb_unset(prog, vers, netconfig_udpv4);
+        rpcb_unset(prog, vers, netconfig_tcpv4);
+    }
+}
+
+/**
+ * @brief xprt destructor callout
+ *
+ * @param[in] xprt Transport to destroy
+ */
+static enum xprt_stat nfs_rpc_free_user_data(SVCXPRT *xprt)
+{
+    if (xprt->xp_u2) {
+        /*TODO*/
+//        nfs_dupreq_put_drc(xprt->xp_u2);
+//        xprt->xp_u2 = NULL;
+    }
+    return XPRT_DESTROYED;
+}
+
+SVCXPRT *udp_xprt;
+SVCXPRT *tcp_xprt;
+
+/* 给每一个协议创建相应的svcxprt网络传输句柄，每一个协议对应的每一个网络协议都
+ * 有一个单独的XPRT传输句柄，用来执行后续的处理操作 */
+void create_svcxprts() {
+    /* 创建UDP相关的XPRT */
+    udp_xprt = svc_dg_create(udp_socket,
+                             nfs_param.core_param.rpc.max_send_buffer_size,
+                             nfs_param.core_param.rpc.max_recv_buffer_size);
+    if (udp_xprt == NULL) {
+        LOG(MODULE_NAME, EXIT_ERROR, "Cannot allocate UDP SVCXPRT");
     }
 
-    if (rc) {
-        LogFatal(COMPONENT_DISPATCH,
-                 "Error binding to V4 interface. Cannot continue.");
-    }
-    LogInfo(COMPONENT_DISPATCH,
-            "Bind sockets successful, v6disabled = %d, vsock = %d, rdma = %d",
-            v6disabled, vsock, rdma);
+    udp_xprt->xp_dispatch.rendezvous_cb = nfs_rpc_dispatch_udp_NFS;
+
+    /* Hook xp_free_user_data (finalize/free private data) */
+    (void)SVC_CONTROL(udp_xprt, SVCSET_XP_FREE_USER_DATA,
+                      nfs_rpc_free_user_data);
+
+    (void)svc_rqst_evchan_reg(rpc_evchan[UDP_UREG_CHAN].chan_id,
+                              udp_xprt[prot],
+                              SVC_RQST_FLAG_XPRT_UREG);
+
+    /* 创建TCP相关的XPRT */
+    tcp_xprt[prot] =
+            svc_vc_ncreatef(tcp_socket[prot],
+                            nfs_param.core_param.rpc.max_send_buffer_size,
+                            nfs_param.core_param.rpc.max_recv_buffer_size,
+                            SVC_CREATE_FLAG_CLOSE | SVC_CREATE_FLAG_LISTEN);
+    if (tcp_xprt[prot] == NULL)
+        LogFatal(COMPONENT_DISPATCH, "Cannot allocate %s/TCP SVCXPRT",
+                 tags[prot]);
+
+    tcp_xprt[prot]->xp_dispatch.rendezvous_cb = tcp_dispatch[prot];
+
+    /* Hook xp_free_user_data (finalize/free private data) */
+    (void)SVC_CONTROL(tcp_xprt[prot], SVCSET_XP_FREE_USER_DATA,
+                      nfs_rpc_free_user_data);
+
+    (void)svc_rqst_evchan_reg(rpc_evchan[TCP_UREG_CHAN].chan_id,
+                              tcp_xprt[prot], SVC_RQST_FLAG_XPRT_UREG);
 }
 
 /* 初始化nfs服务相关的接口注册操作 */
@@ -573,6 +616,7 @@ static void dnfs_init_svc(void) {
     /* 将生成的套接字socket绑定到指定的端口号 */
     bind_udp_sockets();
     bind_tcp_sockets();
+    LOG(MODULE_NAME, L_INFO, "Bind sockets successful");
 
     /* Unregister from portmapper/rpcbind */
     unregister_rpc();
