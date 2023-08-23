@@ -20,11 +20,15 @@
 #include <string.h>
 #include <signal.h>
 #include <sys/stat.h>
+#include <netinet/tcp.h>
 
 #include <experimental/filesystem>
 
+#include "rpc/rpc.h"
 #include "rpc/svc.h"
+#include "rpc/svc_rqst.h"
 #include "log/log.h"
+#include "utils/common_utils.h"
 #include "dnfsd/dnfs_config.h"
 #include "dnfsd/dnfs_init.h"
 #include "dnfsd/dnfs_ntirpc.h"
@@ -230,15 +234,126 @@ int init_thread_signal_mask() {
  * TI-RPC event channels.  Each channel is a thread servicing an event
  * demultiplexer.
  */
-
 struct rpc_evchan {
     uint32_t chan_id;	/*< Channel ID */
 };
 
 static struct rpc_evchan rpc_evchan[EVCHAN_SIZE];
+int udp_socket;
+int tcp_socket;
 
-/* 初始化nfs服务相关的接口注册操作 */
-static void dnfs_init_svc(void) {
+/* 为已经分配的套接字设置相关的属性信息 */
+static int alloc_socket_setopts() {
+    int one = 1;
+    const struct nfs_core_param *nfs_cp = &nfs_param.core_param;
+
+    /* Use SO_REUSEADDR in order to avoid wait the 2MSL timeout */
+    if (setsockopt(udp_socket, SOL_SOCKET, SO_REUSEADDR,
+                   &one, sizeof(one))) {
+        LOG(MODULE_NAME, L_ERROR,
+            "Bad udp socket options reuseaddr for NFS_V3 udp sock, error %d(%s)",
+            errno, strerror(errno));
+        return -1;
+    }
+
+    if (setsockopt(tcp_socket, SOL_SOCKET, SO_REUSEADDR,
+                   &one, sizeof(one))) {
+        LOG(MODULE_NAME, L_ERROR,
+            "Bad tcp socket option reuseaddr for NFS_V3 tcp sock, error %d(%s)",
+            errno, strerror(errno));
+        return -1;
+    }
+
+    if (nfs_cp->enable_tcp_keepalive) {
+        if (setsockopt(tcp_socket, SOL_SOCKET, SO_KEEPALIVE,
+                       &one, sizeof(one))) {
+            LOG(MODULE_NAME, L_ERROR,
+                "Bad tcp socket option keepalive for %s, error %d(%s)",
+                errno, strerror(errno));
+            return -1;
+        }
+
+        if (nfs_cp->tcp_keepcnt) {
+            if (setsockopt(tcp_socket, IPPROTO_TCP, TCP_KEEPCNT,
+                           &nfs_cp->tcp_keepcnt,
+                           sizeof(nfs_cp->tcp_keepcnt))) {
+                LOG(MODULE_NAME, L_ERROR,
+                    "Bad tcp socket option TCP_KEEPCNT for %s, error %d(%s)",
+                    errno, strerror(errno));
+                return -1;
+            }
+        }
+
+        if (nfs_cp->tcp_keepidle) {
+            if (setsockopt(tcp_socket, IPPROTO_TCP, TCP_KEEPIDLE,
+                           &nfs_cp->tcp_keepidle,
+                           sizeof(nfs_cp->tcp_keepidle))) {
+                LOG(MODULE_NAME, L_ERROR,
+                    "Bad tcp socket option TCP_KEEPIDLE for %s, error %d(%s)",
+                    errno, strerror(errno));
+                return -1;
+            }
+        }
+
+        if (nfs_cp->tcp_keepintvl) {
+            if (setsockopt(tcp_socket, IPPROTO_TCP,
+                           TCP_KEEPINTVL, &nfs_cp->tcp_keepintvl,
+                           sizeof(nfs_cp->tcp_keepintvl))) {
+                LOG(MODULE_NAME, L_ERROR,
+                    "Bad tcp socket option TCP_KEEPINTVL for %s, error %d(%s)",
+                    errno, strerror(errno));
+                return -1;
+            }
+        }
+    }
+
+    /* We prefer using non-blocking socket in the specific case */
+    if (fcntl(udp_socket, F_SETFL, FNDELAY) == -1) {
+        LOG(MODULE_NAME, L_ERROR,
+            "Cannot set udp socket for %s as non blocking, error %d(%s)",
+            errno, strerror(errno));
+        return -1;
+    }
+
+    return 0;
+}
+
+/* 为DNFS分配socket套接字 */
+static int allocate_sockets(void) {
+    int rc = 0;
+
+    LOG(MODULE_NAME, D_INFO, "Allocation of the sockets");
+
+    udp_socket = tcp_socket = -1;
+
+    /* 首先为NFSV3分配UDP的监听接口 */
+    udp_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+    if (udp_socket == -1) {
+        if (errno == EAFNOSUPPORT) {
+            LOG(MODULE_NAME, L_ERROR, "No V4 intfs configured?!");
+        }
+
+        LOG(MODULE_NAME, L_ERROR,
+            "Cannot allocate a udp socket for NFS_V3, error %d(%s)",
+            errno, strerror(errno));
+        return -1;
+    }
+
+    /* 首先为NFSV3分配TCP的监听接口 */
+    tcp_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+
+    if (tcp_socket == -1) {
+        LOG(MODULE_NAME, L_ERROR,
+            "Cannot allocate a tcp socket for NFS_V3, error %d(%s)",
+            errno, strerror(errno));
+        return -1;
+    }
+    return 0;
+}
+
+/* 初始化ntirpc相关的基本参数配置 */
+static int setup_ntirpc_params() {
     svc_init_params svc_params;
     int ix;
     int code;
@@ -275,7 +390,8 @@ static void dnfs_init_svc(void) {
 
     /* Only after TI-RPC allocators, log channel are setup */
     if (!svc_init(&svc_params)) {
-        LOG(MODULE_NAME, EXIT_ERROR, "SVC initialization failed");
+        LOG(MODULE_NAME, L_ERROR, "SVC initialization failed");
+        return -1;
     }
 
     for (ix = 0; ix < EVCHAN_SIZE; ++ix) {
@@ -283,26 +399,186 @@ static void dnfs_init_svc(void) {
         code = svc_rqst_new_evchan(&rpc_evchan[ix].chan_id,
                                    NULL /* u_data */,
                                    SVC_RQST_FLAG_NONE);
-        if (code)
-            LogFatal(COMPONENT_DISPATCH,
-                     "Cannot create TI-RPC event channel (%d, %d)",
-                     ix, code);
-        /* XXX bail?? */
+        if (code) {
+            LOG(MODULE_NAME, L_ERROR,
+                "Cannot create TI-RPC event channel (%d, %d)", ix, code);
+            return -1;
+        }
     }
 
-    /* Allocate the UDP and TCP sockets for the RPC */
-    Allocate_sockets();
+    return 0;
+}
 
-    if ((NFS_options & CORE_OPTION_ALL_NFS_VERS) != 0) {
-        /* Bind the tcp and udp sockets */
-        Bind_sockets();
+/* NFSV3的socket绑定信息 */
+proto_data nfsv3_sock_info;
 
-        /* Unregister from portmapper/rpcbind */
-        unregister_rpc();
+/* 将已经申请到的套接字绑定到指定的端口号上 */
+static void bind_udp_sockets() {
+    LOG(MODULE_NAME, D_INFO, "Binding to UDP address %s",
+        format(nfs_param.core_param.bind_addr).c_str());
 
-        /* Set up well-known xprt handles */
-        Create_SVCXPRTs();
+    proto_data *pdatap = &nfsv3_sock_info;
+
+    memset(&pdatap->sinaddr_udp, 0,
+           sizeof(pdatap->sinaddr_udp));
+
+    pdatap->sinaddr_udp.sin_family = AF_INET;
+
+    /* all interfaces */
+    pdatap->sinaddr_udp.sin_addr.s_addr =
+            ((struct sockaddr_in *)
+                    &nfs_param.core_param.bind_addr)->
+                    sin_addr.s_addr;
+    pdatap->sinaddr_udp.sin_port =
+            htons(nfs_param.core_param.port[p]);
+
+    pdatap->netbuf_udp6.maxlen =
+            sizeof(pdatap->sinaddr_udp);
+    pdatap->netbuf_udp6.len =
+            sizeof(pdatap->sinaddr_udp);
+    pdatap->netbuf_udp6.buf = &pdatap->sinaddr_udp;
+
+    pdatap->bindaddr_udp6.qlen = SOMAXCONN;
+    pdatap->bindaddr_udp6.addr =
+            pdatap->netbuf_udp6;
+
+    /* 从socket中获取ntirpc需要的信息并存储起来 */
+    if (!__rpc_fd2sockinfo(udp_socket,
+                           &pdatap->si_udp6)) {
+        LOG(MODULE_NAME, EXIT_ERROR,
+            "Cannot get socket info for udp6 socket errno=%d (%s)",
+            errno, strerror(errno));
     }
+
+    if (isInfo(COMPONENT_DISPATCH)) {
+        char str[LOG_BUFF_LEN] = "\0";
+        struct display_buffer dbuf = {
+                sizeof(str), str, str};
+
+        display_sockaddr(
+                &dbuf,
+                (sockaddr_t *)
+                        pdatap->bindaddr_udp6.addr.buf);
+
+        LogInfo(COMPONENT_DISPATCH,
+                "Binding UDP socket to address %s for %s",
+                str, tags[p]);
+    }
+
+    rc = bind(udp_socket[p],
+              (struct sockaddr *)
+                      pdatap->bindaddr_udp6.addr.buf,
+              (socklen_t) pdatap->si_udp6.si_alen);
+    if (rc == -1) {
+        LogWarn(COMPONENT_DISPATCH,
+                "Cannot bind %s udp6 socket, error %d (%s)",
+                tags[p], errno,
+                strerror(errno));
+        return -1;
+    }
+
+}
+
+/* 将已经申请到的套接字绑定到指定的端口号上 */
+static void bind_tcp_sockets() {
+    LOG(MODULE_NAME, D_INFO, "Binding to TCP address %s",
+        format(nfs_param.core_param.bind_addr).c_str());
+
+    proto_data *pdatap = &nfsv3_sock_info;
+
+    memset(&pdatap->sinaddr_tcp, 0,
+           sizeof(pdatap->sinaddr_tcp));
+    pdatap->sinaddr_tcp.sin_family = AF_INET;
+    /* all interfaces */
+    pdatap->sinaddr_tcp.sin_addr.s_addr =
+            ((struct sockaddr_in *)
+                    &nfs_param.core_param.bind_addr)->sin_addr.s_addr;
+    pdatap->sinaddr_tcp.sin_port =
+            htons(nfs_param.core_param.port[p]);
+
+    pdatap->netbuf_tcp6.maxlen =
+            sizeof(pdatap->sinaddr_tcp);
+    pdatap->netbuf_tcp6.len = sizeof(pdatap->sinaddr_tcp);
+    pdatap->netbuf_tcp6.buf = &pdatap->sinaddr_tcp;
+
+    pdatap->bindaddr_tcp6.qlen = SOMAXCONN;
+    pdatap->bindaddr_tcp6.addr = pdatap->netbuf_tcp6;
+
+    if (!__rpc_fd2sockinfo(tcp_socket[p],
+                           &pdatap->si_tcp6)) {
+        LogWarn(COMPONENT_DISPATCH,
+                "V4 : Cannot get %s socket info for tcp socket error %d(%s)",
+                tags[p], errno, strerror(errno));
+        return -1;
+    }
+
+    if (isInfo(COMPONENT_DISPATCH)) {
+        char str[LOG_BUFF_LEN] = "\0";
+        struct display_buffer dbuf = {
+                sizeof(str), str, str};
+
+        display_sockaddr(
+                &dbuf,
+                (sockaddr_t *)
+                        pdatap->bindaddr_tcp6.addr.buf);
+
+        LogInfo(COMPONENT_DISPATCH,
+                "Binding TCP socket to address %s for %s",
+                str, tags[p]);
+    }
+
+    rc = bind(tcp_socket[p],
+              (struct sockaddr *)
+                      pdatap->bindaddr_tcp6.addr.buf,
+              (socklen_t) pdatap->si_tcp6.si_alen);
+    if (rc == -1) {
+        LogWarn(COMPONENT_DISPATCH,
+                "Cannot bind %s tcp socket, error %d(%s)",
+                tags[p], errno, strerror(errno));
+        return -1;
+    }
+
+    if (rc) {
+        LogFatal(COMPONENT_DISPATCH,
+                 "Error binding to V4 interface. Cannot continue.");
+    }
+    LogInfo(COMPONENT_DISPATCH,
+            "Bind sockets successful, v6disabled = %d, vsock = %d, rdma = %d",
+            v6disabled, vsock, rdma);
+}
+
+/* 初始化nfs服务相关的接口注册操作 */
+static void dnfs_init_svc(void) {
+    /* 初始化NTIRPC的基本参数 */
+    if (setup_ntirpc_params()) {
+        LOG(MODULE_NAME, EXIT_ERROR, "Failed to setup ntirpc params");
+    }
+
+    /* 为NFS_V3的协议分配UDP和TCP的套接字 */
+    if (allocate_sockets()) {
+        LOG(MODULE_NAME, EXIT_ERROR,
+            "Failed to allocate socket for NFS_V3, error %d(%s)",
+            errno, strerror(errno));
+    }
+
+    LOG(MODULE_NAME, D_INFO, "Socket numbers are: tcp=%d udp=%d",
+        tcp_socket, udp_socket);
+
+    /* 对分配的socket的属性进行设置 */
+    if (alloc_socket_setopts()) {
+        LOG(MODULE_NAME, EXIT_ERROR,
+            "Error setting socket option for NFS_V3");
+    }
+
+    /* 将生成的套接字socket绑定到指定的端口号 */
+    bind_udp_sockets();
+    bind_tcp_sockets();
+
+    /* Unregister from portmapper/rpcbind */
+    unregister_rpc();
+
+    /* Set up well-known xprt handles */
+    Create_SVCXPRTs();
 
     /*
 	 * Perform all the RPC registration, for UDP and TCP, on both NFS_V3
@@ -313,14 +589,6 @@ static void dnfs_init_svc(void) {
 		Register_program(P_NFS, NFS_V3);
 		Register_program(P_MNT, MOUNT_V1);
 		Register_program(P_MNT, MOUNT_V3);
-#ifdef _USE_NLM
-		if (nfs_param.core_param.enable_NLM)
-			Register_program(P_NLM, NLM4_VERS);
-#endif /* _USE_NLM */
-#ifdef USE_NFSACL3
-		if (nfs_param.core_param.enable_NFSACL)
-			Register_program(P_NFSACL, NFSACL_V3);
-#endif
 	}
 }
 
@@ -333,20 +601,6 @@ void nfs_Init_admin_thread(void) {
     LogEvent(COMPONENT_NFS_CB, "Admin thread initialized");
 }
 
-/**
- * @brief Init the nfs daemon
- *
- * @param[in] p_start_info Unused
- */
-static void dnfs_init(const nfs_start_info_t *nfs_start_info) {
-    /* RPC Initialisation - exits on failure */
-    dnfs_init_svc();
-    LogInfo(COMPONENT_INIT, "RPC resources successfully initialized");
-
-    /* Admin initialisation */
-    nfs_Init_admin_thread();
-}
-
 /* dnfs启动处理函数 */
 void dnfs_start(nfs_start_info_t *nfs_start_info) {
     if (nfs_start_info->dump_default_config == true) {
@@ -357,8 +611,14 @@ void dnfs_start(nfs_start_info_t *nfs_start_info) {
     /* Make sure DNFS runs with a 0000 umask. */
     umask(0000);
 
-    /* Initialize all layers and service threads */
-    dnfs_init(nfs_start_info);
+    /* RPC Initialisation - exits on failure */
+    dnfs_init_svc();
+
+    LOG(MODULE_NAME, L_INFO, "RPC resources successfully initialized");
+
+    /* Admin initialisation */
+    nfs_Init_admin_thread();
+
     nfs_Start_threads(); /* Spawns service threads */
 
     nfs_init_complete();

@@ -16,6 +16,8 @@
 #ifndef UTILS_COMMON_UTILS_H
 #define UTILS_COMMON_UTILS_H
 
+#include <sys/socket.h>
+
 #include <string>
 #include <vector>
 #include <queue>
@@ -37,6 +39,13 @@ extern int _indent;
 extern std::string _indent_str;
 extern std::map<const void *, int> print_depth;
 
+/* Allow much more space than we really need for a sock name. An IPV4 address
+ * embedded in IPv6 could use 45 bytes and then if we add a port, that would be
+ * an additional 6 bytes (:65535) for a total of 51, and then one more for NUL
+ * termination. We could use 64 instead of 128.
+ */
+#define SOCK_NAME_MAX 128
+
 /* 该函数用于设置format的格式，设置为True则会追加缩进和换行 */
 void set_print_beauty(bool beauty);
 
@@ -51,6 +60,8 @@ inline std::string format(const T &out_data) {
 inline std::string format(const std::string &out_data) {
     return out_data;
 }
+
+const std::string format(const sockaddr_storage &out_data);
 
 /*将pid转为字符串
  * params t:任意类型字符串

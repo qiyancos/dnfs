@@ -18,13 +18,6 @@
 
 #include "rpc/svc.h"
 
-/* Allow much more space than we really need for a sock name. An IPV4 address
- * embedded in IPv6 could use 45 bytes and then if we add a port, that would be
- * an additional 6 bytes (:65535) for a total of 51, and then one more for NUL
- * termination. We could use 64 instead of 128.
- */
-#define SOCK_NAME_MAX 128
-
 enum evchan {
     UDP_UREG_CHAN,		/*< Put UDP on a dedicated channel */
     TCP_UREG_CHAN,		/*< Accepts new TCP connections */
