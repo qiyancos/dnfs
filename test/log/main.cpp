@@ -2,6 +2,7 @@
 #include "log/log.h"
 #include "utils/common_utils.h"
 #include <cstdarg>
+#include <unistd.h>
 #include <experimental/filesystem>
 
 using namespace std;
@@ -17,8 +18,8 @@ void test(const char *format, ...) {
 
     va_start(arguments, format);
 
-    int s=vsnprintf(wd,12, format, arguments);
-    cout<<s<<endl;
+    int s = vsnprintf(wd, 12, format, arguments);
+    cout << s << endl;
     cout << wd << endl;
 
     va_end(arguments);
@@ -99,12 +100,13 @@ int main() {
 
     /*设置所有模块日志格式*/
     cout << "设置所有模块日志格式:"
-         << logger.set_formatter(" %(program_name)/%(process)", s) << ":"
+         << logger.set_formatter(" %(program_name)-%(process)-%(asctime):%(message)", s)
+         << ":"
          << *s << endl;
 
-    /*设置所有模块日志格式*/
-    cout << "设置所有模块日志格式:" << logger.set_module_formatter("yes",
-                                                                   " %(program_name)/%(process)/%(modulename)",
+    /*设置指定模块日志格式*/
+    cout << "设置指定模块日志格式:" << logger.set_module_formatter("yes",
+                                                                   " %(program_name)-%(modulename)-%(asctime):%(message)",
                                                                    s) << ":"
          << *s << endl;
 
@@ -114,20 +116,26 @@ int main() {
 
     /*设置所有模块日志格式*/
     cout << "设置所有模块日志格式:" << endl;
-    logger.set_data_format("%Y%m%d%H%M%S");
+    cout << "设置所有模块日志格式:"
+         <<endl;
+    logger.set_data_format("");
 
     /*设置单独模块日志格式*/
     cout << "设置单独模块日志格式:"
-         << logger.set_module_data_format("yes", "%Y%m%d%H%M%S", s) << ":"
-         << endl;
+         << logger.set_module_data_format("yes", "%Y-%m-%d %H:%M:%S", s) << ":"
+         <<*s<< endl;
 
     /*获取日期*/
-    cout<<get_record_time(time(nullptr),"")<<endl;
+    cout << get_record_time(time(nullptr), "") << endl;
 
-    thread::id tid=this_thread::get_id();
-    cout<<any_to_string(tid)<<endl;
-    vector<int> wd={1,2,3};
-    cout<<format(wd)<<endl;
+    /*格式化模块日志*/
+    string message;
+    cout << "格式化模块日志:"
+         << logger.format_module_log("yes", message, L_ERROR, __FILE__,
+                                     __LINE__, __func__, "main.cpp",
+                                     time(nullptr), this_thread::get_id(),
+                                     getpid(), "what fuck", s) << ":" << *s<<":"
+         <<"message:"<<message<< endl;
     return 0;
 }
 

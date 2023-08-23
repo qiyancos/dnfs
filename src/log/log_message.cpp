@@ -12,10 +12,10 @@
  * along with this project.
  *
  */
-
+#include <string>
+#include <unistd.h>
 #include "log/log_message.h"
 #include "utils/common_utils.h"
-#include <string>
 
 using namespace std;
 
@@ -75,6 +75,9 @@ LogMessage::LogMessage(const std::string &module_name,
 
     /*获取线程id*/
     tid = this_thread::get_id();
+
+    /*获取进程id*/
+    pid=getpid();
 }
 
 /*析构函数*/
