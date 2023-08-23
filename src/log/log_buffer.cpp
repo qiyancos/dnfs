@@ -15,26 +15,16 @@
 
 #include "log/log_buffer.h"
 #include <iostream>
-using namespace std;
 
-/*建立日志缓存实例*/
-LogBuffer log_buffer=LogBuffer::get_instance();
+using namespace std;
+atomic<int> LogBuffer::log_num = 0;
 
 LogBuffer::LogBuffer() = default;
 
 /*将缓存写入文件,监听log_num*/
 void LogBuffer::output_thread() {
     /*todo 开启监听线程*/
-    cout<<"缓存线程开启"<<endl;
-}
-
-/*得到日志缓存单例对象
- * return: 日志缓存对象
- * */
-LogBuffer &LogBuffer::get_instance() {
-    /*建立单例*/
-    static LogBuffer log_buffer;
-    return log_buffer;
+    cout << "缓存线程开启" << endl;
 }
 
 /*设置缓存限制
@@ -52,6 +42,22 @@ void LogBuffer::set_limit(const int &b_limit) {
  * */
 void LogBuffer::add_log_buffer(const string &thread_name,
                                const LogMessage &log_message) {
-    /*todo 枷锁进行添加缓存*/
+    /*所有的操作都要在锁内进行*/
+    // std::lock_guard对象构造时，自动调用mtx.lock()进行上锁
+    // std::lock_guard对象析构时，自动调用mtx.unlock()释放锁
+    std::lock_guard<std::mutex> lk(mtx);
+    /*查询是否已经存在thread_name对应的数据*/
+    if (buffer_map.find(thread_name) == buffer_map.end()) {
+        /*不存在,建立数据字典*/
+        buffer_map.insert(pair<string, vector<LogMessage>>(thread_name, {}));
+    }
+    /*已经存在进行添加*/
+    buffer_map[thread_name].push_back(log_message);
+    /*数据总数加1*/
+    log_num += 1;
+    /*如果数目大于设置的缓存限制*/
+    if (log_num > buffer_limit) {
+        cond.notify_one();
+    }
 
 }

@@ -20,7 +20,7 @@
 #include <iostream>
 #include <vector>
 #include <thread>
-#include "log.h"
+#include "log_data.h"
 
 /*日志信息对象，存放了单词输出的日志信息结构*/
 class LogMessage {
@@ -61,12 +61,22 @@ public:
      * params line:调用行号
      * params func:调用方法名
      * params format:用户信息日志格式
+     * params tid:线程id
      * params args:用户信息参数，需对应format
      * */
     LogMessage(const std::string &module_name,
                const LogLevel &log_level,
                const std::string &file, const int &line,
-               const std::string &func, const char *format, va_list args);
+               const std::string &func, const char *format,
+               const std::thread::id &tid,
+               va_list args);
+
+    /*生成日志信息
+     * params error_info:错误信息
+     * params log_message:生成的日志信息
+     * return: 状态码 0 生成成功 其他 生成失败
+     * */
+    int grnarate_log_message(std::string &format_message, std::string *error_info);
 
     /*析构函数*/
     ~LogMessage();

@@ -19,6 +19,8 @@
 #include <iostream>
 #include <map>
 #include <atomic>
+#include <mutex>
+#include <condition_variable>
 
 #include "log_message.h"
 
@@ -28,6 +30,11 @@ private:
     /*原子数据，记录缓存数据数量*/
     static std::atomic<int> log_num;
 
+    /*设置线程锁*/
+    std::mutex mtx;
+    /*设置条件锁通知缓存写文件线程*/
+    std::condition_variable cond;
+
     /*保存每个线程日志缓存列表 线程标识 日志信息列表*/
     std::map<std::string, std::vector<LogMessage>> buffer_map;
 
@@ -36,18 +43,15 @@ private:
 
     /*缓存最大限制，超出限制则将缓存落盘*/
     int buffer_limit = 100;
+
 private:
-    /*无参构造函数，使用默认的缓存限制*/
-    LogBuffer();
 
 public:
     /*将缓存写入文件,监听log_num*/
     void output_thread();
 
-    /*得到日志缓存单例对象
-     * return: 日志缓存对象
-     * */
-    static LogBuffer &get_instance();
+    /*无参构造函数，使用默认的缓存限制*/
+    LogBuffer();
 
     /*设置缓存限制
      * params b_limit:设置的缓存限制
@@ -60,10 +64,8 @@ public:
      * params log_message:打印信息保存对象
      * return
      * */
-    void add_log_buffer(const std::string &thread_name, const LogMessage &log_message);
+    void add_log_buffer(const std::string &thread_name,
+                        const LogMessage &log_message);
 };
-
-/*设置全局log_buffer实例*/
-extern LogBuffer log_buffer;
 
 #endif //LOG_LOG_BUFFER_H

@@ -15,6 +15,7 @@
 #include <string>
 #include <unistd.h>
 #include "log/log_message.h"
+#include "log/log.h"
 #include "utils/common_utils.h"
 
 using namespace std;
@@ -26,12 +27,14 @@ using namespace std;
  * params line:调用行号
  * params func:调用方法名
  * params format:用户信息日志格式
+ * params tid:线程id
  * params args:用户信息参数，需对应format
  * */
-LogMessage::LogMessage(const std::string &module_name,
+LogMessage::LogMessage(const string &module_name,
                        const LogLevel &log_level,
-                       const std::string &file, const int &line,
-                       const std::string &func, const char *format,
+                       const string &file, const int &line,
+                       const string &func, const char *format,
+                       const thread::id &tid,
                        va_list args) {
 
     /*建立临时缓存存储数据*/
@@ -48,7 +51,7 @@ LogMessage::LogMessage(const std::string &module_name,
         } else {
             /*动态申请内存*/
             log_message = (char *) malloc(MAX_BUFFER);
-            /*打印日志超出警告日志*/
+            /*todo 打印日志超出警告日志*/
         }
         int result = vsnprintf(log_message, 100, format, args);
         /*如果添加失败*/
@@ -63,6 +66,7 @@ LogMessage::LogMessage(const std::string &module_name,
     /*参数赋值*/
     this->module_name = module_name;
     this->log_level = log_level;
+    this->tid = tid;
     file_path = file;
     line_no = line;
     func_name = func;
@@ -73,11 +77,8 @@ LogMessage::LogMessage(const std::string &module_name,
     split_str(file, "/", path_split);
     file_name = path_split[path_split.size() - 1];
 
-    /*获取线程id*/
-    tid = this_thread::get_id();
-
     /*获取进程id*/
-    pid=getpid();
+    pid = getpid();
 }
 
 /*析构函数*/
@@ -87,3 +88,23 @@ LogMessage::~LogMessage() {
         free(log_message);
     }
 }
+
+/*生成日志信息
+ * params error_info:错误信息
+ * params log_message:生成的日志信息
+ * return: 状态码 0 生成成功 其他 生成失败
+ * */
+int
+LogMessage::grnarate_log_message(string &format_message,
+                                 std::string *error_info) {
+    
+    /*生成日志信息，并判断是否生成成功*/
+    if (logger.format_module_log(module_name, format_message, log_level,
+                                 file_path, line_no, func_name, file_name,
+                                 record_time, tid, pid, log_message,
+                                 error_info) != 0) {
+        return 1;
+    }
+    return 0;
+}
+

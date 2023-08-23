@@ -21,9 +21,10 @@
 #include "utils/common_utils.h"
 #include "utils/thread_utils.h"
 #include "log/log_message.h"
-#include "log/log_buffer.h"
 
 using namespace std;
+
+Logger::Logger() = default;
 
 /*建立日志实例*/
 Logger &logger = Logger::get_instance();
@@ -61,10 +62,10 @@ void Logger::init_module(const string &module_name) {
 }
 
 /*默认构造函数*/
-Logger::Logger() {
-    /*开启缓存线程*/
-    log_buffer.output_thread();
-}
+//Logger::Logger() {
+//    /*开启缓存线程*/
+//    log_buffer.output_thread();
+//}
 
 /*设置退出函数,和退出状态码
  * params e_code:错误码
@@ -83,14 +84,14 @@ void Logger::set_exit_func(int e_code, void (*exit_f)(int)) {
 int
 Logger::set_default_attr_from(const string &module_name, string *error_info) {
     /*如果不存在*/
-    if (!logger.judge_module_attr_exist(module_name)) {
+    if (!judge_module_attr_exist(module_name)) {
         /*设置错误信息*/
         set_ptr_info(error_info,
                      "the module what get log attr is not exist");
         return 1;
     }
     /*查到了设置日志属性*/
-    default_attr = logger.module_attr[module_name];
+    default_attr = module_attr[module_name];
     return 0;
 }
 
@@ -329,7 +330,7 @@ int Logger::set_module_log_level(const string &module_name,
  * params log_attr:需要判定的日志属性结构体对象，直接更改其属性
  * params log_level:判定的日志等级
  * */
-void Logger::_judge_debug(Logger::LoggerAttr &log_attr, log_level_t log_level) {
+void Logger::_judge_debug(LoggerAttr &log_attr, log_level_t log_level) {
     /*进行debug模式判定,如果包含DEBUG,设置为true*/
     if (log_level_info_dict.at(log_level).first.find("DEBUG") !=
         string::npos) {
@@ -493,9 +494,23 @@ Logger::set_module_data_format(const string &module_name,
  * params format:用户打印信息格式
  * params ...:用户打印信息,需对应format
  * */
-void Logger::_log(const string &module_name, log_level_t log_level,
-                  const string &file, const int &line, const string &func,
-                  const char *format, ...) {
+int Logger::_log(const string &module_name, log_level_t log_level,
+                 const string &file, const int &line, const string &func,
+                 const char *format, ...) {
+    /*如果模块不存在，直接报错*/
+    if (!judge_module_attr_exist(module_name)) {
+//        set_ptr_info(error_info,
+//                     "the module what set lof message is not exist");
+        return 1;
+    }
+    /*先判断打印等级满不满足要求*/
+    if (module_attr[module_name].log_level < log_level) {
+        return 0;
+    }
+
+    /*获取线程id*/
+    thread::id tid = this_thread::get_id();
+
     /*创建LogMessage对象*/
     va_list args;
     va_start(args, format);
@@ -504,16 +519,26 @@ void Logger::_log(const string &module_name, log_level_t log_level,
     LogMessage log_message = LogMessage(module_name,
                                         log_level,
                                         file, line,
-                                        func, format, args);
+                                        func, format, tid, args);
 
     va_end(args);
+    string result;
+    string *error_info;
+    string s;
+    error_info=&s;
+    if(log_message.grnarate_log_message(result,error_info)==0){
+        cout<<result<<endl;
+    }else{
+        cout<<*error_info<<endl;
+    }
 
-    /*获取线程名*/
-    string thread_name;
-
-    /*将LogMessage对象加到缓存*/
+//    /*获取线程名*/
+//    string thread_name = ThreadPool::get_target_thread_name(tid);
+//
+//    /*将LogMessage对象加到缓存*/
 //    log_buffer.add_log_buffer(thread_name, log_message);
 
+    return 0;
 }
 
 /*判断模块日志debug状态
@@ -540,6 +565,7 @@ bool Logger::is_module_debug_on(const string &module_name) {
  * params tid:线程id
  * params pid:进程id
  * params message:用户打印的消息
+ * params error_info:错误信息
  * return: 状态码 0 生成成功 其他 生成失败
  * */
 int Logger::format_module_log(const string &module_name, string &log_message,
@@ -565,168 +591,4 @@ int Logger::format_module_log(const string &module_name, string &log_message,
                                              pid, message);
 
     return 0;
-}
-
-/*日志输出属性名默认构造函数*/
-Logger::LogOutputAttr::LogOutputAttr() = default;
-
-/*从配置字符串生成配置
- * params log_out_attr_str:日志文件设置
- * params error_info:错误信息
- * 比如 "stderr:syslog:/tmp/a.log@(time,midnight,30):/tmp/b.log"
- * 比如 "stderr:syslog:/tmp/a.log@(size,10MB,30):/tmp/b.log"
- * return 状态码 0 生成成功 其他 生成失败
- * */
-int Logger::LogOutputAttr::generate_config(const string &log_out_attr_str,
-                                           string *error_info) {
-    /*设置切割保存结果*/
-    vector<string> split_result;
-
-    /*切割配置字符串*/
-    split_str(log_out_attr_str, ":", split_result);
-
-    /*清空之前的结果*/
-    log_files.clear();
-
-    for (string &param: split_result) {
-        /*判断输出流开关*/
-        if (param == "stderr") {
-            stderr_on = true;
-        } else if (param == "syslog") {
-            syslog_on = true;
-        } else if (param == "stdout_on") {
-            stdout_on = true;
-        } else {
-            /*先建立文件属性对象*/
-            LogFile log_file = LogFile();
-            /*建立属性,有错误就返回*/
-            if (log_file.generate_data(param, error_info) != 0) {
-                return 1;
-            }
-            log_files.push_back(log_file);
-        }
-    }
-    return 0;
-}
-
-/*模块日志属性默认构造函数*/
-Logger::LoggerAttr::LoggerAttr() = default;
-
-/*根据formatter得到日志信息
- * params log_message:根据设置的formatter生成的日志消息
- * params log_le:输出的日志级别
- * params file:调用文件完整路径
- * params line:调用行号
- * params func:调用方法名
- * params file_name:调用文件名
- * params record_time:创建时间
- * params tid:线程id
- * params pid:进程id
- * params message:用户打印的消息
- * return
- * */
-void
-Logger::LoggerAttr::get_log_message(string &log_message, log_level_t log_le,
-                                    const string &file,
-                                    const int &line, const string &func,
-                                    const string &file_name,
-                                    const time_t &record_time,
-                                    const thread::id &tid,
-                                    const int &pid,
-                                    const string &message) {
-    /*获取设置的日志格式进行判断替换*/
-    log_message = formatter;
-
-    /*循环判定选中的格式，选中就替换*/
-    for (int i = 0; i < log_formatter_select.size(); i++) {
-        /*如果选择了*/
-        if (log_formatter_select[i]) {
-            /*直接判定进行正则替换*/
-            switch (i) {
-                case 0:
-                    /*项目名称*/
-                    log_message = regex_replace(log_message,
-                                                std::regex("%\\(program_name\\)"),
-                                                logger.program_name);
-                case 1:
-                    /*主机名*/
-                    log_message = regex_replace(log_message,
-                                                std::regex("%\\(hostname\\)"),
-                                                logger.program_name);
-                case 2:
-                    /*日志级别数字*/
-                    log_message = regex_replace(log_message,
-                                                std::regex("%\\(levelno\\)"),
-                                                to_string(log_le));
-                case 3:
-                    /*输出模块的完整路径名*/
-                    log_message = regex_replace(log_message,
-                                                std::regex("%\\(pathname\\)"),
-                                                file);
-                case 4:
-                    /*输出模块的文件名*/
-                    log_message = regex_replace(log_message,
-                                                std::regex("%\\(filename\\)"),
-                                                file_name);
-                case 5:
-                    /*模块名*/
-                    log_message = regex_replace(log_message,
-                                                std::regex("%\\(modulename\\)"),
-                                                module_name);
-                case 6:
-                    /*调用方法名*/
-                    log_message = regex_replace(log_message,
-                                                std::regex("%\\(funcName\\)"),
-                                                func);
-                case 7:
-                    /*调用行号*/
-                    log_message = regex_replace(log_message,
-                                                std::regex("%\\(lineno\\)"),
-                                                to_string(line));
-                case 8:
-                    /*当前时间，UNIX浮点数表示*/
-                    log_message = regex_replace(log_message,
-                                                std::regex("%\\(created\\)"),
-                                                to_string(record_time));
-                case 9:
-                    /*自logger创建以来的毫秒数*/
-                    log_message = regex_replace(log_message,
-                                                std::regex(
-                                                        "%\\(relativeCreated\\)"),
-                                                to_string(logger.init_time -
-                                                          time(nullptr)));
-                case 10:
-                    /* 字符串形式的当前时间 默认为2023-08-18 11:18:45998*/
-                    log_message = regex_replace(log_message,
-                                                std::regex("%\\(asctime\\)"),
-                                                get_record_time(record_time,
-                                                                date_format));
-                case 11:
-                    /*打印线程id*/
-                    /*将pid转化为字符串*/
-                    log_message = regex_replace(log_message,
-                                                std::regex("%\\(thread\\)"),
-                                                pid_to_string(tid));
-                case 12:
-                    /*打印线程名*/
-                    log_message = regex_replace(log_message,
-                                                std::regex("%\\(threadName\\)"),
-                                                ThreadPool::get_target_thread_name(
-                                                        tid));
-                case 13:
-                    /*打印进程id*/
-                    log_message = regex_replace(log_message,
-                                                std::regex("%\\(process\\)"),
-                                                to_string(pid));
-                case 14:
-                    /*打印用户信息*/
-                    log_message = regex_replace(log_message,
-                                                std::regex("%\\(message\\)"),
-                                                message);
-                default:
-                    continue;
-            }
-        }
-
-    }
 }

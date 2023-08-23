@@ -106,7 +106,7 @@ int main() {
 
     /*设置指定模块日志格式*/
     cout << "设置指定模块日志格式:" << logger.set_module_formatter("yes",
-                                                                   " %(program_name)-%(modulename)-%(asctime):%(message)",
+                                                                   "%(program_name)-%(modulename)-%(asctime):%(message)",
                                                                    s) << ":"
          << *s << endl;
 
@@ -115,7 +115,6 @@ int main() {
          << endl;
 
     /*设置所有模块日志格式*/
-    cout << "设置所有模块日志格式:" << endl;
     cout << "设置所有模块日志格式:"
          <<endl;
     logger.set_data_format("");
