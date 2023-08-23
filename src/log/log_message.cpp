@@ -14,26 +14,10 @@
  */
 
 #include "log/log_message.h"
+#include "utils/common_utils.h"
+#include <string>
 
 using namespace std;
-
-/*将时间戳转化为字符串*/
-string LogMessage::get_record_time(const time_t &timeStamp) {
-
-    /*保存转化时间*/
-    char time_buffer[30] = {0};
-
-    /*构建时间存储结构*/
-    struct tm *info;
-
-    /*将时间戳转化为为时间存储结构*/
-    info = localtime(&timeStamp);
-
-    /*转化时间格式*/
-    strftime(time_buffer, 30, "%Y-%m-%d %H:%M:%S", info);
-
-    return time_buffer;
-}
 
 /*初始化参数
  * params module_name:模块名
@@ -49,8 +33,32 @@ LogMessage::LogMessage(const std::string &module_name,
                        const std::string &file, const int &line,
                        const std::string &func, const char *format,
                        va_list args) {
+
+    /*建立临时缓存存储数据*/
+    char temporary[1024];
+
     /*格式化字符串*/
-    vsnprintf(log_message, 200, format, args);
+    int message_len = vsnprintf(temporary, 1024, format, args);
+
+    /*判断数据大小*/
+    if (message_len > 100) {
+        if (1024 <= message_len < MAX_BUFFER) {
+            /*动态申请内存*/
+            log_message = (char *) malloc(message_len);
+        } else {
+            /*动态申请内存*/
+            log_message = (char *) malloc(MAX_BUFFER);
+            /*打印日志超出警告日志*/
+        }
+        int result = vsnprintf(log_message, 100, format, args);
+        /*如果添加失败*/
+        if (result < 0) {
+            /*todo 打印日志错误日志*/
+        }
+    } else {
+        log_message = temporary;
+    }
+
 
     /*参数赋值*/
     this->module_name = module_name;
@@ -59,4 +67,20 @@ LogMessage::LogMessage(const std::string &module_name,
     line_no = line;
     func_name = func;
     record_time = time(nullptr);
+
+    /*切割路径获取文件名*/
+    vector<string> path_split;
+    split_str(file, "/", path_split);
+    file_name = path_split[path_split.size() - 1];
+
+    /*获取线程id*/
+    tid = this_thread::get_id();
+}
+
+/*析构函数*/
+LogMessage::~LogMessage() {
+    /*释放指针*/
+    if (log_message) {
+        free(log_message);
+    }
 }

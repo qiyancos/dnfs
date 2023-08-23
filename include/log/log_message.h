@@ -15,22 +15,27 @@
 
 #ifndef LOG_LOG_MESSAGE_H
 #define LOG_LOG_MESSAGE_H
+#define MAX_BUFFER 65536
 
 #include <iostream>
 #include <vector>
+#include <thread>
 #include "log.h"
 
 /*日志信息对象，存放了单词输出的日志信息结构*/
 class LogMessage {
 private:
     /*日志的记录内容的格式*/
-    char log_message[200]{};
+    char *log_message = nullptr;
 
     /*模块名，用来查询默认的日志格式*/
     std::string module_name;
 
-    /*调用的文件完成路径*/
+    /*调用的文件完整路径*/
     std::string file_path;
+
+    /*调用的文件名*/
+    std::string file_name;
 
     /*调用行号*/
     int line_no;
@@ -43,6 +48,9 @@ private:
 
     /*记录日志级别*/
     LogLevel log_level = NOLOG;
+
+    /*线程id*/
+    std::thread::id tid;
 public:
     /*初始化参数
      * params module_name:模块名
@@ -58,8 +66,8 @@ public:
                const std::string &file, const int &line,
                const std::string &func, const char *format, va_list args);
 
-    /*获取日志记录时间*/
-    static std::string get_record_time(const time_t &timeStamp);
+    /*析构函数*/
+    ~LogMessage();
 };
 
 #endif //LOG_LOG_MESSAGE_H

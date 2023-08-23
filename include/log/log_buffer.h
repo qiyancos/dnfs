@@ -44,17 +44,21 @@ public:
     /*将缓存写入文件,监听log_num*/
     void output_thread();
 
-    /*得到日志缓存单例对象*/
+    /*得到日志缓存单例对象
+     * return: 日志缓存对象
+     * */
     static LogBuffer &get_instance();
 
     /*设置缓存限制
      * params b_limit:设置的缓存限制
+     * return
      * */
     void set_limit(const int &b_limit);
 
     /*添加线程对应的日志，每次记录log_num递增
      * params thread_name:线程名
      * params log_message:打印信息保存对象
+     * return
      * */
     void add_log_buffer(const std::string &thread_name, const LogMessage &log_message);
 };

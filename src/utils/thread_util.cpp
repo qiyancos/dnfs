@@ -22,6 +22,11 @@ using namespace std;
 
 #define MODULE_NAME "thread_pool"
 
+/*id name存储字典*/
+std::map<std::thread::id, std::string> ThreadPool:: thread_id_name_map;
+/*name id存储字典*/
+std::map<std::string, std::thread::id> ThreadPool:: thread_name_id_map;
+
 // 设置当前现成的名称与线程id绑定
 void ThreadPool::set_thread_name(const string &name) {
     const thread::id tid = this_thread::get_id();
