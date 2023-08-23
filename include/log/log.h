@@ -203,6 +203,7 @@ private:
          * params file_name:调用文件名
          * params record_time:创建时间
          * params tid:线程id
+         * params pid:进程id
          * params message:用户打印的消息
          * return
          * */
@@ -213,6 +214,7 @@ private:
                         const std::string &file_name,
                         const time_t &record_time,
                         const std::thread::id &tid,
+                        const int &pid,
                         const std::string &message);
     };
 
@@ -474,6 +476,32 @@ public:
      * return: true 开启debug false 关闭debug
      * */
     bool is_module_debug_on(const std::string &module_name);
+
+    /*按照模型的日志模板格式化日志
+     * params module_name:模型名
+     * params log_message:根据设置的formatter生成的日志消息
+     * params log_le:输出的日志级别
+     * params file:调用文件完整路径
+     * params line:调用行号
+     * params func:调用方法名
+     * params file_name:调用文件名
+     * params record_time:创建时间
+     * params tid:线程id
+     * params pid:进程id
+     * params message:用户打印的消息
+     * return: 状态码 0 生成成功 其他 生成失败
+     * */
+    int format_module_log(const std::string &module_name,
+                          std::string &log_message,
+                          log_level_t log_le,
+                          const std::string &file,
+                          const int &line, const std::string &func,
+                          const std::string &file_name,
+                          const time_t &record_time,
+                          const std::thread::id &tid,
+                          const int &pid,
+                          const std::string &message,
+                          std::string *error_info);
 
 };
 

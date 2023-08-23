@@ -51,6 +51,8 @@ private:
 
     /*线程id*/
     std::thread::id tid;
+    /*进程id*/
+    pid_t pid;
 public:
     /*初始化参数
      * params module_name:模块名
