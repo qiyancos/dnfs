@@ -26,6 +26,7 @@ using namespace std;
 
 Logger::Logger() = default;
 
+
 /*建立日志实例*/
 Logger &logger = Logger::get_instance();
 
@@ -37,11 +38,13 @@ log_level_t Logger::decode_log_level(const string &log_level_str) {
 
     /*遍历字典进行判定*/
     for (const auto &item: log_level_info_dict) {
-        if (log_level_str == item.second.first) {
-            return item.first;
-        }
+        /*遍历别名列表对照*/
+        for (const string &log_level: item.second.first)
+            if (log_level_str == log_level) {
+                return item.first;
+            }
     }
-    return LEVEL_COUNT;
+    return L_ALL;
 }
 
 /*初始化全局日志类
@@ -58,7 +61,10 @@ void Logger::init(const string &program_name_in, const string &hostname_in) {
  * return
  * */
 void Logger::init_module(const string &module_name) {
-    module_attr.insert(pair<string, LoggerAttr>(module_name, default_attr));
+    /*建立默认属性*/
+    auto *init_attr = new LoggerAttr(default_attr);
+    /*将属性赋值*/
+    module_attr[module_name] = init_attr;
 }
 
 /*默认构造函数*/
@@ -91,7 +97,7 @@ Logger::set_default_attr_from(const string &module_name, string *error_info) {
         return 1;
     }
     /*查到了设置日志属性*/
-    default_attr = module_attr[module_name];
+    default_attr = *module_attr[module_name];
     return 0;
 }
 
@@ -114,7 +120,12 @@ int Logger::copy_module_attr_from(const string &target_module_name,
     /*判断目标模块存不存在，不存在，创建在赋值,存在直接赋值*/
     if (judge_module_attr_exist(target_module_name)) {
         /*存在，直接赋值*/
-        module_attr[target_module_name] = module_attr[src_module_name];
+        /*先复制模块的数据*/
+        delete module_attr[target_module_name];
+        /*复制数据*/
+        auto *copy = new LoggerAttr(*module_attr[src_module_name]);
+        /*重新构建数据*/
+        module_attr[target_module_name] = copy;
     } else {
         set_ptr_info(error_info,
                      "the module what set log attr is not exist");
@@ -208,7 +219,7 @@ int Logger::set_log_output(const vector<log_level_t> &log_level_list,
     /*遍历选中模式更改数据*/
     for (auto &attr: module_attr) {
         for (auto &log_level: log_level_list) {
-            attr.second.log_level_output[log_level] = generate_output_attr;
+            attr.second->log_level_output[log_level] = generate_output_attr;
         }
     }
     return 0;
@@ -282,7 +293,7 @@ int Logger::set_module_log_output(const string &module_name,
     /*设置选择模式的日志文件属性*/
     for (auto &log_level: log_level_list) {
         /*重新生成数据对象,错误直接返回*/
-        if (module_attr[module_name].log_level_output[log_level].generate_config(
+        if (module_attr[module_name]->log_level_output[log_level].generate_config(
                 log_file_config, error_info) != 0) {
             return 1;
         }
@@ -298,7 +309,7 @@ int Logger::set_module_log_output(const string &module_name,
 void Logger::set_log_level(const log_level_t &log_level) {
     /*遍历所有属性进行设置*/
     for (auto &md: module_attr) {
-        md.second.log_level = log_level;
+        md.second->log_level = log_level;
 
         /*判断debug模式*/
         _judge_debug(md.second, log_level);
@@ -320,7 +331,7 @@ int Logger::set_module_log_level(const string &module_name,
         return 1;
     }
     /*更改属性设置*/
-    module_attr[module_name].log_level = log_level;
+    module_attr[module_name]->log_level = log_level;
     /*判断debug模式*/
     _judge_debug(module_attr[module_name], log_level);
     return 0;
@@ -330,15 +341,17 @@ int Logger::set_module_log_level(const string &module_name,
  * params log_attr:需要判定的日志属性结构体对象，直接更改其属性
  * params log_level:判定的日志等级
  * */
-void Logger::_judge_debug(LoggerAttr &log_attr, log_level_t log_level) {
-    /*进行debug模式判定,如果包含DEBUG,设置为true*/
-    if (log_level_info_dict.at(log_level).first.find("DEBUG") !=
-        string::npos) {
-        log_attr.debug_on = true;
-    } else {
-        /*清空之前的设置*/
-        log_attr.debug_on = false;
-    }
+void Logger::_judge_debug(LoggerAttr *log_attr, log_level_t log_level) {
+    /*遍历别名列表*/
+    for (const string &log_l: log_level_info_dict[log_level].first)
+        /*进行debug模式判定,如果包含DEBUG,设置为true*/
+        if (log_l.find("DEBUG") !=
+            string::npos) {
+            log_attr->debug_on = true;
+        } else {
+            /*清空之前的设置*/
+            log_attr->debug_on = false;
+        }
 }
 
 
@@ -361,9 +374,9 @@ Logger::set_formatter(const string &format_str, string *error_info) {
     /*遍历所有模块进行创建*/
     for (auto &md_attr: module_attr) {
         /*设置格式*/
-        md_attr.second.formatter = format_str;
+        md_attr.second->formatter = format_str;
         /*设置格式开关*/
-        md_attr.second.log_formatter_select = log_formatter_select;
+        md_attr.second->log_formatter_select = log_formatter_select;
     }
     return 0;
 }
@@ -394,9 +407,10 @@ int Logger::set_module_formatter(const string &module_name,
     }
 
     /*设置格式*/
-    module_attr[module_name].formatter = format_str;
+    module_attr[module_name]->formatter = format_str;
     /*设置格式开关*/
-    module_attr[module_name].log_formatter_select = log_formatter_select;
+    module_attr[module_name]->log_formatter_select = log_formatter_select;
+
 
     return 0;
 }
@@ -457,8 +471,8 @@ Logger::_init_log_formatter(const string &format_str, string *error_info,
 void
 Logger::set_data_format(const string &date_format) {
     /*遍历添加日志格式字符串*/
-    for (auto md_attr: module_attr) {
-        md_attr.second.date_format = date_format;
+    for (const auto &md_attr: module_attr) {
+        md_attr.second->date_format = date_format;
     }
 }
 
@@ -480,7 +494,7 @@ Logger::set_module_data_format(const string &module_name,
     }
 
     /*设置日期格式*/
-    module_attr[module_name].date_format = date_format;
+    module_attr[module_name]->date_format = date_format;
     return 0;
 }
 
@@ -504,7 +518,7 @@ int Logger::_log(const string &module_name, log_level_t log_level,
         return 1;
     }
     /*先判断打印等级满不满足要求*/
-    if (module_attr[module_name].log_level < log_level) {
+    if (module_attr[module_name]->log_level < log_level) {
         return 0;
     }
 
@@ -525,11 +539,11 @@ int Logger::_log(const string &module_name, log_level_t log_level,
     string result;
     string *error_info;
     string s;
-    error_info=&s;
-    if(log_message.grnarate_log_message(result,error_info)==0){
-        cout<<result<<endl;
-    }else{
-        cout<<*error_info<<endl;
+    error_info = &s;
+    if (log_message.grnarate_log_message(result, error_info) == 0) {
+        cout << result << endl;
+    } else {
+        cout << *error_info << endl;
     }
 
 //    /*获取线程名*/
@@ -550,7 +564,7 @@ bool Logger::is_module_debug_on(const string &module_name) {
         return false;
     }
     /*返回debug状态*/
-    return module_attr[module_name].debug_on;
+    return module_attr[module_name]->debug_on;
 }
 
 /*按照模型的日志模板格式化日志
@@ -583,12 +597,19 @@ int Logger::format_module_log(const string &module_name, string &log_message,
     }
 
     /*直接格式化设置日志*/
-    module_attr[module_name].get_log_message(log_message,
-                                             log_le, file,
-                                             line, func,
-                                             file_name,
-                                             record_time, tid,
-                                             pid, message);
+    module_attr[module_name]->get_log_message(log_message,
+                                              log_le, file,
+                                              line, func,
+                                              file_name,
+                                              record_time, tid,
+                                              pid, message);
 
     return 0;
+}
+
+/*析构函数*/
+Logger::~Logger() {
+    for (const auto &attr: module_attr) {
+        delete attr.second;
+    }
 }

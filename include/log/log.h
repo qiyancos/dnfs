@@ -30,17 +30,6 @@
 #include "log_attr.h"
 #include "log_buffer.h"
 
-/*不输出任何日志*/
-#define LNOLOG NOLOG
-/*只输出导致退出的日志*/
-#define LEXIT EXIT_ERROR
-/*输出普通日志以及退出日志*/
-#define LRUNTIME L_INFO
-/*输出DEBUG日志、普通日志和退出日志*/
-#define LDEBUG D_INFO
-/*输出所有日志*/
-#define LALL LEVEL_COUNT
-
 /*打印日志*/
 #define LOG(module_name, log_level, format, args...) \
     logger._log(module_name,\
@@ -77,7 +66,7 @@ private:
     int exit_code{};
 
     /*不同模块的日志属性*/
-    std::map<std::string, LoggerAttr> module_attr;
+    std::map<std::string, LoggerAttr *> module_attr;
 
     /*设置创建时间*/
     time_t init_time = time(nullptr);
@@ -90,6 +79,7 @@ private:
 
 public:
     friend class LogMessage;
+
     friend class LoggerAttr;
 
     /*设置主机名*/
@@ -237,7 +227,7 @@ public:
      * params log_attr:需要判定的日志属性结构体对象，直接更改其属性
      * params log_level:判定的日志等级
      * */
-    static void _judge_debug(LoggerAttr &log_attr, log_level_t log_level);
+    static void _judge_debug(LoggerAttr *log_attr, log_level_t log_level);
 
     /*设置所有模块日志格式
      * params format_str:格式化字符串
@@ -262,9 +252,9 @@ public:
      * params log_formatter_select:生成的日志格式化字段选择列表
      * return: 状态码 0 生成成功 其他 生成失败
      * */
-    int _init_log_formatter(const std::string &format_str,
-                            std::string *error_info,
-                            std::vector<bool> &log_formatter_select);
+    static int _init_log_formatter(const std::string &format_str,
+                                   std::string *error_info,
+                                   std::vector<bool> &log_formatter_select);
 
     /*设置所有模块的日期打印格式
      * params date_format:日期打印格式
@@ -327,6 +317,8 @@ public:
                           const int &pid,
                           const std::string &message,
                           std::string *error_info);
+
+    ~Logger();
 
 };
 
