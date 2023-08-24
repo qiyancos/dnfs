@@ -15,6 +15,13 @@
  *
  */
 
+extern "C" {
+#include "rpc/rpc.h"
+#include "rpc/svc.h"
+#include "rpc/svc_rqst.h"
+#include "rpc/rpcb_clnt.h"
+}
+
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
@@ -26,10 +33,6 @@
 
 #include "nfs/nfs23.h"
 #include "nfs/nfsv41.h"
-#include "rpc/rpc.h"
-#include "rpc/svc.h"
-#include "rpc/svc_rqst.h"
-#include "rpc/rpcb_clnt.h"
 #include "log/log.h"
 #include "utils/common_utils.h"
 #include "dnfsd/dnfs_config.h"
@@ -47,7 +50,7 @@ static const char default_config[] =
 
 /* 创建一个默认初始化的配置 */
 static void init_default_config(const string& config_file_path) {
-    string config_dir = config_file_path.substr(
+    string config_dir = config_file_path.substr(0,
             config_file_path.find_last_of('/'));
     if (! experimental::filesystem::create_directories(config_dir)) {
         LOG(MODULE_NAME, EXIT_ERROR,
@@ -74,7 +77,12 @@ void init_config(const string& config_file_path) {
         /* 如果目标文件不存在，创建一个默认初始化的配置 */
         init_default_config(config_file_path);
     }
-    dnfs_config = YAML::LoadFile(config_file_path);
+    try {
+        dnfs_config = YAML::LoadFile(config_file_path);
+    } catch (exception) {
+        LOG(MODULE_NAME, EXIT_ERROR,
+            "Failed to load config file %s", config_file_path.c_str());
+    }
     /* 这里还会做一些基本配置文件的校验 */
     /*TODO*/
 }
@@ -517,7 +525,7 @@ struct netconfig *netconfig_tcpv4;
 /* 使用rpcbind取消当前rpc的绑定关系，以便绑定新的内容 */
 static void unregister_rpc(void)
 {
-    const rpcprog_t& prog = nfs_param.core_param.program[P_NFS];
+    const rpcprog_t& prog = nfs_param.core_param.program;
     const rpcvers_t vers1 = NFS_V3;
     const rpcvers_t vers2 = NFS_V4;
 
@@ -593,14 +601,14 @@ static void register_rpc_program() {
     LOG(MODULE_NAME, D_INFO, "Registering V3/UDP");
 
     /* XXXX fix svc_register! */
-    if (!svc_reg(udp_xprt, nfs_param.core_param.program[P_NFS], (u_long) NFS_V3,
+    if (!svc_reg(udp_xprt, nfs_param.core_param.program, (u_long) NFS_V3,
             nfs_rpc_dispatch_dummy, netconfig_udpv4)) {
         LOG(MODULE_NAME, EXIT_ERROR, "Cannot register V%d on UDP", (int)NFS_V3);
     }
 
     LOG(MODULE_NAME, D_INFO, "Registering V%d/TCP", (int)NFS_V3);
 
-    if (!svc_reg(tcp_xprt, nfs_param.core_param.program[P_NFS], (u_long) NFS_V3,
+    if (!svc_reg(tcp_xprt, nfs_param.core_param.program, (u_long) NFS_V3,
             nfs_rpc_dispatch_dummy, netconfig_tcpv4)) {
         LOG(MODULE_NAME, EXIT_ERROR, "Cannot register %s V%d on TCP", (int)NFS_V3);
     }

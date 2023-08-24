@@ -47,7 +47,7 @@ LoggerAttr::get_log_message(string &log_message, log_level_t log_le,
     log_message = formatter;
 
     /*循环判定选中的格式，选中就替换*/
-    for (int i = 0; i < log_formatter_select.size(); i++) {
+    for (unsigned int i = 0; i < log_formatter_select.size(); i++) {
         /*如果选择了*/
         if (log_formatter_select[i]) {
             /*直接判定进行正则替换*/

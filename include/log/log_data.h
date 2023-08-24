@@ -56,4 +56,5 @@ extern std::map<log_format_t, std::pair<std::string, log_format_t>> log_formatte
 
 /*初始化日志等级对照字典*/
 extern std::map<log_level_t, std::pair<std::string, int>> log_level_info_dict;
+
 #endif //DNFSD_LOG_DATA_H

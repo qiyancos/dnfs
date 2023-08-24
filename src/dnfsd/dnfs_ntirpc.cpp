@@ -13,12 +13,15 @@
  *
  */
 
+extern "C" {
+#include "rpc/rpc.h"
+#include "rpc/svc.h"
+}
+
 #include <assert.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 
-#include "rpc/rpc.h"
-#include "rpc/svc.h"
 #include "log/log.h"
 #include "nfs/nfs23.h"
 #include "nfs/nfsv41.h"
@@ -26,6 +29,7 @@
 #include "utils/thread_utils.h"
 #include "dnfsd/dnfs_meta_data.h"
 #include "dnfsd/dnfs_ntirpc.h"
+#include "dnfsd/dnfs_config.h"
 
 using namespace std;
 
@@ -404,10 +408,6 @@ static enum xprt_stat nfs_rpc_noprog(nfs_request_t *reqdata) {
     return svcerr_noprog(&reqdata->svc);
 }
 
-#define NFS_pcp nfs_param.core_param
-#define NFS_options NFS_pcp.core_options
-#define NFS_program NFS_pcp.program
-
 /* RPC处理主程序入口 */
 static enum xprt_stat nfs_rpc_process_request(nfs_request_t *reqdata) {
     return svcerr_auth(&reqdata->svc, AUTH_FAILED);
@@ -444,11 +444,11 @@ enum xprt_stat nfs_rpc_valid_NFS(struct svc_req *req) {
 
     reqdata->funcdesc = &invalid_funcdesc;
 
-    if (req->rq_msg.cb_prog != NFS_program[P_NFS]) {
+    if (req->rq_msg.cb_prog != nfs_param.core_param.program) {
         return nfs_rpc_noprog(reqdata);
     }
 
-    if (req->rq_msg.cb_vers == NFS_V3 && NFS_options) {
+    if (req->rq_msg.cb_vers == NFS_V3) {
         if (req->rq_msg.cb_proc <= NFSPROC3_COMMIT) {
             reqdata->funcdesc =
                     &nfs3_func_desc[req->rq_msg.cb_proc];

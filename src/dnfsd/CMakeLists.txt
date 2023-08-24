@@ -13,4 +13,5 @@ target_link_libraries(dnfsd
         ntirpc
         utils
         ${YAML_CPP_LIBRARIES}
+        stdc++fs
 )

@@ -16,7 +16,9 @@
 #ifndef DNFSD_DNFS_NTIRPC_H
 #define DNFSD_DNFS_NTIRPC_H
 
+extern "C" {
 #include "rpc/svc.h"
+}
 
 enum evchan {
     UDP_UREG_CHAN,		/*< Put UDP on a dedicated channel */
