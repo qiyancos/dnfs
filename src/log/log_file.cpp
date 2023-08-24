@@ -47,7 +47,7 @@ int LogFile::generate_data(const string &config_str, string *error_info) {
     regex path_regex_str("[<>?*\\s]+");
 */
     /*这个是合法字符匹配*/
-    regex path_regex_str("^/([\\w]+/)+");
+    regex path_regex_str("^/([\\w]+/)*([\\w]+)/?");
 
     /*如果存在*/
     if (args_index != string::npos) {
@@ -153,7 +153,8 @@ int LogFile::generate_data(const string &config_str, string *error_info) {
     /*如果路径不合法*/
     if (!judge_regex(dir_path, path_regex_str)) {
         set_ptr_info(error_info,
-                     "the directory for saving log must a absolutely path what start and end with / and just contain the number alphabet _");
+                     "\n"
+                     "The log directory must be an absolute path and can only be named with numbers, letters and '_'");
         return 1;
     }
     /*查看路径是否存在，不存在创建,创建错误直接返回*/

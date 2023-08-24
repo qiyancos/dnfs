@@ -17,9 +17,61 @@
 #include "utils/common_utils.h"
 #include "utils/thread_utils.h"
 #include <regex>
+
 using namespace std;
+
 /*模块日志属性默认构造函数*/
-LoggerAttr::LoggerAttr() = default;
+LoggerAttr::LoggerAttr() {
+    /*message默认打开*/
+    log_formatter_select[FMT_LOG_MESSAGE] = true;
+};
+
+/*根据格式字符串，建立日志格式,供设置日志格式调用
+ * params error_info:错误信息
+ * return: 状态码 0 生成成功 其他 生成失败
+ * */
+int
+LoggerAttr::init_log_formatter(string *error_info) {
+    /*用来判定是否设置了格式，没有设置至少一个格式报错*/
+    bool set_formatter = false;
+    int i=0;
+    /*循环判定是否有关键字*/
+    for (auto &log_formate: log_formatter_dict) {
+        /*如果查找到了关键字*/
+        if (formatter.find(log_formate.second.first) != string::npos) {
+            /*设置字段选中*/
+            log_formatter_select[i]=true;
+            /*设置了格式*/
+            set_formatter = true;
+        } else {
+            log_formatter_select[i]=false;
+        }
+        i+=1;
+    }
+    /*如果没有设置格式*/
+    if (!set_formatter) {
+        /*设置错误信息*/
+        set_ptr_info(error_info,
+                     "the formatter need select from the list:\n"
+                     "        * %(program_name) the program name\n"
+                     "        * %(hostname) the host name\n"
+                     "        * %(levelno) the number of log level\n"
+                     "        * %(pathname) the complete path for the module what use log\n"
+                     "        * %(filename) the file name what for the module what use log\n"
+                     "        * %(modulename) the module name\n"
+                     "        * %(funcName) the function name for the module what use log\n"
+                     "        * %(lineno) the line number for the module what use log\n"
+                     "        * %(created) now time (UNIX float)\n"
+                     "        * %(relativeCreated) the ms from log build\n"
+                     "        * %(asctime) the time formatter default is 2023-08-18 11:18:45998\n"
+                     "        * %(thread) the thread id\n"
+                     "        * %(threadName) the thread name\n"
+                     "        * %(process) the progress id\n"
+                     "        * %(message) the log message");
+        return 1;
+    }
+    return 0;
+}
 
 /*根据formatter得到日志信息
  * params log_message:根据设置的formatter生成的日志消息
@@ -36,18 +88,18 @@ LoggerAttr::LoggerAttr() = default;
  * */
 void
 LoggerAttr::get_log_message(string &log_message, log_level_t log_le,
-                                    const string &file,
-                                    const int &line, const string &func,
-                                    const string &file_name,
-                                    const time_t &record_time,
-                                    const thread::id &tid,
-                                    const int &pid,
-                                    const string &message) {
+                            const string &file,
+                            const int &line, const string &func,
+                            const string &file_name,
+                            const time_t &record_time,
+                            const thread::id &tid,
+                            const int &pid,
+                            const string &message) {
     /*获取设置的日志格式进行判断替换*/
     log_message = formatter;
 
     /*循环判定选中的格式，选中就替换*/
-    for (unsigned int i = 0; i < log_formatter_select.size(); i++) {
+    for (unsigned int i = 0; i < FMT_LOG_FORMAT_COUNT; i++) {
         /*如果选择了*/
         if (log_formatter_select[i]) {
             /*直接判定进行正则替换*/

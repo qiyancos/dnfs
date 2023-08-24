@@ -255,16 +255,6 @@ public:
                              const std::string &format_str,
                              std::string *error_info);
 
-    /*根据格式字符串，建立日志格式,供设置日志格式调用
-     * params format_str:格式化字符串
-     * params error_info:错误信息
-     * params log_formatter_select:生成的日志格式化字段选择列表
-     * return: 状态码 0 生成成功 其他 生成失败
-     * */
-    static int _init_log_formatter(const std::string &format_str,
-                                   std::string *error_info,
-                                   std::vector<bool> &log_formatter_select);
-
     /*设置所有模块的日期打印格式
      * params date_format:日期打印格式
      * return

@@ -65,10 +65,13 @@ void Logger::init(const string &program_name_in, const string &hostname_in) {
  * return
  * */
 void Logger::init_module(const string &module_name) {
-    /*建立默认属性*/
-    auto *init_attr = new LoggerAttr(default_attr);
-    /*将属性赋值*/
-    module_attr[module_name] = init_attr;
+    /*如果不存在,在建立*/
+    if (!judge_module_attr_exist(module_name)) {
+        /*建立默认属性*/
+        auto *init_attr = new LoggerAttr(default_attr);
+        /*将属性赋值*/
+        module_attr[module_name] = init_attr;
+    }
 }
 
 /*默认构造函数*/
@@ -366,21 +369,15 @@ void Logger::_judge_debug(LoggerAttr *log_attr, log_level_t log_level) {
  * */
 int
 Logger::set_formatter(const string &format_str, string *error_info) {
-    /*格式化字段选择,选中为true,未选中为false*/
-    vector<bool> log_formatter_select;
-
-    /*建立日志格式*/
-    if (_init_log_formatter(format_str, error_info, log_formatter_select) !=
-        0) {
-        return 1;
-    }
 
     /*遍历所有模块进行创建*/
     for (auto &md_attr: module_attr) {
         /*设置格式*/
         md_attr.second->formatter = format_str;
         /*设置格式开关*/
-        md_attr.second->log_formatter_select = log_formatter_select;
+        if(md_attr.second->init_log_formatter(error_info)!=0){
+            return 1;
+        }
     }
     return 0;
 }
@@ -394,14 +391,6 @@ Logger::set_formatter(const string &format_str, string *error_info) {
 int Logger::set_module_formatter(const string &module_name,
                                  const string &format_str,
                                  string *error_info) {
-    /*格式化字段选择,选中为true,未选中为false*/
-    vector<bool> log_formatter_select;
-
-    /*建立日志格式*/
-    if (_init_log_formatter(format_str, error_info, log_formatter_select) !=
-        0) {
-        return 1;
-    }
 
     /*如果模块不存在，直接报错*/
     if (!judge_module_attr_exist(module_name)) {
@@ -413,59 +402,15 @@ int Logger::set_module_formatter(const string &module_name,
     /*设置格式*/
     module_attr[module_name]->formatter = format_str;
     /*设置格式开关*/
-    module_attr[module_name]->log_formatter_select = log_formatter_select;
-
-
-    return 0;
-}
-
-/*根据格式字符串，建立日志格式,供设置日志格式调用
- * params format_str:格式化字符串
- * params error_info:错误信息
- * params log_formatter_select:生成的日志格式化字段选择列表
- * return: 状态码 0 生成成功 其他 生成失败
- * */
-int
-Logger::_init_log_formatter(const string &format_str, string *error_info,
-                            vector<bool> &log_formatter_select) {
-    /*用来判定是否设置了格式，没有设置至少一个格式报错*/
-    bool set_formatter = false;
-    /*循环判定是否有关键字*/
-    for (auto &log_formate: log_formatter_dict) {
-        /*如果查找到了关键字*/
-        if (format_str.find(log_formate.second.first) != string::npos) {
-            /*设置字段选中*/
-            log_formatter_select.push_back(true);
-            /*设置了格式*/
-            set_formatter = true;
-        } else {
-            log_formatter_select.push_back(false);
-        }
-    }
-    /*如果没有设置格式*/
-    if (!set_formatter) {
-        /*设置错误信息*/
-        set_ptr_info(error_info,
-                     "the formatter need select from the list:\n"
-                     "        * %(program_name) the program name\n"
-                     "        * %(hostname) the host name\n"
-                     "        * %(levelno) the number of log level\n"
-                     "        * %(pathname) the complete path for the module what use log\n"
-                     "        * %(filename) the file name what for the module what use log\n"
-                     "        * %(modulename) the module name\n"
-                     "        * %(funcName) the function name for the module what use log\n"
-                     "        * %(lineno) the line number for the module what use log\n"
-                     "        * %(created) now time (UNIX float)\n"
-                     "        * %(relativeCreated) the ms from log build\n"
-                     "        * %(asctime) the time formatter default is 2023-08-18 11:18:45998\n"
-                     "        * %(thread) the thread id\n"
-                     "        * %(threadName) the thread name\n"
-                     "        * %(process) the progress id\n"
-                     "        * %(message) the log message");
+    if(module_attr[module_name]->init_log_formatter(error_info)!=0){
         return 1;
     }
+
+
+
     return 0;
 }
+
 
 /*设置所有模块的日期打印格式
  * params date_format:日期打印格式

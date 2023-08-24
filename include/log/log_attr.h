@@ -46,7 +46,7 @@ private:
     * %(process) 进程id
     * %(message) 用户输出消息
     * */
-    std::string formatter = "%(program_name)-%(modulename)-%(asctime):%(message)";
+    std::string formatter = "%(message)";
 
     /*每一个日志级别可以对应单独的输出日志文件*/
     LogOutputAttr log_level_output[LEVEL_COUNT];
@@ -76,11 +76,17 @@ private:
     bool debug_on = false;
 
     /*格式化字段选择,选中为true,未选中为false*/
-    std::vector<bool> log_formatter_select;
+    bool log_formatter_select[FMT_LOG_FORMAT_COUNT]{};
 
 public:
     /*默认初始化构造函数 */
     LoggerAttr();
+
+    /*根据格式字符串，建立日志格式,供设置日志格式调用
+     * params error_info:错误信息
+     * return: 状态码 0 生成成功 其他 生成失败
+     * */
+     int init_log_formatter(std::string *error_info);
 
     /*根据formatter得到日志信息
      * params log_message:根据设置的formatter生成的日志消息
