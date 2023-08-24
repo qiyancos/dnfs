@@ -29,8 +29,19 @@ typedef enum LogLevel {
     D_WARN,
     D_BACKTRACE,
     D_INFO,
-    LEVEL_COUNT,
+    L_ALL,
 } log_level_t;
+
+/*不输出任何日志*/
+#define LNOLOG NOLOG
+/*只输出导致退出的日志*/
+#define LEXIT EXIT_ERROR
+/*输出普通日志以及退出日志*/
+#define LRUNTIME L_INFO
+/*输出DEBUG日志、普通日志和退出日志*/
+#define LDEBUG D_INFO
+/*输出所有日志*/
+#define LEVEL_COUNT L_ALL
 
 /*日志格式化参数*/
 typedef enum LogFormatter {
@@ -52,9 +63,37 @@ typedef enum LogFormatter {
 } log_format_t;
 
 /*存储格式字段和结构下标对应*/
-extern std::map<log_format_t, std::pair<std::string, log_format_t>> log_formatter_dict;
+static std::map<log_format_t, std::pair<std::string, log_format_t>> log_formatter_dict= {
+{PG_NAME,        {"%(program_name)",    PG_NAME}},
+{HOST_NAME,      {"%(hostname)",        HOST_NAME}},
+{LEVEL_NO,       {"%(levelno)",         LEVEL_NO}},
+{PATH_NAME,      {"%(pathname)",        PATH_NAME}},
+{FILE_NAME,      {"%(filename)",        FILE_NAME}},
+{MD_NAME,        {"%(modulename)",      MD_NAME}},
+{FUNC_NAME,      {"%(funcName)",        FUNC_NAME}},
+{LINE_NO,        {"%(lineno)",          LINE_NO}},
+{WHEN_CREATED,   {"%(created)",         WHEN_CREATED}},
+{RELATE_CREATED, {"%(relativeCreated)", RELATE_CREATED}},
+{ASC_TIME,       {"%(asctime)",         ASC_TIME}},
+{THREAD_ID,      {"%(thread)",          THREAD_ID}},
+{THREAD_NAME,    {"%(threadName)",      THREAD_NAME}},
+{PROCESS_ID,     {"%(process)",         PROCESS_ID}},
+{LOG_MESSAGE,    {"%(message)",         LOG_MESSAGE}},
+};;
 
 /*初始化日志等级对照字典*/
-extern std::map<log_level_t, std::pair<std::string, int>> log_level_info_dict;
+static std::map<log_level_t, std::pair<std::vector<std::string>, int>> log_level_info_dict= {
+        {L_INFO,      {{"LOG_INFO","LRUNTIME"},        LOG_INFO}},
+        {L_WARN,      {{"LOG_WARN"},        LOG_WARNING}},
+        {L_ERROR,     {{"LOG_ERROR"},       LOG_ERR}},
+        {L_BACKTRACE, {{"LOG_BACKTRACE"},   LOG_ERR}},
+        {D_ERROR,     {{"DEBUG_ERROR"},     LOG_ERR}},
+        {D_WARN,      {{"DEBUG_WARN"},      LOG_WARNING}},
+        {D_BACKTRACE, {{"DEBUG_BACKTRACE"}, LOG_ERR}},
+        {D_INFO,      {{"DEBUG_INFO","LDEBUG"},      LOG_INFO}},
+        {EXIT_ERROR,  {{"EXIT_ERROR","LEXIT"},      LOG_ALERT}},
+        {NOLOG,       {{"NOLOG"},           LOG_EMERG}},
+        {L_ALL,       {{"LOG_ALL"},           LOG_INFO}},
+};
 
 #endif //DNFSD_LOG_DATA_H

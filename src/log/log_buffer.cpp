@@ -49,7 +49,7 @@ void LogBuffer::add_log_buffer(const string &thread_name,
     /*查询是否已经存在thread_name对应的数据*/
     if (buffer_map.find(thread_name) == buffer_map.end()) {
         /*不存在,建立数据字典*/
-        buffer_map.insert(pair<string, vector<LogMessage>>(thread_name, {}));
+        buffer_map[thread_name]={};
     }
     /*已经存在进行添加*/
     buffer_map[thread_name].push_back(log_message);
