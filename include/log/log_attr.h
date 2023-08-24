@@ -110,6 +110,11 @@ public:
                     const std::thread::id &tid,
                     const int &pid,
                     const std::string &message);
+
+    /*判断debug模式
+     * */
+    void judge_debug();
+
 };
 
 

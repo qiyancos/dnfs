@@ -224,12 +224,6 @@ public:
                              const log_level_t &log_level,
                              std::string *error_info);
 
-    /*判断debug模式
-     * params log_attr:需要判定的日志属性结构体对象，直接更改其属性
-     * params log_level:判定的日志等级
-     * */
-    static void _judge_debug(LoggerAttr *log_attr, log_level_t log_level);
-
     /*设置所有模块日志格式
      * params format_str:格式化字符串
      * params error_info:错误信息

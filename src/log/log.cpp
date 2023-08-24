@@ -313,7 +313,7 @@ void Logger::set_log_level(const log_level_t &log_level) {
         md.second->log_level = log_level;
 
         /*判断debug模式*/
-        _judge_debug(md.second, log_level);
+        md.second->judge_debug();
     }
 }
 
@@ -334,25 +334,8 @@ int Logger::set_module_log_level(const string &module_name,
     /*更改属性设置*/
     module_attr[module_name]->log_level = log_level;
     /*判断debug模式*/
-    _judge_debug(module_attr[module_name], log_level);
+    module_attr[module_name]->judge_debug();
     return 0;
-}
-
-/*判断debug模式
- * params log_attr:需要判定的日志属性结构体对象，直接更改其属性
- * params log_level:判定的日志等级
- * */
-void Logger::_judge_debug(LoggerAttr *log_attr, log_level_t log_level) {
-    /*遍历别名列表*/
-    for (const string &log_l: log_level_info_dict[log_level].first)
-        /*进行debug模式判定,如果包含DEBUG,设置为true*/
-        if (log_l.find("DEBUG") !=
-            string::npos) {
-            log_attr->debug_on = true;
-        } else {
-            /*清空之前的设置*/
-            log_attr->debug_on = false;
-        }
 }
 
 
@@ -369,7 +352,7 @@ Logger::set_formatter(const string &format_str, string *error_info) {
         /*设置格式*/
         md_attr.second->formatter = format_str;
         /*设置格式开关*/
-        if(md_attr.second->init_log_formatter(error_info)!=0){
+        if (md_attr.second->init_log_formatter(error_info) != 0) {
             return 1;
         }
     }
@@ -396,10 +379,9 @@ int Logger::set_module_formatter(const string &module_name,
     /*设置格式*/
     module_attr[module_name]->formatter = format_str;
     /*设置格式开关*/
-    if(module_attr[module_name]->init_log_formatter(error_info)!=0){
+    if (module_attr[module_name]->init_log_formatter(error_info) != 0) {
         return 1;
     }
-
 
 
     return 0;

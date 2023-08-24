@@ -7,10 +7,6 @@
 
 using namespace std;
 
-CREATE_MODULE(main)
-
-int id = 3;
-
 void exit_t(int code) {
     cout << "错误退出" << endl;
     exit(code);

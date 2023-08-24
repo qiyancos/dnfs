@@ -192,3 +192,21 @@ LoggerAttr::get_log_message(string &log_message, log_level_t log_le,
 
     }
 }
+
+
+/*判断debug模式
+ * params log_attr:需要判定的日志属性结构体对象，直接更改其属性
+ * params log_level:判定的日志等级
+ * */
+void LoggerAttr::judge_debug() {
+    /*遍历别名列表*/
+    for (const string &log_l: log_level_info_dict[log_level].first)
+        /*进行debug模式判定,如果包含DEBUG,设置为true*/
+        if (log_l.find("DEBUG") !=
+            string::npos) {
+            debug_on = true;
+        } else {
+            /*清空之前的设置*/
+            debug_on = false;
+        }
+}
