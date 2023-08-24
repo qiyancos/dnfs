@@ -62,7 +62,7 @@ private:
     void (*exit_func)(int) =exit;
 
     /*退出函数退出码*/
-    int exit_code{};
+    int exit_code;
 
     /*不同模块的日志属性*/
     std::map<std::string, LoggerAttr *> module_attr;

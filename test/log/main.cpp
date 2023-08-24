@@ -137,7 +137,8 @@ int main() {
          <<"message:"<<message<< endl;
 
     LOG("yes", L_ERROR, "%s", "what fuck");
-    LOG("test", L_ERROR, "%s", "what fuck");
+    LOG("test", D_ERROR, "%s", "what fuck");
+    LOG("test", EXIT_ERROR, "%s", "what fuck");
     return 0;
 }
 
