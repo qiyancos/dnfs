@@ -21,6 +21,7 @@
 #include <vector>
 #include <thread>
 #include "log_data.h"
+#include "log_attr.h"
 
 /*日志信息对象，存放了单词输出的日志信息结构*/
 class LogMessage {
@@ -53,6 +54,9 @@ private:
     std::thread::id tid;
     /*进程id*/
     pid_t pid;
+
+    /*保存对应的日志属性*/
+    LoggerAttr *log_attr;
 public:
     /*初始化参数
      * params module_name:模块名
@@ -62,6 +66,7 @@ public:
      * params func:调用方法名
      * params format:用户信息日志格式
      * params tid:线程id
+     * params log_attr:对应的日志打印属性
      * params args:用户信息参数，需对应format
      * */
     LogMessage(const std::string &module_name,
@@ -69,6 +74,7 @@ public:
                const std::string &file, const int &line,
                const std::string &func, const char *format,
                const std::thread::id &tid,
+               LoggerAttr *log_attr,
                va_list args);
 
     /*生成日志信息

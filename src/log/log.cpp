@@ -54,6 +54,10 @@ log_level_t Logger::decode_log_level(const string &log_level_str) {
 void Logger::init(const string &program_name_in, const string &hostname_in) {
     hostname = hostname_in;
     program_name = program_name_in;
+    /*遍历初始化所有的module*/
+    for(const auto & module_n:*module_set){
+        init_module(module_n);
+    }
 }
 
 /*使用默认日志属性初始化一个模块日志
@@ -508,51 +512,57 @@ Logger::set_module_data_format(const string &module_name,
  * params format:用户打印信息格式
  * params ...:用户打印信息,需对应format
  * */
-int Logger::_log(const string &module_name, log_level_t log_level,
-                 const string &file, const int &line, const string &func,
-                 const char *format, ...) {
+void Logger::_log(const string &module_name, log_level_t log_level,
+                  const string &file, const int &line, const string &func,
+                  const char *format, ...) {
+
     /*如果模块不存在，直接报错*/
     if (!judge_module_attr_exist(module_name)) {
-//        set_ptr_info(error_info,
-//                     "the module what set lof message is not exist");
-        return 1;
-    }
-    /*先判断打印等级满不满足要求*/
-    if (module_attr[module_name]->log_level < log_level) {
-        return 0;
+        throw "the module what set lof message is not exist";
     }
 
-    /*获取线程id*/
-    thread::id tid = this_thread::get_id();
+    /*如果满足打印日志条件*/
+    if (log_level != LNOLOG and log_level != LEVEL_COUNT) {
+        /*先判断打印等级满满足要求*/
+        if (module_attr[module_name]->log_level >= log_level) {
+            /*获取线程id*/
+            thread::id tid = this_thread::get_id();
 
-    /*创建LogMessage对象*/
-    va_list args;
-    va_start(args, format);
+            /*创建LogMessage对象*/
+            va_list args;
+            va_start(args, format);
 
-    /*构建构建对象*/
-    LogMessage log_message = LogMessage(module_name,
-                                        log_level,
-                                        file, line,
-                                        func, format, tid, args);
+            /*构建构建对象*/
+            LogMessage log_message = LogMessage(module_name,
+                                                log_level,
+                                                file, line,
+                                                func, format, tid,
+                                                module_attr[module_name], args);
 
-    va_end(args);
-    string result;
-    string *error_info;
-    string s;
-    error_info = &s;
-    if (log_message.grnarate_log_message(result, error_info) == 0) {
-        cout << result << endl;
-    } else {
-        cout << *error_info << endl;
-    }
+            va_end(args);
+            string result;
+            string *error_info;
+            string s;
+            error_info = &s;
+            if (log_message.grnarate_log_message(result, error_info) == 0) {
+                cout << result << endl;
+            } else {
+                cout << *error_info << endl;
+            }
 
-//    /*获取线程名*/
-//    string thread_name = ThreadPool::get_target_thread_name(tid);
+//            /*获取线程名*/
+//            string thread_name = ThreadPool::get_target_thread_name(tid);
 //
-//    /*将LogMessage对象加到缓存*/
-//    log_buffer.add_log_buffer(thread_name, log_message);
+//            /*将LogMessage对象加到缓存*/
+//            log_buffer.add_log_buffer(thread_name, log_message);
+        }
 
-    return 0;
+        /*如果是退出标志*/
+        if (log_level == LEXIT) {
+            exit_func(exit_code);
+        }
+    }
+
 }
 
 /*判断模块日志debug状态
@@ -612,4 +622,31 @@ Logger::~Logger() {
     for (const auto &attr: module_attr) {
         delete attr.second;
     }
+}
+
+/*将所有的模板设置为默认属性*/
+void Logger::set_all_module_attr_default() {
+    /*遍历建立所有默认属性*/
+    for (auto &log_attr: module_attr) {
+        /*先删除之前的属性*/
+        delete module_attr[log_attr.first];
+        /*复制属性*/
+        auto *attr = new LoggerAttr(default_attr);
+        /*建立属性*/
+        module_attr[log_attr.first] = attr;
+    }
+}
+
+/*存储模块名*/
+set<string>* module_set = nullptr;
+
+/*添加新的模块名*/
+const char *create_new_module(const char *name) {
+    if (!module_set) {
+        module_set = new set<string>();
+    }
+    if (module_set->find(name) == module_set->end()) {
+        module_set->insert(name);
+    }
+    return nullptr;
 }

@@ -78,6 +78,10 @@ private:
     /*格式化字段选择,选中为true,未选中为false*/
     std::vector<bool> log_formatter_select;
 
+public:
+    /*默认初始化构造函数 */
+    LoggerAttr();
+
     /*根据formatter得到日志信息
      * params log_message:根据设置的formatter生成的日志消息
      * params log_le:输出的日志级别
@@ -100,10 +104,6 @@ private:
                     const std::thread::id &tid,
                     const int &pid,
                     const std::string &message);
-
-public:
-    /*默认初始化构造函数 */
-    LoggerAttr();
 };
 
 

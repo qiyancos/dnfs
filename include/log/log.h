@@ -24,11 +24,19 @@
 #include <atomic>
 #include <queue>
 #include <thread>
+#include <set>
 
-#include "log_file.h"
 #include "log_data.h"
 #include "log_attr.h"
 #include "log_buffer.h"
+
+/*存储模块名*/
+extern std::set<std::string>* module_set;
+/*添加新的模块名*/
+const char* create_new_module(const char* name);
+
+#define CREATE_MODULE(name) \
+    const char * temp_##name = create_new_module(""#name"");
 
 /*打印日志*/
 #define LOG(module_name, log_level, format, args...) \
@@ -54,6 +62,10 @@
 
 /*日志类*/
 class Logger {
+    friend class LogMessage;
+
+    friend class LoggerAttr;
+
 private:
 
     /*默认日志属性，新建日志默认使用该属性*/
@@ -63,7 +75,7 @@ private:
     void (*exit_func)(int) =exit;
 
     /*退出函数退出码*/
-    int exit_code{};
+    int exit_code;
 
     /*不同模块的日志属性*/
     std::map<std::string, LoggerAttr *> module_attr;
@@ -78,9 +90,6 @@ private:
     Logger();
 
 public:
-    friend class LogMessage;
-
-    friend class LoggerAttr;
 
     /*设置主机名*/
     std::string hostname = "localhost";
@@ -281,9 +290,9 @@ public:
      * params format:用户打印信息格式
      * params ...:用户打印信息,需对应format
      * */
-    int _log(const std::string &module_name, log_level_t log_level,
-             const std::string &file, const int &line,
-             const std::string &func, const char *format, ...);
+    void _log(const std::string &module_name, log_level_t log_level,
+              const std::string &file, const int &line,
+              const std::string &func, const char *format, ...);
 
     /*判断模块日志debug状态
      * params module_name:模型名
@@ -317,6 +326,9 @@ public:
                           const int &pid,
                           const std::string &message,
                           std::string *error_info);
+
+    /*将所有的模板设置为默认属性*/
+    void set_all_module_attr_default();
 
     ~Logger();
 

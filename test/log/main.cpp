@@ -7,6 +7,10 @@
 
 using namespace std;
 
+CREATE_MODULE(main)
+
+int id = 3;
+
 void exit_t(int code) {
     cout << "错误退出" << endl;
     exit(code);
@@ -33,7 +37,7 @@ int main() {
     logger.init("xx", "xx");
 
     /*解析日志级别*/
-    cout << "解析日志级别:" << logger.decode_log_level("DEBUG_INFO")
+    cout << "解析日志级别:" << Logger::decode_log_level("DEBUG_INFO")
          << endl;
 
     /*建立模板*/
@@ -135,8 +139,14 @@ int main() {
                                      time(nullptr), this_thread::get_id(),
                                      getpid(), "what fuck", s) << ":" << *s<<":"
          <<"message:"<<message<< endl;
+
+    /*将所有的模板设置为默认属性*/
+    cout << "将所有的模板设置为默认属性:"<< endl;
+    logger.set_all_module_attr_default();
+
     LOG("yes", L_ERROR, "%s", "what fuck");
-    LOG("test", L_ERROR, "%s", "what fuck");
+    LOG("test", D_ERROR, "%s", "what fuck");
+    LOG("test", EXIT_ERROR, "%s", "what fuck");
     return 0;
 }
 
