@@ -508,42 +508,39 @@ Logger::set_module_data_format(const string &module_name,
  * params format:用户打印信息格式
  * params ...:用户打印信息,需对应format
  * */
-int Logger::_log(const string &module_name, log_level_t log_level,
-                 const string &file, const int &line, const string &func,
-                 const char *format, ...) {
+void Logger::_log(const string &module_name, log_level_t log_level,
+                  const string &file, const int &line, const string &func,
+                  const char *format, ...) {
     /*如果模块不存在，直接报错*/
     if (!judge_module_attr_exist(module_name)) {
-//        set_ptr_info(error_info,
-//                     "the module what set lof message is not exist");
-        return 1;
+        throw "the module what set lof message is not exist";
     }
-    /*先判断打印等级满不满足要求*/
-    if (module_attr[module_name]->log_level < log_level) {
-        return 0;
-    }
+    /*先判断打印等级满满足要求*/
+    if (module_attr[module_name]->log_level > log_level) {
+        /*获取线程id*/
+        thread::id tid = this_thread::get_id();
 
-    /*获取线程id*/
-    thread::id tid = this_thread::get_id();
+        /*创建LogMessage对象*/
+        va_list args;
+        va_start(args, format);
 
-    /*创建LogMessage对象*/
-    va_list args;
-    va_start(args, format);
+        /*构建构建对象*/
+        LogMessage log_message = LogMessage(module_name,
+                                            log_level,
+                                            file, line,
+                                            func, format, tid,
+                                            module_attr[module_name], args);
 
-    /*构建构建对象*/
-    LogMessage log_message = LogMessage(module_name,
-                                        log_level,
-                                        file, line,
-                                        func, format, tid, args);
-
-    va_end(args);
-    string result;
-    string *error_info;
-    string s;
-    error_info = &s;
-    if (log_message.grnarate_log_message(result, error_info) == 0) {
-        cout << result << endl;
-    } else {
-        cout << *error_info << endl;
+        va_end(args);
+        string result;
+        string *error_info;
+        string s;
+        error_info = &s;
+        if (log_message.grnarate_log_message(result, error_info) == 0) {
+            cout << result << endl;
+        } else {
+            cout << *error_info << endl;
+        }
     }
 
 //    /*获取线程名*/
@@ -552,7 +549,6 @@ int Logger::_log(const string &module_name, log_level_t log_level,
 //    /*将LogMessage对象加到缓存*/
 //    log_buffer.add_log_buffer(thread_name, log_message);
 
-    return 0;
 }
 
 /*判断模块日志debug状态

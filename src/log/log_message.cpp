@@ -15,7 +15,6 @@
 #include <string>
 #include <unistd.h>
 #include "log/log_message.h"
-#include "log/log.h"
 #include "utils/common_utils.h"
 
 using namespace std;
@@ -35,6 +34,7 @@ LogMessage::LogMessage(const string &module_name,
                        const string &file, const int &line,
                        const string &func, const char *format,
                        const thread::id &tid,
+                       LoggerAttr *log_attr,
                        va_list args) {
 
     /*建立临时缓存存储数据*/
@@ -65,6 +65,7 @@ LogMessage::LogMessage(const string &module_name,
     this->module_name = module_name;
     this->log_level = log_level;
     this->tid = tid;
+    this->log_attr= log_attr;
     file_path = file;
     line_no = line;
     func_name = func;
@@ -96,13 +97,11 @@ int
 LogMessage::grnarate_log_message(string &format_message,
                                  std::string *error_info) {
 
-    /*生成日志信息，并判断是否生成成功*/
-    if (logger.format_module_log(module_name, format_message, log_level,
-                                 file_path, line_no, func_name, file_name,
-                                 record_time, tid, pid, log_message,
-                                 error_info) != 0) {
-        return 1;
-    }
+    /*生成消息*/
+    log_attr->get_log_message(format_message,
+                              log_level,
+                              file_path, line_no, func_name, file_name,
+                              record_time, tid, pid, log_message);
     return 0;
 }
 

@@ -135,6 +135,7 @@ int main() {
                                      time(nullptr), this_thread::get_id(),
                                      getpid(), "what fuck", s) << ":" << *s<<":"
          <<"message:"<<message<< endl;
+
     LOG("yes", L_ERROR, "%s", "what fuck");
     LOG("test", L_ERROR, "%s", "what fuck");
     return 0;

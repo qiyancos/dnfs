@@ -25,7 +25,6 @@
 #include <queue>
 #include <thread>
 
-#include "log_file.h"
 #include "log_data.h"
 #include "log_attr.h"
 #include "log_buffer.h"
@@ -281,7 +280,7 @@ public:
      * params format:用户打印信息格式
      * params ...:用户打印信息,需对应format
      * */
-    int _log(const std::string &module_name, log_level_t log_level,
+    void _log(const std::string &module_name, log_level_t log_level,
              const std::string &file, const int &line,
              const std::string &func, const char *format, ...);
 
