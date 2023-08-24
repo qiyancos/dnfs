@@ -13,7 +13,6 @@
  *
  */
 
-#include <utility>
 #include <iostream>
 #include <cstdarg>
 
@@ -25,7 +24,6 @@
 using namespace std;
 
 Logger::Logger() = default;
-
 
 /*建立日志实例*/
 Logger &logger = Logger::get_instance();
@@ -54,10 +52,6 @@ log_level_t Logger::decode_log_level(const string &log_level_str) {
 void Logger::init(const string &program_name_in, const string &hostname_in) {
     hostname = hostname_in;
     program_name = program_name_in;
-    /*遍历初始化所有的module*/
-    for(const auto & module_n:*module_set){
-        init_module(module_n);
-    }
 }
 
 /*使用默认日志属性初始化一个模块日志
@@ -580,18 +574,4 @@ void Logger::set_all_module_attr_default() {
         /*建立属性*/
         module_attr[log_attr.first] = attr;
     }
-}
-
-/*存储模块名*/
-set<string>* module_set = nullptr;
-
-/*添加新的模块名*/
-const char *create_new_module(const char *name) {
-    if (!module_set) {
-        module_set = new set<string>();
-    }
-    if (module_set->find(name) == module_set->end()) {
-        module_set->insert(name);
-    }
-    return nullptr;
 }

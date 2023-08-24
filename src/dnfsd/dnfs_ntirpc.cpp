@@ -33,7 +33,7 @@ extern "C" {
 
 using namespace std;
 
-#define MODULE_NAME("rpc")
+#define MODULE_NAME "rpc"
 
 // tirpc的控制参数集合
 tirpc_pkg_params ntirpc_pp = {

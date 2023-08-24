@@ -42,7 +42,7 @@ extern "C" {
 
 using namespace std;
 
-#define MODULE_NAME("main")
+#define MODULE_NAME "main"
 
 /* 默认配置文件的字符表达形式 */
 static const char default_config[] =
@@ -101,6 +101,11 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
     string log_path = arg_log_path;
     /*初始化日志管理器*/
     logger.init(exec_name, nfs_host_name);
+    /* 初始化主程序日志模块 */
+    logger.init_module(MODULE_NAME);
+    logger.init_module("config");
+    logger.init_module("rpc");
+    logger.init_module("thread_pool");
     /*初始化日志等级*/
     logger.set_log_level(debug_level);
 
