@@ -24,10 +24,19 @@
 #include <atomic>
 #include <queue>
 #include <thread>
+#include <set>
 
 #include "log_data.h"
 #include "log_attr.h"
 #include "log_buffer.h"
+
+/*存储模块名*/
+extern std::set<std::string>* module_set;
+/*添加新的模块名*/
+const char* create_new_module(const char* name);
+
+#define CREATE_MODULE(name) \
+    const char * temp_##name = create_new_module(""#name"");
 
 /*打印日志*/
 #define LOG(module_name, log_level, format, args...) \
@@ -53,6 +62,10 @@
 
 /*日志类*/
 class Logger {
+    friend class LogMessage;
+
+    friend class LoggerAttr;
+
 private:
 
     /*默认日志属性，新建日志默认使用该属性*/
@@ -77,9 +90,6 @@ private:
     Logger();
 
 public:
-    friend class LogMessage;
-
-    friend class LoggerAttr;
 
     /*设置主机名*/
     std::string hostname = "localhost";
@@ -281,8 +291,8 @@ public:
      * params ...:用户打印信息,需对应format
      * */
     void _log(const std::string &module_name, log_level_t log_level,
-             const std::string &file, const int &line,
-             const std::string &func, const char *format, ...);
+              const std::string &file, const int &line,
+              const std::string &func, const char *format, ...);
 
     /*判断模块日志debug状态
      * params module_name:模型名
@@ -316,6 +326,9 @@ public:
                           const int &pid,
                           const std::string &message,
                           std::string *error_info);
+
+    /*将所有的模板设置为默认属性*/
+    void set_all_module_attr_default();
 
     ~Logger();
 

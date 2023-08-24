@@ -54,6 +54,10 @@ log_level_t Logger::decode_log_level(const string &log_level_str) {
 void Logger::init(const string &program_name_in, const string &hostname_in) {
     hostname = hostname_in;
     program_name = program_name_in;
+    /*遍历初始化所有的module*/
+    for(const auto & module_n:*module_set){
+        init_module(module_n);
+    }
 }
 
 /*使用默认日志属性初始化一个模块日志
@@ -546,15 +550,15 @@ void Logger::_log(const string &module_name, log_level_t log_level,
                 cout << *error_info << endl;
             }
 
-            //    /*获取线程名*/
-            //    string thread_name = ThreadPool::get_target_thread_name(tid);
-            //
-            //    /*将LogMessage对象加到缓存*/
-            //    log_buffer.add_log_buffer(thread_name, log_message);
+//            /*获取线程名*/
+//            string thread_name = ThreadPool::get_target_thread_name(tid);
+//
+//            /*将LogMessage对象加到缓存*/
+//            log_buffer.add_log_buffer(thread_name, log_message);
         }
 
         /*如果是退出标志*/
-        if (log_level==LEXIT){
+        if (log_level == LEXIT) {
             exit_func(exit_code);
         }
     }
@@ -618,4 +622,31 @@ Logger::~Logger() {
     for (const auto &attr: module_attr) {
         delete attr.second;
     }
+}
+
+/*将所有的模板设置为默认属性*/
+void Logger::set_all_module_attr_default() {
+    /*遍历建立所有默认属性*/
+    for (auto &log_attr: module_attr) {
+        /*先删除之前的属性*/
+        delete module_attr[log_attr.first];
+        /*复制属性*/
+        auto *attr = new LoggerAttr(default_attr);
+        /*建立属性*/
+        module_attr[log_attr.first] = attr;
+    }
+}
+
+/*存储模块名*/
+set<string>* module_set = nullptr;
+
+/*添加新的模块名*/
+const char *create_new_module(const char *name) {
+    if (!module_set) {
+        module_set = new set<string>();
+    }
+    if (module_set->find(name) == module_set->end()) {
+        module_set->insert(name);
+    }
+    return nullptr;
 }

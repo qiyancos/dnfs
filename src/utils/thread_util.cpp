@@ -21,6 +21,7 @@
 using namespace std;
 
 #define MODULE_NAME "thread_pool"
+CREATE_MODULE(thread_pool)
 
 /*id name存储字典*/
 std::map<std::thread::id, std::string> ThreadPool:: thread_id_name_map;
