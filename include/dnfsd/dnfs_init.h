@@ -40,13 +40,13 @@ void init_check_malloc();
 int init_thread_signal_mask();
 
 /* dnfs启动处理函数 */
-void dnfs_start(nfs_start_info_t *p_start_info);
+void dnfs_start();
 
 typedef struct proto_data {
     struct sockaddr_in sinaddr_udp;
     struct sockaddr_in sinaddr_tcp;
-    struct sockaddr_in6 sinaddr_udp6;
-    struct sockaddr_in6 sinaddr_tcp6;
+//    struct sockaddr_in6 sinaddr_udp6;
+//    struct sockaddr_in6 sinaddr_tcp6;
     struct netbuf netbuf_udp6;
     struct netbuf netbuf_tcp6;
     struct t_bind bindaddr_udp6;

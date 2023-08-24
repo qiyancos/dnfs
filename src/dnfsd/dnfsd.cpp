@@ -237,7 +237,7 @@ int main(int argc, char ** argv)
     init_thread_signal_mask();
 
 	/* Everything seems to be OK! We can now start service threads */
-	dnfs_start(&nfs_start_info);
+	dnfs_start();
 
 	return 0;
 }

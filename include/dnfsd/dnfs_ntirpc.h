@@ -65,4 +65,10 @@ void free_dnfs_request(struct svc_req *req, enum xprt_stat stat);
  * 执行该函数进行二次分发，分发给实际RPC对应的处理函数执行处理操作并返回数据 */
 enum xprt_stat nfs_rpc_dispatch_udp_NFS(SVCXPRT *xprt);
 
+/* 该函数用于在接收到指定协议的TCP数据 */
+enum xprt_stat nfs_rpc_dispatch_tcp_NFS(SVCXPRT *xprt);
+
+/* 一个占位函数，基本不会使用到 */
+void nfs_rpc_dispatch_dummy([[maybe_unused]] struct svc_req *req);
+
 #endif //DNFSD_DNFS_NTIRPC_H

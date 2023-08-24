@@ -23,9 +23,9 @@ using namespace std;
 
 // 服务启动配置信息
 nfs_start_info_t nfs_start_info = {
-        .dump_default_config = false,
-        .lw_mark_trigger = false,
-        .drop_caps = true
+    .dump_default_config = false
+//    .lw_mark_trigger = false,
+//    .drop_caps = true
 };
 
 /* DNFS的核心参数，与配置有关 */

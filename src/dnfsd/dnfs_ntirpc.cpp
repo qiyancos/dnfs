@@ -53,12 +53,14 @@ const nfs_function_desc_t invalid_funcdesc = {
     .dispatch_behaviour = NOTHING_SPECIAL
 };
 
-int nfs_null(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
+int nfs_null([[maybe_unused]] nfs_arg_t *arg,
+             [[maybe_unused]] struct svc_req *req,
+                     [[maybe_unused]] nfs_res_t *res) {
     LOG(MODULE_NAME, D_INFO, "REQUEST PROCESSING: Calling NFS_NULL");
     return NFS3_OK;
 }
 
-void nfs_null_free(nfs_res_t *res) {
+void nfs_null_free([[maybe_unused]] nfs_res_t *res) {
     /* Nothing to do here */
 }
 
@@ -407,8 +409,7 @@ static enum xprt_stat nfs_rpc_noprog(nfs_request_t *reqdata) {
 #define NFS_program NFS_pcp.program
 
 /* RPC处理主程序入口 */
-static enum xprt_stat nfs_rpc_process_request(nfs_request_t *reqdata,
-                                              bool retry) {
+static enum xprt_stat nfs_rpc_process_request(nfs_request_t *reqdata) {
     return svcerr_auth(&reqdata->svc, AUTH_FAILED);
 }
 
@@ -426,23 +427,20 @@ static enum xprt_stat nfs_rpc_noproc(nfs_request_t *reqdata)
 }
 
 /* 如果出现了一个不支持的协议版本，那么会调用该函数处理 */
-static enum xprt_stat nfs_rpc_novers(nfs_request_t *reqdata,
-                                     int lo_vers, int hi_vers)
+static enum xprt_stat nfs_rpc_novers(nfs_request_t *reqdata)
 {
     LOG(MODULE_NAME, D_ERROR,
         "Invalid protocol Version %" PRIu32
         " for Program number %" PRIu32,
         reqdata->svc.rq_msg.cb_vers,
         reqdata->svc.rq_msg.cb_prog);
-    return svcerr_progvers(&reqdata->svc, lo_vers, hi_vers);
+    return svcerr_progvers(&reqdata->svc, NFS_V3, NFS_V3);
 }
 
 /* 对于一个有效的NFS调用，找到匹配的处理函数调用函数处理请求并返回结果 */
 enum xprt_stat nfs_rpc_valid_NFS(struct svc_req *req) {
     nfs_request_t *reqdata = get_parent_struct_addr(
             req, struct nfs_request, svc);
-    int lo_vers;
-    int hi_vers;
 
     reqdata->funcdesc = &invalid_funcdesc;
 
@@ -451,18 +449,15 @@ enum xprt_stat nfs_rpc_valid_NFS(struct svc_req *req) {
     }
 
     if (req->rq_msg.cb_vers == NFS_V3 && NFS_options) {
-		if (req->rq_msg.cb_proc <= NFSPROC3_COMMIT) {
-			reqdata->funcdesc =
-				&nfs3_func_desc[req->rq_msg.cb_proc];
-			return nfs_rpc_process_request(reqdata, false);
-		}
-		return nfs_rpc_noproc(reqdata);
-	}
+        if (req->rq_msg.cb_proc <= NFSPROC3_COMMIT) {
+            reqdata->funcdesc =
+                    &nfs3_func_desc[req->rq_msg.cb_proc];
+            return nfs_rpc_process_request(reqdata);
+        }
+        return nfs_rpc_noproc(reqdata);
+    }
 
-    hi_vers = NFS_V3;
-    lo_vers = NFS_V3;
-
-    return nfs_rpc_novers(reqdata, lo_vers, hi_vers);
+    return nfs_rpc_novers(reqdata);
 }
 
 /* Dispatch after rendezvous，该函数用于在接收到指定协议的UDP数据，如NFSV23的RPC请求后
@@ -473,4 +468,20 @@ enum xprt_stat nfs_rpc_dispatch_udp_NFS(SVCXPRT *xprt) {
         xprt, xprt->xp_fd);
     xprt->xp_dispatch.process_cb = nfs_rpc_valid_NFS;
     return SVC_RECV(xprt);
+}
+
+/* 该函数用于在接收到指定协议的TCP数据 */
+enum xprt_stat nfs_rpc_dispatch_tcp_NFS(SVCXPRT *xprt) {
+    LOG(MODULE_NAME, D_INFO,
+        "NFS TCP request on SVCXPRT %p fd %d",
+        xprt, xprt->xp_fd);
+    xprt->xp_dispatch.process_cb = nfs_rpc_valid_NFS;
+    return SVC_STAT(xprt->xp_parent);
+}
+
+/* 一个占位函数，基本不会使用到 */
+void nfs_rpc_dispatch_dummy([[maybe_unused]] struct svc_req *req) {
+    LOG(MODULE_NAME, L_ERROR,
+        "Possible error, function %s should never be called",
+        __func__);
 }
