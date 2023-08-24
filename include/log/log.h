@@ -30,14 +30,6 @@
 #include "log_attr.h"
 #include "log_buffer.h"
 
-/*存储模块名*/
-extern std::set<std::string>* module_set;
-/*添加新的模块名*/
-const char* create_new_module(const char* name);
-
-#define CREATE_MODULE(name) \
-    const char * temp_##name = create_new_module(""#name"");
-
 /*打印日志*/
 #define LOG(module_name, log_level, format, args...) \
     logger._log(module_name,\

@@ -17,7 +17,7 @@
 
 using namespace std;
 
-#define MODULE_NAME("config")
+#define MODULE_NAME "config"
 
 /* DNFSD全局默认的YAML文件结构 */
 YAML::Node dnfs_config;

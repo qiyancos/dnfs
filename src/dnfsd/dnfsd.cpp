@@ -28,7 +28,7 @@
 
 using namespace std;
 
-#define MODULE_NAME("main")
+#define MODULE_NAME "main"
 
 // 服务默认选项字符串信息
 static const char options[] = "v@L:N:f:p:FRTE:ChI:x";
@@ -196,9 +196,6 @@ void exit_process(const int exit_code) {
 // 主程序入口
 int main(int argc, char ** argv)
 {
-    // 设置当前线程名称
-    ThreadPool::set_thread_name(exec_name + "_main");
-
     // 解析主程序参数并初始化部分状态变量
     arg_parser(argc, argv);
 
@@ -209,6 +206,9 @@ int main(int argc, char ** argv)
     logger.set_exit_func(-1, exit_process);
     init_logging(exec_name, nfs_host_name, debug_level,
                  detach_flag, log_path);
+
+    // 设置当前线程名称
+    ThreadPool::set_thread_name(exec_name + "_main");
 
     // 初始化崩溃信号处理函数hook
     if (dump_trace) {
