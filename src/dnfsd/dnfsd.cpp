@@ -28,7 +28,7 @@
 
 using namespace std;
 
-#define MODULE_NAME "main"
+#define MODULE_NAME("main")
 
 // 服务默认选项字符串信息
 static const char options[] = "v@L:N:f:p:FRTE:ChI:x";

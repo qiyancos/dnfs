@@ -29,6 +29,7 @@ extern "C" {
 #include <sys/stat.h>
 #include <netinet/tcp.h>
 
+#include <exception>
 #include <experimental/filesystem>
 
 #include "nfs/nfs23.h"
@@ -41,7 +42,7 @@ extern "C" {
 
 using namespace std;
 
-#define MODULE_NAME "main"
+#define MODULE_NAME("main")
 
 /* 默认配置文件的字符表达形式 */
 static const char default_config[] =
@@ -52,23 +53,26 @@ static const char default_config[] =
 static void init_default_config(const string& config_file_path) {
     string config_dir = config_file_path.substr(0,
             config_file_path.find_last_of('/'));
-    if (! experimental::filesystem::create_directories(config_dir)) {
-        LOG(MODULE_NAME, EXIT_ERROR,
-                   "Failed to create directory \"%s\" for config file.",
-                   config_dir.c_str());
+    try {
+        experimental::filesystem::create_directories(config_dir);
+    } catch (exception& e) {
+        fprintf(stderr,
+                "Failed to create directory \"%s\" for config file: %s.\n",
+                config_dir.c_str(), e.what());
+        exit(-1);
     }
-    int config_fd = open(config_file_path.c_str(), O_WRONLY);
-    if (config_fd == -1) {
-        LOG(MODULE_NAME, EXIT_ERROR,
-                   "Failed to create default config file \"%s\"",
-                   config_file_path.c_str());
+
+    ofstream config_file_os;
+    try {
+        config_file_os.open(config_file_path.c_str(), ios::out);
+    } catch (exception& e) {
+        fprintf(stderr,
+                "Failed to create default config file \"%s\"",
+                config_file_path.c_str());
+        exit(-1);
     }
-    if (write(config_fd, default_config, strlen(default_config)) == -1) {
-        LOG(MODULE_NAME, EXIT_ERROR,
-                   "Failed to write default config to config file \"%s\"",
-                   config_file_path.c_str());
-    }
-    close(config_fd);
+    config_file_os << default_config;
+    config_file_os.close();
 }
 
 /* 初始化配置文件并进行解析 */
@@ -79,9 +83,10 @@ void init_config(const string& config_file_path) {
     }
     try {
         dnfs_config = YAML::LoadFile(config_file_path);
-    } catch (exception) {
-        LOG(MODULE_NAME, EXIT_ERROR,
-            "Failed to load config file %s", config_file_path.c_str());
+    } catch (exception& e) {
+        fprintf(stderr, "Failed to load config file %s: %s\n",
+                config_file_path.c_str(), e.what());
+        exit(-1);
     }
     /* 这里还会做一些基本配置文件的校验 */
     /*TODO*/
@@ -96,8 +101,6 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
     string log_path = arg_log_path;
     /*初始化日志管理器*/
     logger.init(exec_name, nfs_host_name);
-    /*初始化主程序日志*/
-    logger.init_module(MODULE_NAME);
     /*初始化日志等级*/
     logger.set_log_level(debug_level);
 
@@ -124,7 +127,8 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
     if (!detach_flag) {
         /* 只检查log_path部分的合法性 */
         if (logger.set_log_output(L_INFO, log_path + ":stdout:syslog", &temp)) {
-            LOG(MODULE_NAME, EXIT_ERROR, temp.c_str());
+            fprintf(stderr, "%s", temp.c_str());
+            exit(-1);
         }
         logger.set_log_output({EXIT_ERROR, L_ERROR, L_WARN},
                               log_path + ":stderr:syslog", nullptr);
@@ -133,7 +137,8 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
     } else {
         /* 只检查log_path部分的合法性 */
         if (logger.set_log_output(log_path, &temp)) {
-            LOG(MODULE_NAME, EXIT_ERROR, temp.c_str());
+            fprintf(stderr, "%s", temp.c_str());
+            exit(-1);
         }
         logger.set_log_output(L_INFO, log_path + ":syslog", nullptr);
         logger.set_log_output({EXIT_ERROR, L_ERROR, L_WARN},
@@ -142,7 +147,8 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
     if (config_get(temp, dnfs_config, {"log", "formatter"})) {
         string error_info;
         if (logger.set_formatter(temp, &error_info)) {
-            LOG(MODULE_NAME, EXIT_ERROR, error_info.c_str());
+            fprintf(stderr, "%s", temp.c_str());
+            exit(-1);
         }
     }
     logger.set_default_attr_from(MODULE_NAME, nullptr);
