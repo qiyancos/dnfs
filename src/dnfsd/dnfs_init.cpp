@@ -22,15 +22,11 @@ extern "C" {
 #include "rpc/rpcb_clnt.h"
 }
 
-#include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
 #include <signal.h>
 #include <sys/stat.h>
 #include <netinet/tcp.h>
-
-#include <exception>
-#include <experimental/filesystem>
 
 #include "nfs/nfs23.h"
 #include "nfs/nfsv41.h"
@@ -44,59 +40,11 @@ using namespace std;
 
 #define MODULE_NAME "main"
 
-/* 默认配置文件的字符表达形式 */
-static const char default_config[] =
-        "# default config file content\n"
-        "\n";
-
-/* 创建一个默认初始化的配置 */
-static void init_default_config(const string& config_file_path) {
-    string config_dir = config_file_path.substr(0,
-            config_file_path.find_last_of('/'));
-    try {
-        experimental::filesystem::create_directories(config_dir);
-    } catch (exception& e) {
-        fprintf(stderr,
-                "Failed to create directory \"%s\" for config file: %s.\n",
-                config_dir.c_str(), e.what());
-        exit(-1);
-    }
-
-    ofstream config_file_os;
-    try {
-        config_file_os.open(config_file_path.c_str(), ios::out);
-    } catch (exception& e) {
-        fprintf(stderr,
-                "Failed to create default config file \"%s\"",
-                config_file_path.c_str());
-        exit(-1);
-    }
-    config_file_os << default_config;
-    config_file_os.close();
-}
-
-/* 初始化配置文件并进行解析 */
-void init_config(const string& config_file_path) {
-    if (access(config_file_path.c_str(), F_OK) == -1) {
-        /* 如果目标文件不存在，创建一个默认初始化的配置 */
-        init_default_config(config_file_path);
-    }
-    try {
-        dnfs_config = YAML::LoadFile(config_file_path);
-    } catch (exception& e) {
-        fprintf(stderr, "Failed to load config file %s: %s\n",
-                config_file_path.c_str(), e.what());
-        exit(-1);
-    }
-    /* 这里还会做一些基本配置文件的校验 */
-    /*TODO*/
-}
-
-
 /* 初始化日志相关的配置 */
 void init_logging(const string& exec_name, const string& nfs_host_name,
                   const log_level_t debug_level, const bool detach_flag,
                   const string& arg_log_path) {
+    fprintf(stdout, "Start init logging setup\n");
     /* 日志路径 */
     string log_path = arg_log_path;
     /*初始化日志管理器*/
@@ -116,14 +64,15 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
 
     char buffer[256] = "";
     size_t buf_size = 0;
+
     /*初始化日志文件信息*/
     /* TODO 这里需要对参数进行校验避免buffer overflow */
-    if (config_get(temp, dnfs_config, {"log", "limit_type"})) {
+    if (!config_get(temp, dnfs_config, {"log", "limit_type"})) {
         buf_size += sprintf(buffer, "@(%s", temp.c_str());
-        if (config_get(temp, dnfs_config, {"log", "limit_info"})) {
+        if (!config_get(temp, dnfs_config, {"log", "limit_info"})) {
             buf_size += sprintf(buffer, ",%s", temp.c_str());
         }
-        if (config_get(temp, dnfs_config, {"log", "backup_count"})) {
+        if (!config_get(temp, dnfs_config, {"log", "backup_count"})) {
             buf_size += sprintf(buffer, ",%s", temp.c_str());
         }
         buffer[buf_size] = ')';
@@ -132,7 +81,7 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
     if (!detach_flag) {
         /* 只检查log_path部分的合法性 */
         if (logger.set_log_output(L_INFO, log_path + ":stdout:syslog", &temp)) {
-            fprintf(stderr, "%s", temp.c_str());
+            fprintf(stderr, "%s\n", temp.c_str());
             exit(-1);
         }
         logger.set_log_output({EXIT_ERROR, L_ERROR, L_WARN},
@@ -142,17 +91,17 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
     } else {
         /* 只检查log_path部分的合法性 */
         if (logger.set_log_output(log_path, &temp)) {
-            fprintf(stderr, "%s", temp.c_str());
+            fprintf(stderr, "%s\n", temp.c_str());
             exit(-1);
         }
         logger.set_log_output(L_INFO, log_path + ":syslog", nullptr);
         logger.set_log_output({EXIT_ERROR, L_ERROR, L_WARN},
                               log_path + ":syslog", nullptr);
     }
-    if (config_get(temp, dnfs_config, {"log", "formatter"})) {
+    if (!config_get(temp, dnfs_config, {"log", "formatter"})) {
         string error_info;
         if (logger.set_formatter(temp, &error_info)) {
-            fprintf(stderr, "%s", temp.c_str());
+            fprintf(stderr, "%s\n", temp.c_str());
             exit(-1);
         }
     }
@@ -197,6 +146,7 @@ static void install_sighandler(int signo,
 
 /* 初始化错误信号的处理函数 */
 void init_crash_handlers(void) {
+    LOG(MODULE_NAME, L_INFO, "Start init crash handler for main thread");
     install_sighandler(SIGSEGV, crash_handler);
     install_sighandler(SIGABRT, crash_handler);
     install_sighandler(SIGBUS, crash_handler);
@@ -233,6 +183,7 @@ void init_check_malloc() {
 
 /* 初始化线程对信号的处理操作 */
 int init_thread_signal_mask() {
+    LOG(MODULE_NAME, L_INFO, "Start init thread signal mask");
     /* 解除文件大小资源限制，对相关的停止信号进行忽略 */
     signal(SIGXFSZ, SIG_IGN);
     /* 在所有默认子线程中阻塞指定的信号以便专门的信号处理线程能够正确处理信号 */

@@ -42,7 +42,7 @@ void ThreadPool::set_thread_name(const string &name) {
                     thread_id_name_map[tid].c_str(), name.c_str(), tid);
     } else {
         LOG(MODULE_NAME,D_INFO,
-                   "Set thread %d name as \"%s\"", tid, name.c_str());
+                   "Set thread %ld name as \"%s\"", tid, name.c_str());
     }
     thread_id_name_map[tid] = name;
 }

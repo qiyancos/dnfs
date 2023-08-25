@@ -41,6 +41,11 @@ extern nfs_start_info_t nfs_start_info;
 /* DNFS的核心参数，与配置有关 */
 extern nfs_parameter_t nfs_param;
 
+/*  */
+
+/* 初始化配置文件 */
+void init_config(const std::string& config_file_path);
+
 /* 用于打印当前系统使用的配置信息 */
 void dump_config();
 
@@ -51,16 +56,16 @@ template<typename T>
 int config_get(T& out, const YAML::Node& config,
                const std::vector<std::string>& key_list) {
     int key_size = key_list.size();
-    YAML::Node next_node = const_cast<YAML::Node&>(config);
+    YAML::Node next_node(config);
     for (int i = 0; i < key_size; i++) {
         const std::string& key = key_list[i];
         YAML::NodeType::value type;
         try {
-            type = config[key].Type();
+            type = next_node[key].Type();
         } catch (YAML::InvalidNode) {
             LOG("config", L_WARN,
-                "Unknown config node %s(%d) in %s",
-                key.c_str(), i, format(key_list).c_str());
+                "Unknown config node \"%s\" in %s(@%d)",
+                key.c_str(), format(key_list).c_str(), i);
             return 1;
         }
         switch (type) {
@@ -103,8 +108,8 @@ int config_get(T& out, const YAML::Node& config,
                 } else {
                     LOG("config", L_WARN,
                         "List type config node can not be "
-                        "indexed by \"%s(%d)\" in %s)",
-                        key.c_str(), i, format(key_list).c_str());
+                        "indexed by \"%s\" in %s(@%d))",
+                        key.c_str(), format(key_list).c_str(), i);
                     return 1;
                 }
             case YAML::NodeType::Scalar:
@@ -127,17 +132,17 @@ int config_get(T& out, const YAML::Node& config,
                 } else {
                     LOG("config", L_WARN,
                         "Value type config node can not be "
-                        "indexed by \"%s(%d)\" in %s)",
-                        key.c_str(), i, format(key_list).c_str());
+                        "indexed by \"%s\" in %s(@%d))",
+                        key.c_str(), format(key_list).c_str(), i);
                     return 1;
                 }
             default:
                 LOG("config", L_WARN,
-                    "Unknown config node type %d @%s(%d) in %s",
-                    type, key.c_str(), i, format(key_list).c_str());
+                    "Unknown config node type %d for \"%s\" in %s(@%d)",
+                    type, key.c_str(), format(key_list).c_str(), i);
                 return 1;
         }
-        next_node = next_node[key];
+        next_node = YAML::Node(next_node[key]);
     }
     /* Should never reach here */
     return 1;

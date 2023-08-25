@@ -67,7 +67,7 @@ string nfs_config_path = DNFSD_CONFIG_PATH;
 [[maybe_unused]] time_t nfs_ServerEpoch;
 
 // debug日志的级别
-log_level_t debug_level = LNOLOG;
+log_level_t debug_level = LRUNTIME;
 
 // 是否常驻后台的形式运行
 bool detach_flag = true;
@@ -194,8 +194,7 @@ void exit_process(const int exit_code) {
 }
 
 // 主程序入口
-int main(int argc, char ** argv)
-{
+int main(int argc, char ** argv) {
     // 解析主程序参数并初始化部分状态变量
     arg_parser(argc, argv);
 
