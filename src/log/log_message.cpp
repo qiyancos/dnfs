@@ -14,8 +14,10 @@
  */
 #include <string>
 #include <unistd.h>
+#include <cstdarg>
 #include "log/log_message.h"
 #include "utils/common_utils.h"
+#include "log/log.h"
 
 using namespace std;
 
@@ -38,34 +40,61 @@ LogMessage::LogMessage(const string &module_name,
                        va_list args) {
 
     /*建立临时缓存存储数据*/
-    log_message = (char *) malloc(1024);
+    log_message = (char *) malloc(ONE_MB);
+
+    /*复制参数,超出范围重新格式化做准备*/
+    va_list buffer;
+    va_copy(buffer, args);
 
     /*格式化字符串*/
-    int message_len = vsnprintf(log_message, 1024, format, args);
+    int message_len = vsnprintf(log_message, ONE_MB, format, args);
+
+    /*如果添加失败*/
+    if (message_len < 0) {
+        LOG("logger", L_ERROR,
+            "Failed to format module log information");
+    }
 
     /*判断数据大小*/
-    if (message_len >= 1024) {
+    if (message_len >= ONE_MB) {
+        /*设置新的指针*/
+        char *log_message_new;
 
         if (message_len < MAX_BUFFER) {
             /*动态申请内存*/
-            log_message = (char *) realloc(log_message, message_len);
+            log_message_new = (char *) realloc(log_message, message_len);
         } else {
             /*动态申请内存*/
-            log_message = (char *) realloc(log_message, MAX_BUFFER);
-            /*todo 打印日志超出警告日志*/
+            log_message_new = (char *) realloc(log_message, MAX_BUFFER);
+
+            message_len = MAX_BUFFER;
+            LOG("logger", L_WARN,
+                "The log printed by the module '%s' exceeds the message size limit,the size limit is %d,the message size is %d",
+                module_name.c_str(), MAX_BUFFER, message_len);
         }
-        int result = vsnprintf(log_message, message_len, format, args);
-        /*如果添加失败*/
-        if (result < 0) {
-            /*todo 打印日志错误日志*/
+        /*如果成功分配空间*/
+        if (log_message_new) {
+            /*重定向结果指针*/
+            log_message = log_message_new;
+            /*格式化结果*/
+            message_len = vsnprintf(log_message, message_len, format, buffer);
+            /*如果添加失败*/
+            if (message_len < 0) {
+                LOG("logger", L_ERROR,
+                    "Failed to format module log information");
+            }
+        } else {
+            LOG("logger", L_ERROR,
+                "Module log information format request failed to reallocate memory");
         }
+
     }
 
     /*参数赋值*/
     this->module_name = module_name;
     this->log_level = log_level;
     this->tid = tid;
-    this->log_attr= log_attr;
+    this->log_attr = log_attr;
     file_path = file;
     line_no = line;
     func_name = func;

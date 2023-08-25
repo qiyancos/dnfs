@@ -31,9 +31,9 @@ public:
     // 设置当前现成的名称与线程id绑定
     [[maybe_unused]] static void set_thread_name(const char* name);
     // 获取当前线程的线程名称，如果没有设置返回id
-    [[maybe_unused]] static const std::string get_thread_name();
+    [[maybe_unused]] static std::string get_thread_name();
     // 获取指定线程的线程名称，如果没有设置返回id
-    static const std::string get_target_thread_name(const std::thread::id& tid);
+    static std::string get_target_thread_name(const std::thread::id& tid);
 };
 
 #endif //UTILS_THREAD_UTILS_H

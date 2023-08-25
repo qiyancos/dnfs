@@ -42,10 +42,6 @@ int main() {
     logger.init_module("test");
     logger.init_module("yes");
 
-    /*设置默认模板*/
-    cout << "设置默认模板:" << logger.set_default_attr_from("test", s)
-         << ":" << *s << endl;
-
     /*复制日志模板*/
     cout << "复制日志模板:"
          << logger.copy_module_attr_from("yes", "test", s) << ":" << *s << endl;
@@ -79,7 +75,7 @@ int main() {
     /*设置指定日志等级日志文件配置*/
     cout << "设置指定模块单个日志等级日志文件配置:"
          << logger.set_module_log_output("yes",
-                                         L_ERROR,
+                                         L_INFO,
                                          "stderr:syslog:/tmp/single/@(time,MINUTE,30):/tmp/dasdad/",
                                          s) << ":" << *s << endl;
 
@@ -136,14 +132,18 @@ int main() {
                                      getpid(), "what fuck", s) << ":" << *s<<":"
          <<"message:"<<message<< endl;
 
+    /*设置默认模板*/
+    cout << "设置默认模板:" << logger.set_default_attr_from("yes", s)
+         << ":" << *s << endl;
+
     /*将所有的模板设置为默认属性*/
     cout << "将所有的模板设置为默认属性:"<< endl;
     logger.set_all_module_attr_default();
 
 
     LOG("yes", L_ERROR, "%s", "what fuck");
-    LOG("test", D_ERROR, "%s", "what fuck");
-    LOG("test", EXIT_ERROR, "%s", "what fuck");
+    LOG("test", L_ERROR, "%s", "what fuck");
+    LOG("test", L_ERROR, "%s", "what fuck");
     return 0;
 }
 

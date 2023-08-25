@@ -35,6 +35,9 @@
 #include <thread>
 
 #define SET_PTR_INFO(error_info, error_content) if(error_info != nullptr) *error_info = error_content;
+/*设置格式化缓存区默认大小*/
+#define ONE_MB 1024
+
 extern bool _beauty;
 extern int _indent;
 extern std::string _indent_str;
