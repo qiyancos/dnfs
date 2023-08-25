@@ -52,6 +52,11 @@ log_level_t Logger::decode_log_level(const string &log_level_str) {
 void Logger::init(const string &program_name_in, const string &hostname_in) {
     hostname = hostname_in;
     program_name = program_name_in;
+    /*直接注册logger的模板*/
+    init_module("logger");
+    /*开启buffer线程*/
+//    thread buffer_thread(&LogBuffer::output_thread,&log_buffer);
+//    buffer_thread.detach();
 }
 
 /*使用默认日志属性初始化一个模块日志
@@ -63,6 +68,8 @@ void Logger::init_module(const string &module_name) {
     if (!judge_module_attr_exist(module_name)) {
         /*建立默认属性*/
         auto *init_attr = new LoggerAttr(default_attr);
+        /*改变模块名*/
+        init_attr->module_name = module_name;
         /*将属性赋值*/
         module_attr[module_name] = init_attr;
     }
@@ -101,6 +108,8 @@ Logger::set_default_attr_from(const string &module_name, string *error_info) {
     }
     /*查到了设置日志属性*/
     default_attr = *module_attr[module_name];
+    /*改变名字*/
+    default_attr.module_name="default";
     return 0;
 }
 
@@ -129,6 +138,8 @@ int Logger::copy_module_attr_from(const string &target_module_name,
         delete module_attr[target_module_name];
         /*复制数据*/
         auto *copy = new LoggerAttr(*module_attr[src_module_name]);
+        /*更改名字*/
+        copy->module_name=target_module_name;
         /*重新构建数据*/
         module_attr[target_module_name] = copy;
     } else {
@@ -369,7 +380,7 @@ Logger::set_formatter(const string &format_str, string *error_info) {
         /*设置格式开关*/
         if (md_attr.second->init_log_formatter(error_info) != 0) {
             /*设置默认*/
-            md_attr.second->formatter="%(message)";
+            md_attr.second->formatter = "%(message)";
             return 1;
         }
     }
@@ -401,7 +412,7 @@ int Logger::set_module_formatter(const string &module_name,
     /*设置格式开关*/
     if (module_attr[module_name]->init_log_formatter(error_info) != 0) {
         /*设置默认*/
-        module_attr[module_name]->formatter ="%(message)";
+        module_attr[module_name]->formatter = "%(message)";
         return 1;
     }
 
@@ -468,7 +479,7 @@ void Logger::_log(const string &module_name, log_level_t log_level,
     }
 
     /*如果满足打印日志条件*/
-    if (log_level != LNOLOG and log_level != LEVEL_COUNT) {
+    if (LNOLOG < log_level) {
         /*先判断打印等级满满足要求*/
         if (module_attr[module_name]->log_level >= log_level) {
             /*获取线程id*/
@@ -581,6 +592,8 @@ void Logger::set_all_module_attr_default() {
         delete module_attr[log_attr.first];
         /*复制属性*/
         auto *attr = new LoggerAttr(default_attr);
+        /*设置名字*/
+        attr->module_name=log_attr.first;
         /*建立属性*/
         module_attr[log_attr.first] = attr;
     }

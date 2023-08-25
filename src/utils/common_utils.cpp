@@ -220,11 +220,11 @@ string get_record_time(const time_t &timeStamp, const string &format) {
  * return: 转化完成的字符串
  * */
 string pid_to_string(const thread::id &t) {
-/*建立操作实例*/
+    /*建立操作实例*/
     std::stringstream s_stream;
-/*将数据输入操作实例*/
+    /*将数据输入操作实例*/
     s_stream << t;
-/*返回结果*/
+    /*返回结果*/
     return s_stream.str();
 }
 
@@ -234,7 +234,7 @@ string pid_to_string(const thread::id &t) {
  * return:格式完成的数据
  * */
 string foramt_message(const char *foramt, ...) {
-    char buffer[1024];
+    char buffer[ONE_MB];
     va_list va;
     va_start(va, foramt);
     /*格式化字符串*/

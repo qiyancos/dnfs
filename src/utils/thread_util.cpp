@@ -54,19 +54,19 @@ void ThreadPool::set_thread_name(const string &name) {
 }
 
 // 获取当前线程的线程名称，如果没有设置返回id
-[[maybe_unused]] const string ThreadPool::get_thread_name(){
+[[maybe_unused]] string ThreadPool::get_thread_name(){
     const thread::id tid = this_thread::get_id();
     return get_target_thread_name(tid);
 }
 
 // 获取指定线程的线程名称，如果没有设置返回id
-const string ThreadPool::get_target_thread_name(const std::thread::id& tid){
+string ThreadPool::get_target_thread_name(const std::thread::id& tid){
     if (thread_id_name_map.find(tid) != thread_id_name_map.end()) {
         return thread_id_name_map[tid];
     } else {
         string tid_str = "Thread-";
-        stringstream tid_ss(tid_str);
-        tid_ss << tid;
-        return tid_str;
+        stringstream tid_ss;
+        tid_ss<<tid_str << tid;
+        return tid_ss.str();
     }
 }

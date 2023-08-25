@@ -52,7 +52,7 @@ private:
     LogOutputAttr log_level_output[LEVEL_COUNT];
 
     /*日志等级开关，比他小的都可以输出*/
-    log_level_t log_level = NOLOG;
+    log_level_t log_level = L_INFO;
 
     /*设置时间格式
      *     %Y  Year with century as a decimal number.
