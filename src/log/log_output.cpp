@@ -43,7 +43,7 @@ int LogOutputAttr::generate_config(const string &log_out_attr_str,
             stderr_on = true;
         } else if (param == "syslog") {
             syslog_on = true;
-        } else if (param == "stdout_on") {
+        } else if (param == "stdout") {
             stdout_on = true;
         } else {
             /*先建立文件属性对象*/
