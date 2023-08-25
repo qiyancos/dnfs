@@ -1,0 +1,6 @@
+log:
+  limit_type: time
+  limit_info: MIDNIGHT
+  backup_count: 30
+  formatter: "%(levelname) <%(asctime)><PID-%(process)>: %(message)"
+  path: /var/log/dnfsd/runtime.log

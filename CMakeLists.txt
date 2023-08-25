@@ -52,3 +52,5 @@ add_subdirectory(src/dnfsd)
 
 #[[测试日志]]
 add_subdirectory(test/log)
+#[[测试配置文件读取]]
+add_subdirectory(test/dnfs_config)

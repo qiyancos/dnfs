@@ -41,10 +41,20 @@ extern nfs_start_info_t nfs_start_info;
 /* DNFS的核心参数，与配置有关 */
 extern nfs_parameter_t nfs_param;
 
-/*  */
+/* DNFS 日志配置 */
+typedef struct __nfs_logging_config {
+    std::string path;
+    std::string limit_type;
+    std::string limit_info;
+    int backup_count;
+    std::string formatter;
+} nfs_logging_config;
 
 /* 初始化配置文件 */
 void init_config(const std::string& config_file_path);
+
+/* 初始化日志配置 */
+int init_logging_config(nfs_logging_config& out, const YAML::Node& config);
 
 /* 用于打印当前系统使用的配置信息 */
 void dump_config();

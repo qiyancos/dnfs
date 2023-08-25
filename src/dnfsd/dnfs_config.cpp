@@ -70,6 +70,36 @@ static void init_default_config(const string& config_file_path) {
     config_file_os.close();
 }
 
+/* 解析日志配置 */
+int init_logging_config(nfs_logging_config& out, const YAML::Node& config) {
+    try {
+        out.path = config["log"]["path"].as<string>();
+    } catch (YAML::InvalidNode) {
+        fprintf(stderr, "log.path missing\n");
+    }
+    try {
+        out.limit_type = config["log"]["limit_type"].as<string>();
+    } catch (YAML::InvalidNode) {
+        fprintf(stderr, "log.limit_type missing\n");
+    }
+    try {
+        out.limit_info = config["log"]["limit_info"].as<string>();
+    } catch (YAML::InvalidNode) {
+        fprintf(stderr, "log.limit_info missing\n");
+    }
+    try {
+        out.backup_count = config["log"]["backup_count"].as<int>();
+    } catch (YAML::InvalidNode) {
+        fprintf(stderr, "log.backup_count missing\n");
+    }
+    try {
+        out.formatter = config["log"]["formatter"].as<string>();
+    } catch (YAML::InvalidNode) {
+        fprintf(stderr, "log.formatter missing\n");
+    }
+    return 0;
+}
+
 /* 初始化配置文件并进行解析 */
 void init_config(const string& config_file_path) {
     fprintf(stdout, "Start init base config file\n");
