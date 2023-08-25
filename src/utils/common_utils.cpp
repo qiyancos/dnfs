@@ -16,7 +16,7 @@
 #include <sys/un.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
-
+#include <cstdarg>
 #include <algorithm>
 #include <iostream>
 #include <experimental/filesystem>
@@ -39,22 +39,22 @@ const std::string format(const sockaddr_storage &out_data) {
     switch (out_data.ss_family) {
         case AF_INET:
             name = inet_ntop(out_data.ss_family,
-                             &(((struct sockaddr_in *)&out_data)->sin_addr),
+                             &(((struct sockaddr_in *) &out_data)->sin_addr),
                              ipname,
                              sizeof(ipname));
-            port = ntohs(((struct sockaddr_in *)&out_data)->sin_port);
+            port = ntohs(((struct sockaddr_in *) &out_data)->sin_port);
             break;
 
         case AF_INET6:
             name = inet_ntop(out_data.ss_family,
-                             &(((struct sockaddr_in6 *)&out_data)->sin6_addr),
+                             &(((struct sockaddr_in6 *) &out_data)->sin6_addr),
                              ipname,
                              sizeof(ipname));
-            port = ntohs(((struct sockaddr_in6 *)&out_data)->sin6_port);
+            port = ntohs(((struct sockaddr_in6 *) &out_data)->sin6_port);
             break;
 
         case AF_LOCAL:
-            return ((struct sockaddr_un *)&out_data)->sun_path;
+            return ((struct sockaddr_un *) &out_data)->sun_path;
     }
 
     if (name == NULL) {
@@ -117,18 +117,6 @@ bool judge_regex(const string &judge_str, const regex &regex_expression) {
     return regex_match(judge_str, regex_expression);
 }
 
-/*给非空指针设置信息
- * params error_info:字符串指针
- * params error_content:设置的信息
- * return
- * */
-void set_ptr_info(string *error_info, const string &error_content) {
-    /*如果不是空指针，赋值错误信息*/
-    if (error_info != nullptr) {
-        *error_info = error_content;
-    }
-}
-
 /*转为小写
  * params str:需转换的字符串
  * return
@@ -163,7 +151,7 @@ int creat_directory(const string &judge_dir, string *error_info) {
             return 0;
         } catch (experimental::filesystem::filesystem_error &e) {
             /*添加错误信息*/
-            set_ptr_info(error_info, e.what());
+            error_info= (string *) e.what();
             /*创建错误返回失败*/
             return 1;
         }
@@ -172,7 +160,7 @@ int creat_directory(const string &judge_dir, string *error_info) {
         return 0;
     } else {
         /*设置错误信息*/
-        set_ptr_info(error_info, "the path for saving log is not a directory");
+        error_info= (string *) "the path for saving log is not a directory";
         /*不是文件目录返回错误*/
         return 1;
     }
@@ -236,4 +224,19 @@ string pid_to_string(const thread::id &t) {
     s_stream << t;
 /*返回结果*/
     return s_stream.str();
+}
+
+/*按照格式格式化字符串
+ * params format:格式化字符串
+ * params ... :参数
+ * return:格式完成的数据
+ * */
+string foramt_message(const char *foramt, ...) {
+    char buffer[1024];
+    va_list va;
+    va_start(va, foramt);
+    /*格式化字符串*/
+    vsnprintf(buffer, 1024, foramt, va);
+    va_end(va);
+    return buffer;
 }

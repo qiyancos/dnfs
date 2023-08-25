@@ -67,7 +67,7 @@ int main() {
     /*设置全模式更改*/
     cout << "设置所有模块指定日志等级日志文件配置:"
          << logger.set_log_output(L_ERROR,
-                                  "stderr:syslog",
+                                  "stderr:syslog:/tmp/text",
                                   s) << ":" << *s << endl;
 
     /*设置指定模块日志等级日志文件配置*/
@@ -117,11 +117,11 @@ int main() {
     /*设置所有模块日志格式*/
     cout << "设置所有模块日志格式:"
          <<endl;
-    logger.set_data_format("");
+    logger.set_date_format("");
 
     /*设置单独模块日志格式*/
     cout << "设置单独模块日志格式:"
-         << logger.set_module_data_format("yes", "%Y-%m-%d %H:%M:%S", s) << ":"
+         << logger.set_module_date_format("yes", "%Y-%m-%d %H:%M:%S", s) << ":"
          <<*s<< endl;
 
     /*获取日期*/
@@ -139,6 +139,7 @@ int main() {
     /*将所有的模板设置为默认属性*/
     cout << "将所有的模板设置为默认属性:"<< endl;
     logger.set_all_module_attr_default();
+
 
     LOG("yes", L_ERROR, "%s", "what fuck");
     LOG("test", D_ERROR, "%s", "what fuck");

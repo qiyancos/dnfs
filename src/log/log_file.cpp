@@ -14,10 +14,8 @@
  */
 
 #include <vector>
-#include <iostream>
-
-
 #include "log/log_file.h"
+#include "log/log_data.h"
 #include "utils/common_utils.h"
 
 using namespace std;
@@ -60,15 +58,19 @@ int LogFile::generate_data(const string &config_str, string *error_info) {
         split_str(args_str, ",", args);
         /*判断参数数目，如果不为3直接报错*/
         if (args.size() != 3) {
-            set_ptr_info(error_info,
-                         "log path config error need three args such as (time,midnight,30)");
+            SET_PTR_INFO(error_info, foramt_message(
+                    "The log path setting has and only three parameters such as (time,midnight,30),you set is %s",
+                    args_str.c_str())
+            )
             return 1;
         }
         /*解析参数*/
         /*先设置保留的日志数目*/
         if (!judge_regex(args[2], number_regex_str)) {
-            set_ptr_info(error_info,
-                         "the backup_count must be positive integer");
+            SET_PTR_INFO(error_info, foramt_message(
+                    "The size of the number of saved logs must be a positive integer,you set is %s",
+                    args[2].c_str())
+            )
             return 1;
         }
         /*需要保留的日志数量*/
@@ -87,8 +89,10 @@ int LogFile::generate_data(const string &config_str, string *error_info) {
             string size_str = args[1].substr(0, args[1].size() - 2);
             /*如果是数字，转为数字*/
             if (!judge_regex(size_str, number_regex_str)) {
-                set_ptr_info(error_info,
-                             "the value of limit log file size must be positive number");
+                SET_PTR_INFO(error_info, foramt_message(
+                        "Set the file size of the cut log setting must be a positive integer,you set is %s",
+                        size_str.c_str())
+                )
                 return 1;
             }
             /*转换数字*/
@@ -100,14 +104,18 @@ int LogFile::generate_data(const string &config_str, string *error_info) {
                 limit_size <<= 20;
             } else if (unit_b == "gb") {
                 if (limit_size > 3) {
-                    set_ptr_info(error_info,
-                                 "the value of the log file size must be smaller than 4GB");
+                    SET_PTR_INFO(error_info, foramt_message(
+                            "Split logs by size must be less than 4gb,you set is %d GB",
+                            limit_size)
+                    )
                     return 1;
                 }
                 limit_size <<= 30;
             } else {
-                set_ptr_info(error_info,
-                             "the unit of the log file size must be in kb,mb,gb,and ignore case");
+                SET_PTR_INFO(error_info, foramt_message(
+                        "Cutting logs by size must be selected among (kb,mb,gb), and case is ignored,you set is %s",
+                        unit_b.c_str())
+                )
                 return 1;
             }
         } else if (args[0] == "time") {
@@ -130,21 +138,24 @@ int LogFile::generate_data(const string &config_str, string *error_info) {
             } else if (args[1] == "WEEK") {
                 when = WEEK;
             } else {
-                set_ptr_info(error_info,
-                             "the set of log file time limit must be in:"
-                             "        NEVER,\n"
-                             "        SECOND,\n"
-                             "        MINUTE,\n"
-                             "        HOUR,\n"
-                             "        DAY,\n"
-                             "        MIDNIGHT,\n"
-                             "        WEEK\n"
-                             "and ignore case");
+                SET_PTR_INFO(error_info, foramt_message(
+                        "Cutting logs by time must be selected in the list below:\n"
+                        "        NEVER,\n"
+                        "        SECOND,\n"
+                        "        MINUTE,\n"
+                        "        HOUR,\n"
+                        "        DAY,\n"
+                        "        MIDNIGHT,\n"
+                        "        WEEK\n"
+                        "and case is ignored,you set is %s", args[1].c_str())
+                )
                 return 1;
             }
         } else {
-            set_ptr_info(error_info,
-                         "the limit of rotate log file just between size and time");
+            SET_PTR_INFO(error_info, foramt_message(
+                    "The log cutting limit parameter can only be selected between 'size' and 'time',you set is %s",
+                    args[0].c_str())
+            )
             return 1;
         }
         /*截取文件夹路径*/
@@ -152,9 +163,10 @@ int LogFile::generate_data(const string &config_str, string *error_info) {
     }
     /*如果路径不合法*/
     if (!judge_regex(dir_path, path_regex_str)) {
-        set_ptr_info(error_info,
-                     "\n"
-                     "The log directory must be an absolute path and can only be named with numbers, letters and '_'");
+        SET_PTR_INFO(error_info, foramt_message(
+                "The log directory must be an absolute path and can only be named with numbers, letters and '_',you set is %s",
+                dir_path.c_str())
+        )
         return 1;
     }
     /*查看路径是否存在，不存在创建,创建错误直接返回*/

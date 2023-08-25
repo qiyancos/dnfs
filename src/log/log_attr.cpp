@@ -50,24 +50,25 @@ LoggerAttr::init_log_formatter(string *error_info) {
     }
     /*如果没有设置格式*/
     if (!set_formatter) {
-        /*设置错误信息*/
-        set_ptr_info(error_info,
-                     "the formatter need select from the list:\n"
-                     "        * %(program_name) the program name\n"
-                     "        * %(hostname) the host name\n"
-                     "        * %(levelno) the number of log level\n"
-                     "        * %(pathname) the complete path for the module what use log\n"
-                     "        * %(filename) the file name what for the module what use log\n"
-                     "        * %(modulename) the module name\n"
-                     "        * %(funcName) the function name for the module what use log\n"
-                     "        * %(lineno) the line number for the module what use log\n"
-                     "        * %(created) now time (UNIX float)\n"
-                     "        * %(relativeCreated) the ms from log build\n"
-                     "        * %(asctime) the time formatter default is 2023-08-18 11:18:45998\n"
-                     "        * %(thread) the thread id\n"
-                     "        * %(threadName) the thread name\n"
-                     "        * %(process) the progress id\n"
-                     "        * %(message) the log message");
+        SET_PTR_INFO(error_info, foramt_message(
+                "The log format setting must be selected from the list below:\n"
+                "        * %(program_name) the program name\n"
+                "        * %(hostname) the host name\n"
+                "        * %(levelno) the number of log level\n"
+                "        * %(pathname) the complete path for the module what use log\n"
+                "        * %(filename) the file name what for the module what use log\n"
+                "        * %(modulename) the module name\n"
+                "        * %(funcName) the function name for the module what use log\n"
+                "        * %(lineno) the line number for the module what use log\n"
+                "        * %(created) now time (UNIX float)\n"
+                "        * %(relativeCreated) the ms from log build\n"
+                "        * %(asctime) the time formatter default is 2023-08-18 11:18:45998\n"
+                "        * %(thread) the thread id\n"
+                "        * %(threadName) the thread name\n"
+                "        * %(process) the progress id\n"
+                "        * %(message) the log message\n"
+                "you set is %s",formatter.c_str())
+        )
         return 1;
     }
     return 0;

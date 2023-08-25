@@ -204,13 +204,6 @@ void split_str(const std::string &str, const std::string &split,
 bool
 judge_regex(const std::string &judge_str, const std::regex &regex_expression);
 
-/*给非空指针设置信息
- * params error_info:字符串指针
- * params error_content:设置的信息
- * return
- * */
-void set_ptr_info(std::string *error_info, const std::string &error_content);
-
 /*转为小写
  * params str:需转换的字符串
  * return
@@ -241,6 +234,13 @@ std::string get_record_time(const time_t &timeStamp, const std::string &format);
 #define get_parent_struct_addr(addr, type, member) ({			\
 	const typeof(((type *) 0)->member) * __mptr = (addr);	\
 	(type *)((char *) __mptr - offsetof(type, member)); })
+
+/*按照格式格式化字符串
+ * params format:格式化字符串
+ * params ... :参数
+ * return:格式完成的数据
+ * */
+std::string foramt_message(const char *foramt,...);
 
 #endif //UTILS_COMMON_UTILS_H
 

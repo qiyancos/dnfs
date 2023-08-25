@@ -67,7 +67,7 @@ private:
     void (*exit_func)(int) =exit;
 
     /*退出函数退出码*/
-    int exit_code;
+    int exit_code=0;
 
     /*不同模块的日志属性*/
     std::map<std::string, LoggerAttr *> module_attr;
@@ -245,7 +245,7 @@ public:
      * params date_format:日期打印格式
      * return
      * */
-    void set_data_format(const std::string &date_format);
+    void set_date_format(const std::string &date_format);
 
     /*设置指定模块的日期打印格式
      * params module_name:指定的模块名
@@ -253,7 +253,7 @@ public:
      * params error_info:错误信息
      * return: 状态码 0 生成成功 其他 生成失败
      * */
-    int set_module_data_format(const std::string &module_name,
+    int set_module_date_format(const std::string &module_name,
                                const std::string &date_format,
                                std::string *error_info);
 
