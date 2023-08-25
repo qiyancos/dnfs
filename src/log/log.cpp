@@ -94,7 +94,8 @@ Logger::set_default_attr_from(const string &module_name, string *error_info) {
     if (!judge_module_attr_exist(module_name)) {
         /*设置错误信息*/
         set_ptr_info(error_info,
-                     "the module what get log attr is not exist");
+                     "\n"
+                     "The module that sets the default logging attribute does not exist");
         return 1;
     }
     /*查到了设置日志属性*/
@@ -115,7 +116,8 @@ int Logger::copy_module_attr_from(const string &target_module_name,
     if (!judge_module_attr_exist(src_module_name)) {
         /*设置错误信息*/
         set_ptr_info(error_info,
-                     "the module what log attr copy from is not exist");
+                     "\n"
+                     "The module whose log attributes are being copied does not exist");
         return 1;
     }
     /*判断目标模块存不存在，不存在，创建在赋值,存在直接赋值*/
@@ -129,7 +131,8 @@ int Logger::copy_module_attr_from(const string &target_module_name,
         module_attr[target_module_name] = copy;
     } else {
         set_ptr_info(error_info,
-                     "the module what set log attr is not exist");
+                     "\n"
+                     "The module the log attribute is copied to does not exist");
         return 1;
     }
     LogOutputAttr s = LogOutputAttr();
@@ -288,7 +291,7 @@ int Logger::set_module_log_output(const string &module_name,
                                   string *error_info) {
     /*如果模块不存在，直接报错*/
     if (!judge_module_attr_exist(module_name)) {
-        set_ptr_info(error_info, "the module what set log output is not exist");
+        set_ptr_info(error_info, "The module that sets the output does not exist");
         return 1;
     }
     /*设置选择模式的日志文件属性*/

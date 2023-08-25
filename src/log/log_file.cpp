@@ -47,7 +47,7 @@ int LogFile::generate_data(const string &config_str, string *error_info) {
     regex path_regex_str("[<>?*\\s]+");
 */
     /*这个是合法字符匹配*/
-    regex path_regex_str("^/([\\w]+/)*([\\w]+)/?");
+    regex path_regex_str("(/[\\w]*)*");
 
     /*如果存在*/
     if (args_index != string::npos) {

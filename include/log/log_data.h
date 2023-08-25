@@ -82,7 +82,7 @@ static std::map<log_format_t, std::pair<std::string, log_format_t>> log_formatte
         {FMT_THREAD_NAME,    {"%(threadName)",      FMT_THREAD_NAME}},
         {FMT_PROCESS_ID,     {"%(process)",         FMT_PROCESS_ID}},
         {FMT_LOG_MESSAGE,    {"%(message)",         FMT_LOG_MESSAGE}},
-};;
+};
 
 /*初始化日志等级对照字典*/
 static std::map<log_level_t, std::pair<std::vector<std::string>, int>> log_level_info_dict = {
