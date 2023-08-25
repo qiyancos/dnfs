@@ -249,6 +249,7 @@ const nfs_function_desc_t nfs3_func_desc[] = {
 
 /* 注册tirpc的处理操作参数 */
 void init_ntirpc_settings() {
+    LOG(MODULE_NAME, L_INFO, "Start init ntirpc params");
     if (!tirpc_control(TIRPC_PUT_PARAMETERS, &ntirpc_pp)) {
         LOG(MODULE_NAME, EXIT_ERROR,
             "Setting nTI-RPC parameters failed");

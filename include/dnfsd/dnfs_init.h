@@ -22,9 +22,6 @@
 
 #include "rpc/types.h"
 
-/* 初始化配置文件 */
-void init_config(const std::string& config_file_path);
-
 /* 初始化日志相关的配置 */
 void init_logging(const std::string& exec_name, const std::string& nfs_host_name,
                   const log_level_t debug_level, const bool detach_flag,
