@@ -15,7 +15,6 @@
 
 #include <vector>
 #include "log/log_file.h"
-#include "log/log_data.h"
 #include "utils/common_utils.h"
 
 using namespace std;

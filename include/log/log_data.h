@@ -14,7 +14,6 @@
  */
 #ifndef DNFSD_LOG_DATA_H
 #define DNFSD_LOG_DATA_H
-#define SET_PTR_INFO(error_info, error_content) if(error_info != nullptr) *error_info = error_content;
 #include <map>
 #include <syslog.h>
 #include <string>

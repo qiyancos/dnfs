@@ -151,7 +151,7 @@ int creat_directory(const string &judge_dir, string *error_info) {
             return 0;
         } catch (experimental::filesystem::filesystem_error &e) {
             /*添加错误信息*/
-            error_info= (string *) e.what();
+            SET_PTR_INFO(error_info, e.what())
             /*创建错误返回失败*/
             return 1;
         }
@@ -160,7 +160,9 @@ int creat_directory(const string &judge_dir, string *error_info) {
         return 0;
     } else {
         /*设置错误信息*/
-        error_info= (string *) "the path for saving log is not a directory";
+        SET_PTR_INFO(error_info, foramt_message(
+                "The storage log path '%s' set is not a directory",
+                judge_dir.c_str()))
         /*不是文件目录返回错误*/
         return 1;
     }

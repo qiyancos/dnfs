@@ -87,7 +87,7 @@ int main() {
     cout << "设置指定模块多个日志等级日志文件配置:"
          << logger.set_module_log_output("yes",
                                          log_level_list,
-                                         "stderr:syslog:/tmp/no/@(time,MINUTE,30):/tmp/dasdad",
+                                         "stderr:syslog:/tmp/no/@(size,3gb,30):/tmp/dasdad",
                                          s) << ":" << *s << endl;
 
     /*设置所有模块的日志等级，高于该等级的才可以输出*/

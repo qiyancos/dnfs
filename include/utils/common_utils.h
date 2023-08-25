@@ -34,6 +34,7 @@
 #include <sstream>
 #include <thread>
 
+#define SET_PTR_INFO(error_info, error_content) if(error_info != nullptr) *error_info = error_content;
 extern bool _beauty;
 extern int _indent;
 extern std::string _indent_str;
