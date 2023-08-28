@@ -57,7 +57,7 @@ int LogFile::generate_data(const string &config_str, string *error_info) {
         split_str(args_str, ",", args);
         /*判断参数数目，如果不为3直接报错*/
         if (args.size() != 3) {
-            SET_PTR_INFO(error_info, foramt_message(
+            SET_PTR_INFO(error_info, format_message(
                     "The log path setting has and only three parameters such as (time,midnight,30),you set is %s",
                     args_str.c_str())
             )
@@ -66,7 +66,7 @@ int LogFile::generate_data(const string &config_str, string *error_info) {
         /*解析参数*/
         /*先设置保留的日志数目*/
         if (!judge_regex(args[2], number_regex_str)) {
-            SET_PTR_INFO(error_info, foramt_message(
+            SET_PTR_INFO(error_info, format_message(
                     "The size of the number of saved logs must be a positive integer,you set is %s",
                     args[2].c_str())
             )
@@ -88,7 +88,7 @@ int LogFile::generate_data(const string &config_str, string *error_info) {
             string size_str = args[1].substr(0, args[1].size() - 2);
             /*如果是数字，转为数字*/
             if (!judge_regex(size_str, number_regex_str)) {
-                SET_PTR_INFO(error_info, foramt_message(
+                SET_PTR_INFO(error_info, format_message(
                         "Set the file size of the cut log setting must be a positive integer,you set is %s",
                         size_str.c_str())
                 )
@@ -103,7 +103,7 @@ int LogFile::generate_data(const string &config_str, string *error_info) {
                 limit_size <<= 20;
             } else if (unit_b == "gb") {
                 if (limit_size > 3) {
-                    SET_PTR_INFO(error_info, foramt_message(
+                    SET_PTR_INFO(error_info, format_message(
                             "Split logs by size must be less than 4gb,you set is %d GB",
                             limit_size)
                     )
@@ -111,7 +111,7 @@ int LogFile::generate_data(const string &config_str, string *error_info) {
                 }
                 limit_size <<= 30;
             } else {
-                SET_PTR_INFO(error_info, foramt_message(
+                SET_PTR_INFO(error_info, format_message(
                         "Cutting logs by size must be selected among (kb,mb,gb), and case is ignored,you set is %s",
                         unit_b.c_str())
                 )
@@ -137,7 +137,7 @@ int LogFile::generate_data(const string &config_str, string *error_info) {
             } else if (args[1] == "WEEK") {
                 when = WEEK;
             } else {
-                SET_PTR_INFO(error_info, foramt_message(
+                SET_PTR_INFO(error_info, format_message(
                         "Cutting logs by time must be selected in the list below:\n"
                         "        NEVER,\n"
                         "        SECOND,\n"
@@ -151,7 +151,7 @@ int LogFile::generate_data(const string &config_str, string *error_info) {
                 return 1;
             }
         } else {
-            SET_PTR_INFO(error_info, foramt_message(
+            SET_PTR_INFO(error_info, format_message(
                     "The log cutting limit parameter can only be selected between 'size' and 'time',you set is %s",
                     args[0].c_str())
             )
@@ -162,7 +162,7 @@ int LogFile::generate_data(const string &config_str, string *error_info) {
     }
     /*如果路径不合法*/
     if (!judge_regex(dir_path, path_regex_str)) {
-        SET_PTR_INFO(error_info, foramt_message(
+        SET_PTR_INFO(error_info, format_message(
                 "The log directory must be an absolute path and can only be named with numbers, letters and '_',you set is %s",
                 dir_path.c_str())
         )

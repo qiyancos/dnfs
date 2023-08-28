@@ -101,7 +101,7 @@ Logger::set_default_attr_from(const string &module_name, string *error_info) {
     if (!judge_module_attr_exist(module_name)) {
         /*设置错误信息*/
         SET_PTR_INFO(error_info,
-                     foramt_message(
+                     format_message(
                              "The module '%s' that sets the default logging attribute does not exist",
                              module_name.c_str()))
         return 1;
@@ -126,7 +126,7 @@ int Logger::copy_module_attr_from(const string &target_module_name,
     if (!judge_module_attr_exist(src_module_name)) {
         /*设置错误信息*/
         SET_PTR_INFO(error_info,
-                     foramt_message(
+                     format_message(
                              "The module '%s' whose log attributes are being copied does not exist",
                              src_module_name.c_str()))
         return 1;
@@ -145,7 +145,7 @@ int Logger::copy_module_attr_from(const string &target_module_name,
     } else {
         /*设置错误信息*/
         SET_PTR_INFO(error_info,
-                     foramt_message(
+                     format_message(
                              "The module '%s' the log attribute is copied to does not exist",
                              target_module_name.c_str()))
         return 1;
@@ -308,7 +308,7 @@ int Logger::set_module_log_output(const string &module_name,
     if (!judge_module_attr_exist(module_name)) {
         /*设置错误信息*/
         SET_PTR_INFO(error_info,
-                     foramt_message(
+                     format_message(
                              "The module '%s' that sets the output does not exist",
                              module_name.c_str()))
         return 1;
@@ -352,7 +352,7 @@ int Logger::set_module_log_level(const string &module_name,
     if (!judge_module_attr_exist(module_name)) {
         /*设置错误信息*/
         SET_PTR_INFO(error_info,
-                     foramt_message(
+                     format_message(
                              "the module '%s' that set log level does not exist",
                              module_name.c_str()))
         return 1;
@@ -401,7 +401,7 @@ int Logger::set_module_formatter(const string &module_name,
     if (!judge_module_attr_exist(module_name)) {
         /*设置错误信息*/
         SET_PTR_INFO(error_info,
-                     foramt_message(
+                     format_message(
                              "the module '%s' that set log format does not exist",
                              module_name.c_str()))
         return 1;
@@ -448,7 +448,7 @@ Logger::set_module_date_format(const string &module_name,
     if (!judge_module_attr_exist(module_name)) {
         /*设置错误信息*/
         SET_PTR_INFO(error_info,
-                     foramt_message(
+                     format_message(
                              "the module '%s' that set date format does not exist",
                              module_name.c_str()))
         return 1;
@@ -560,7 +560,7 @@ int Logger::format_module_log(const string &module_name, string &log_message,
     if (!judge_module_attr_exist(module_name)) {
         /*设置错误信息*/
         SET_PTR_INFO(error_info,
-                     foramt_message(
+                     format_message(
                              "the module '%s' that format log message does not exist",
                              module_name.c_str()))
         return 1;

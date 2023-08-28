@@ -44,9 +44,17 @@ using namespace std;
 void init_logging(const string& exec_name, const string& nfs_host_name,
                   const log_level_t debug_level, const bool detach_flag,
                   const string& arg_log_path) {
+    /* 首先从配置文件中读取log相关的配置 */
+    fprintf(stdout, "Loading config for logging from config file\n");
+    init_logging_config(dnfs_config.log_config);
+    const dnfs_logging_config& log_config = dnfs_config.log_config;
+
     fprintf(stdout, "Start init logging setup\n");
     /* 日志路径 */
-    string log_path = arg_log_path;
+    string log_path;
+    if (arg_log_path.size()) {
+        log_path = dnfs_config.log_config.path = arg_log_path;
+    }
     /*初始化日志管理器*/
     logger.init(exec_name, nfs_host_name);
     /* 初始化主程序日志模块 */
@@ -57,53 +65,39 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
     /*初始化日志等级*/
     logger.set_log_level(debug_level);
 
-    string temp;
-    if (config_get(temp, dnfs_config, {"log", "path"})) {
-        log_path = temp;
+    if (log_path.size()) {
+        log_path = format_message("%s@(%s,%s,%d)", log_config.path.c_str(),
+                                  log_config.limit_type.c_str(),
+                                  log_config.limit_info.c_str(),
+                                  log_config.backup_count);
     }
 
-    char buffer[256] = "";
-    size_t buf_size = 0;
-
-    /*初始化日志文件信息*/
-    /* TODO 这里需要对参数进行校验避免buffer overflow */
-    if (!config_get(temp, dnfs_config, {"log", "limit_type"})) {
-        buf_size += sprintf(buffer, "@(%s", temp.c_str());
-        if (!config_get(temp, dnfs_config, {"log", "limit_info"})) {
-            buf_size += sprintf(buffer, ",%s", temp.c_str());
-        }
-        if (!config_get(temp, dnfs_config, {"log", "backup_count"})) {
-            buf_size += sprintf(buffer, ",%s", temp.c_str());
-        }
-        buffer[buf_size] = ')';
-    }
-    log_path += buffer;
+    string error_info;
     if (!detach_flag) {
         /* 只检查log_path部分的合法性 */
-        if (logger.set_log_output(L_INFO, log_path + ":stdout:syslog", &temp)) {
-            fprintf(stderr, "%s\n", temp.c_str());
+        if (logger.set_log_output(L_INFO, log_path + ":stdout:syslog", &error_info)) {
+            fprintf(stderr, "%s\n", error_info.c_str());
             exit(-1);
         }
         logger.set_log_output({EXIT_ERROR, L_ERROR, L_WARN},
                               log_path + ":stderr:syslog", nullptr);
-        logger.set_log_output(D_INFO, log_path + ":stdout", nullptr);
-        logger.set_log_output({D_ERROR, D_WARN}, log_path += ":stderr", nullptr);
+        logger.set_log_output(D_INFO,
+                              log_path + ":stdout", nullptr);
+        logger.set_log_output({D_ERROR, D_WARN},
+                              log_path += ":stderr", nullptr);
     } else {
         /* 只检查log_path部分的合法性 */
-        if (logger.set_log_output(log_path, &temp)) {
-            fprintf(stderr, "%s\n", temp.c_str());
+        if (logger.set_log_output(log_path, &error_info)) {
+            fprintf(stderr, "%s\n", error_info.c_str());
             exit(-1);
         }
         logger.set_log_output(L_INFO, log_path + ":syslog", nullptr);
         logger.set_log_output({EXIT_ERROR, L_ERROR, L_WARN},
                               log_path + ":syslog", nullptr);
     }
-    if (!config_get(temp, dnfs_config, {"log", "formatter"})) {
-        string error_info;
-        if (logger.set_formatter(temp, &error_info)) {
-            fprintf(stderr, "%s\n", temp.c_str());
-            exit(-1);
-        }
+    if (logger.set_formatter(log_config.formatter, &error_info)) {
+        fprintf(stderr, "%s\n", error_info.c_str());
+        exit(-1);
     }
     logger.set_default_attr_from(MODULE_NAME, nullptr);
 }

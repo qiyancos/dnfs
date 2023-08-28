@@ -205,8 +205,8 @@ void split_str(const std::string &str, const std::string &split,
  * params judge_str:验证的正则表达式
  * return: true 匹配成功 false 匹配失败
  * */
-bool
-judge_regex(const std::string &judge_str, const std::regex &regex_expression);
+bool judge_regex(const std::string &judge_str,
+                 const std::regex &regex_expression);
 
 /*转为小写
  * params str:需转换的字符串
@@ -244,7 +244,7 @@ std::string get_record_time(const time_t &timeStamp, const std::string &format);
  * params ... :参数
  * return:格式完成的数据
  * */
-std::string foramt_message(const char *foramt,...);
+std::string format_message(const char *foramt,...);
 
 #endif //UTILS_COMMON_UTILS_H
 
