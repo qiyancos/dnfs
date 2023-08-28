@@ -115,6 +115,8 @@ int main() {
          <<endl;
     logger.set_date_format("");
 
+
+
     /*设置单独模块日志格式*/
     cout << "设置单独模块日志格式:"
          << logger.set_module_date_format("yes", "%Y-%m-%d %H:%M:%S", s) << ":"
