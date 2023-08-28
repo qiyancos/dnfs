@@ -42,7 +42,7 @@ private:
     std::map<std::string, FILE *> file_handles;
 
     /*缓存最大限制，超出限制则将缓存落盘*/
-    int buffer_limit = 100;
+    int buffer_limit = 1;
 
 public:
     /*将缓存写入文件,监听log_num*/
