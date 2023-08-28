@@ -507,11 +507,9 @@ void Logger::_log(const string &module_name, log_level_t log_level,
                 cout << *error_info << endl;
             }
 
-//            /*获取线程名*/
-//            string thread_name = ThreadPool::get_target_thread_name(tid);
-//
-//            /*将LogMessage对象加到缓存*/
-//            log_buffer.add_log_buffer(thread_name, log_message);
+            /*将LogMessage对象加到缓存*/
+//            log_buffer.add_log_buffer(*(int*)&tid, log_message);
+
         }
 
         /*如果是退出标志*/

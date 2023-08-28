@@ -65,7 +65,7 @@ inline std::string format(const std::string &out_data) {
     return out_data;
 }
 
-const std::string format(const sockaddr_storage &out_data);
+std::string format(const sockaddr_storage &out_data);
 
 /*将pid转为字符串
  * params t:任意类型字符串
@@ -245,6 +245,5 @@ std::string get_record_time(const time_t &timeStamp, const std::string &format);
  * return:格式完成的数据
  * */
 std::string format_message(const char *foramt,...);
-
 #endif //UTILS_COMMON_UTILS_H
 

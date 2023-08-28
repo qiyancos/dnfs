@@ -95,7 +95,7 @@ LoggerAttr::get_log_message(string &log_message, log_level_t log_le,
                             const time_t &record_time,
                             const thread::id &tid,
                             const int &pid,
-                            const string &message) {
+                            const string & message) {
     /*获取设置的日志格式进行判断替换*/
     log_message = formatter;
 

@@ -109,7 +109,7 @@ public:
                     const time_t &record_time,
                     const std::thread::id &tid,
                     const int &pid,
-                    const std::string &message);
+                    const std::string & message);
 
     /*判断debug模式
      * */

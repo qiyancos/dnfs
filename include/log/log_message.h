@@ -20,6 +20,7 @@
 #include <iostream>
 #include <vector>
 #include <thread>
+#include <memory>
 #include "log_data.h"
 #include "log_attr.h"
 
@@ -27,7 +28,7 @@
 class LogMessage {
 private:
     /*日志的记录内容的格式*/
-    char *log_message = nullptr;
+    std::shared_ptr<char> log_message;
 
     /*模块名，用来查询默认的日志格式*/
     std::string module_name;
@@ -57,6 +58,7 @@ private:
 
     /*保存对应的日志属性*/
     LoggerAttr *log_attr;
+
 public:
     /*初始化参数
      * params module_name:模块名
@@ -82,10 +84,9 @@ public:
      * params log_message:生成的日志信息
      * return: 状态码 0 生成成功 其他 生成失败
      * */
-    int grnarate_log_message(std::string &format_message, std::string *error_info);
+    int
+    grnarate_log_message(std::string &format_message, std::string *error_info);
 
-    /*析构函数*/
-    ~LogMessage();
 };
 
 #endif //LOG_LOG_MESSAGE_H

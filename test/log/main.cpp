@@ -102,7 +102,7 @@ int main() {
 
     /*设置指定模块日志格式*/
     cout << "设置指定模块日志格式:" << logger.set_module_formatter("yes",
-                                                                   "%(program_name)-%(levelname)-%(asctime):%(message)",
+                                                                   "%(modulename)-%(levelname)-%(asctime):%(message)",
                                                                    s) << ":"
          << *s << endl;
 
@@ -114,8 +114,6 @@ int main() {
     cout << "设置所有模块日志格式:"
          <<endl;
     logger.set_date_format("");
-
-
 
     /*设置单独模块日志格式*/
     cout << "设置单独模块日志格式:"
@@ -142,10 +140,14 @@ int main() {
     cout << "将所有的模板设置为默认属性:"<< endl;
     logger.set_all_module_attr_default();
 
+    LOG("yes", L_ERROR, "%s", "what fuck1");
+    cout << "--------" << endl;
+    this_thread::sleep_for(chrono::seconds(2));
+    LOG("test", L_ERROR, "%s", "what fuck2");
+    this_thread::sleep_for(chrono::seconds(2));
+    LOG("test", L_ERROR, "%s", "what fuck3");
+    while(true);
 
-    LOG("yes", L_ERROR, "%s", "what fuck");
-    LOG("test", L_ERROR, "%s", "what fuck");
-    LOG("test", L_ERROR, "%s", "what fuck");
     return 0;
 }
 

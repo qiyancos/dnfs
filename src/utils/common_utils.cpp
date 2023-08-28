@@ -31,7 +31,7 @@ string _indent_str = "    ";
 map<const void *, int> print_depth;
 
 /* 将二进制的socket地址转化为可读的字符串 */
-const std::string format(const sockaddr_storage &out_data) {
+std::string format(const sockaddr_storage &out_data) {
     int port = 0;
     const char *name = NULL;
     char ipname[SOCK_NAME_MAX];
