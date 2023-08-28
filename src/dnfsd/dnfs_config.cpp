@@ -76,45 +76,57 @@ static void init_default_config(const string& config_file_path) {
 /* 解析日志配置 */
 int init_logging_config(dnfs_logging_config& out) {
     try {
-        out.path = dnfs_yaml_config["log"]["path"].as<string>();
-    } catch (YAML::InvalidNode) {
-        fprintf(stderr, "log.path missing\n");
+        YAML::Node log_node = dnfs_yaml_config["log"];
+    } catch (YAML::InvalidNode e) {
+        fprintf(stderr, "Warn: log node not found in config file: %s\n",
+                e.what());
         return -1;
     }
+
+    try {
+        out.path = dnfs_yaml_config["log"]["path"].as<string>();
+    } catch (YAML::InvalidNode e) {
+        fprintf(stderr, "Warn: log.path missing\n");
+    }
+
     try {
         out.limit_type = dnfs_yaml_config["log"]["limit_type"].as<string>();
-    } catch (YAML::InvalidNode) {
-        fprintf(stderr, "log.limit_type missing\n");
-        return -1;
+    } catch (YAML::InvalidNode e) {
+        fprintf(stderr, "Warn: log.limit_type missing\n");
     }
+
     try {
         out.limit_info = dnfs_yaml_config["log"]["limit_info"].as<string>();
-    } catch (YAML::InvalidNode) {
-        fprintf(stderr, "log.limit_info missing\n");
-        return -1;
+    } catch (YAML::InvalidNode e) {
+        fprintf(stderr, "Warn: log.limit_info missing\n");
     }
+
     try {
         out.backup_count = dnfs_yaml_config["log"]["backup_count"].as<int>();
-    } catch (YAML::InvalidNode) {
-        fprintf(stderr, "log.backup_count missing\n");
+    } catch (YAML::InvalidNode e) {
+        fprintf(stderr, "Warn: log.backup_count missing\n");
+    } catch (YAML::BadConversion e) {
+        fprintf(stderr, "Error: log.backup_count \"%s\" format is not int\n",
+                dnfs_yaml_config["log"]["backup_count"].as<string>().c_str());
         return -1;
     }
+
     try {
         out.formatter = dnfs_yaml_config["log"]["formatter"].as<string>();
     } catch (YAML::InvalidNode) {
-        fprintf(stderr, "log.formatter missing\n");
-        return -1;
+        fprintf(stderr, "Warn: log.formatter missing\n");
     }
     return 0;
 }
 
 /* 初始化配置文件并进行解析 */
 void init_config(const string& config_file_path) {
-    fprintf(stdout, "Start init base config file\n");
     if (access(config_file_path.c_str(), F_OK) == -1) {
         /* 如果目标文件不存在，创建一个默认初始化的配置 */
+        fprintf(stdout, "Start init default config file\n");
         init_default_config(config_file_path);
     }
+
     try {
         dnfs_yaml_config = YAML::LoadFile(config_file_path);
     } catch (exception& e) {
@@ -122,8 +134,13 @@ void init_config(const string& config_file_path) {
                 config_file_path.c_str(), e.what());
         exit(-1);
     }
-    /* 这里还会做一些基本配置文件的校验 */
-    /*TODO*/
+
+    /* 首先从配置文件中读取log相关的配置 */
+    fprintf(stdout, "Loading config for logging from config file\n");
+    if (init_logging_config(dnfs_config.log_config)) {
+        fprintf(stderr, "Failed to load log config\n");
+        exit(-1);
+    }
 }
 
 /* 用于打印当前系统使用的配置信息 */

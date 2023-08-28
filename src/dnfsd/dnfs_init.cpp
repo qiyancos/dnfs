@@ -44,12 +44,8 @@ using namespace std;
 void init_logging(const string& exec_name, const string& nfs_host_name,
                   const log_level_t debug_level, const bool detach_flag,
                   const string& arg_log_path) {
-    /* 首先从配置文件中读取log相关的配置 */
-    fprintf(stdout, "Loading config for logging from config file\n");
-    init_logging_config(dnfs_config.log_config);
-    const dnfs_logging_config& log_config = dnfs_config.log_config;
-
     fprintf(stdout, "Start init logging setup\n");
+    const dnfs_logging_config& log_config = dnfs_config.log_config;
     /* 日志路径 */
     string log_path;
     if (arg_log_path.size()) {
