@@ -160,7 +160,7 @@ int creat_directory(const string &judge_dir, string *error_info) {
         return 0;
     } else {
         /*设置错误信息*/
-        SET_PTR_INFO(error_info, foramt_message(
+        SET_PTR_INFO(error_info, format_message(
                 "The storage log path '%s' set is not a directory",
                 judge_dir.c_str()))
         /*不是文件目录返回错误*/
@@ -233,7 +233,7 @@ string pid_to_string(const thread::id &t) {
  * params ... :参数
  * return:格式完成的数据
  * */
-string foramt_message(const char *foramt, ...) {
+string format_message(const char *foramt, ...) {
     char buffer[ONE_MB];
     va_list va;
     va_start(va, foramt);

@@ -22,7 +22,10 @@ using namespace std;
 #define MODULE_NAME "config"
 
 /* DNFSD全局默认的YAML文件结构 */
-YAML::Node dnfs_config;
+YAML::Node dnfs_yaml_config;
+
+/* DNFSD的全局配置参数属性结构体 */
+dnfs_runtime_config dnfs_config;
 
 // 服务启动配置信息
 nfs_start_info_t nfs_start_info = {
@@ -71,31 +74,36 @@ static void init_default_config(const string& config_file_path) {
 }
 
 /* 解析日志配置 */
-int init_logging_config(nfs_logging_config& out, const YAML::Node& config) {
+int init_logging_config(dnfs_logging_config& out) {
     try {
-        out.path = config["log"]["path"].as<string>();
+        out.path = dnfs_yaml_config["log"]["path"].as<string>();
     } catch (YAML::InvalidNode) {
         fprintf(stderr, "log.path missing\n");
+        return -1;
     }
     try {
-        out.limit_type = config["log"]["limit_type"].as<string>();
+        out.limit_type = dnfs_yaml_config["log"]["limit_type"].as<string>();
     } catch (YAML::InvalidNode) {
         fprintf(stderr, "log.limit_type missing\n");
+        return -1;
     }
     try {
-        out.limit_info = config["log"]["limit_info"].as<string>();
+        out.limit_info = dnfs_yaml_config["log"]["limit_info"].as<string>();
     } catch (YAML::InvalidNode) {
         fprintf(stderr, "log.limit_info missing\n");
+        return -1;
     }
     try {
-        out.backup_count = config["log"]["backup_count"].as<int>();
+        out.backup_count = dnfs_yaml_config["log"]["backup_count"].as<int>();
     } catch (YAML::InvalidNode) {
         fprintf(stderr, "log.backup_count missing\n");
+        return -1;
     }
     try {
-        out.formatter = config["log"]["formatter"].as<string>();
+        out.formatter = dnfs_yaml_config["log"]["formatter"].as<string>();
     } catch (YAML::InvalidNode) {
         fprintf(stderr, "log.formatter missing\n");
+        return -1;
     }
     return 0;
 }
@@ -108,7 +116,7 @@ void init_config(const string& config_file_path) {
         init_default_config(config_file_path);
     }
     try {
-        dnfs_config = YAML::LoadFile(config_file_path);
+        dnfs_yaml_config = YAML::LoadFile(config_file_path);
     } catch (exception& e) {
         fprintf(stderr, "Failed to load config file %s: %s\n",
                 config_file_path.c_str(), e.what());

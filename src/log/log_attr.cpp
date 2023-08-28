@@ -50,7 +50,7 @@ LoggerAttr::init_log_formatter(string *error_info) {
     }
     /*如果没有设置格式*/
     if (!set_formatter) {
-        SET_PTR_INFO(error_info, foramt_message(
+        SET_PTR_INFO(error_info, format_message(
                 "The log format setting must be selected from the list below:\n"
                 "        * %(program_name) the program name\n"
                 "        * %(hostname) the host name\n"
