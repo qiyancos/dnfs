@@ -55,8 +55,8 @@ void Logger::init(const string &program_name_in, const string &hostname_in) {
     /*直接注册logger的模板*/
     init_module("logger");
     /*开启buffer线程*/
-    thread buffer_thread(&LogBuffer::output_thread,&log_buffer);
-    buffer_thread.detach();
+//    thread buffer_thread(&LogBuffer::output_thread,&log_buffer);
+//    buffer_thread.detach();
 }
 
 /*使用默认日志属性初始化一个模块日志
@@ -507,11 +507,11 @@ void Logger::_log(const string &module_name, log_level_t log_level,
                 cout << *error_info << endl;
             }
 
-            /*获取线程名*/
-            string thread_name = ThreadPool::get_target_thread_name(tid);
-
-            /*将LogMessage对象加到缓存*/
-            log_buffer.add_log_buffer(thread_name, log_message);
+//            /*获取线程名*/
+//            string thread_name = ThreadPool::get_target_thread_name(tid);
+//
+//            /*将LogMessage对象加到缓存*/
+//            log_buffer.add_log_buffer(thread_name, log_message);
         }
 
         /*如果是退出标志*/

@@ -14,6 +14,7 @@
  */
 #ifndef DNFSD_LOG_DATA_H
 #define DNFSD_LOG_DATA_H
+
 #include <map>
 #include <syslog.h>
 #include <string>
@@ -48,7 +49,7 @@ typedef enum LogLevel {
 typedef enum LogFormatter {
     FMT_PG_NAME,
     FMT_HOST_NAME,
-    FMT_LEVEL_NO,
+    FMT_LEVEL_NAME,
     FMT_PATH_NAME,
     FMT_FILE_NAME,
     FMT_MD_NAME,
@@ -68,7 +69,7 @@ typedef enum LogFormatter {
 static std::map<log_format_t, std::pair<std::string, log_format_t>> log_formatter_dict = {
         {FMT_PG_NAME,        {"%(program_name)",    FMT_PG_NAME}},
         {FMT_HOST_NAME,      {"%(hostname)",        FMT_HOST_NAME}},
-        {FMT_LEVEL_NO,       {"%(levelno)",         FMT_LEVEL_NO}},
+        {FMT_LEVEL_NAME,     {"%(levelname)",       FMT_LEVEL_NAME}},
         {FMT_PATH_NAME,      {"%(pathname)",        FMT_PATH_NAME}},
         {FMT_FILE_NAME,      {"%(filename)",        FMT_FILE_NAME}},
         {FMT_MD_NAME,        {"%(modulename)",      FMT_MD_NAME}},

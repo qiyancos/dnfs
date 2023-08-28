@@ -24,7 +24,7 @@ using namespace std;
 LoggerAttr::LoggerAttr() {
     /*message默认打开*/
     log_formatter_select[FMT_LOG_MESSAGE] = true;
-};
+}
 
 /*根据格式字符串，建立日志格式,供设置日志格式调用
  * params error_info:错误信息
@@ -54,7 +54,7 @@ LoggerAttr::init_log_formatter(string *error_info) {
                 "The log format setting must be selected from the list below:\n"
                 "        * %(program_name) the program name\n"
                 "        * %(hostname) the host name\n"
-                "        * %(levelno) the number of log level\n"
+                "        * %(levelname) log level\n"
                 "        * %(pathname) the complete path for the module what use log\n"
                 "        * %(filename) the file name what for the module what use log\n"
                 "        * %(modulename) the module name\n"
@@ -62,7 +62,7 @@ LoggerAttr::init_log_formatter(string *error_info) {
                 "        * %(lineno) the line number for the module what use log\n"
                 "        * %(created) now time (UNIX float)\n"
                 "        * %(relativeCreated) the ms from log build\n"
-                "        * %(asctime) the time formatter default is 2023-08-18 11:18:45998\n"
+                "        * %(asctime) the time formatter default(2023-08-18 11:18:45998)\n"
                 "        * %(thread) the thread id\n"
                 "        * %(threadName) the thread name\n"
                 "        * %(process) the progress id\n"
@@ -119,8 +119,8 @@ LoggerAttr::get_log_message(string &log_message, log_level_t log_le,
                 case 2:
                     /*日志级别数字*/
                     log_message = regex_replace(log_message,
-                                                std::regex("%\\(levelno\\)"),
-                                                to_string(log_le));
+                                                std::regex("%\\(levelname\\)"),
+                                                log_level_info_dict[log_le].first[0]);
                 case 3:
                     /*输出模块的完整路径名*/
                     log_message = regex_replace(log_message,

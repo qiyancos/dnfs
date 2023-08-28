@@ -32,7 +32,7 @@ private:
     /*log formatter 打印日志格式设置
     * %(program_name) 程序名
     * %(hostname) 主机名
-    * %(levelno) 数字形式的日志级别
+    * %(levelname) 日志级别
     * %(pathname) 输出模块的完整路径名
     * %(filename) 输出模块的文件名
     * %(modulename) 输出模块名

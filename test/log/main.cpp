@@ -102,7 +102,7 @@ int main() {
 
     /*设置指定模块日志格式*/
     cout << "设置指定模块日志格式:" << logger.set_module_formatter("yes",
-                                                                   "%(program_name)-%(modulename)-%(asctime):%(message)",
+                                                                   "%(program_name)-%(levelname)-%(asctime):%(message)",
                                                                    s) << ":"
          << *s << endl;
 
