@@ -38,17 +38,37 @@ extern nfs_start_info_t nfs_start_info;
 /* DNFS的核心参数，与配置有关 */
 extern nfs_parameter_t nfs_param;
 
+/* 日志相关的配置信息 */
 struct dnfs_logging_config {
+    /* 日志文件的绝对路径 */
     std::string path = "";
+
+    /* 日志文件的rotate类型，可以是size或time */
     std::string limit_type = "";
+
+    /* 日志文件的rotate信息 */
     std::string limit_info = "";
+
+    /* 日志文件rotate后保留的历史文件个数 */
     int backup_count = 30;
+
+    /* 日志文件的基本输出格式 */
     std::string formatter = "%(levelname) <%(asctime)><PID-%(process)>: %(message)";
+};
+
+/* 运行时的性能配置 */
+struct dnfs_running_config {
+    /* 线程池的大小，0表示没有限制 */
+    int max_thead_size = 0;
 };
 
 /* DNFS配置 */
 struct dnfs_runtime_config {
+    /* 日志相关配置 */
     dnfs_logging_config log_config;
+
+    /* 运行时相关配置 */
+    dnfs_running_config run_config;
 };
 
 extern dnfs_runtime_config dnfs_config;
@@ -61,104 +81,5 @@ int init_logging_config(dnfs_logging_config& out);
 
 /* 用于打印当前系统使用的配置信息 */
 void dump_config();
-
-/* 该函数用于快速从配置文件中获取指定层级的数据，并将结果按照指定格式写入到变量中，返回成功标志 */
-/* 该函数用于快速从配置文件中获取指定层级的数据，
- * 并将结果按照指定格式写入到变量中，返回成功标志 */
-template<typename T>
-int config_get(T& out, const YAML::Node& config,
-               const std::vector<std::string>& key_list) {
-    int key_size = key_list.size();
-    YAML::Node next_node(config);
-    for (int i = 0; i < key_size; i++) {
-        const std::string& key = key_list[i];
-        YAML::NodeType::value type;
-        try {
-            type = next_node[key].Type();
-        } catch (YAML::InvalidNode) {
-            LOG("config", L_WARN,
-                "Unknown config node \"%s\" in %s(@%d)",
-                key.c_str(), format(key_list).c_str(), i);
-            return 1;
-        }
-        switch (type) {
-            case YAML::NodeType::Map:
-                if (i == key_size - 1) {
-                    if (!(std::is_same<T, std::map<std::string, std::string>>::value or
-                            std::is_same<T, std::map<std::string, char>>::value or
-                            std::is_same<T, std::map<std::string, int>>::value or
-                            std::is_same<T, std::map<std::string, long long>>::value or
-                            std::is_same<T, std::map<std::string, float>>::value or
-                            std::is_same<T, std::map<std::string, long double>>::value)) {
-                        LOG("config", L_WARN,
-                            "Config file node for %s cannot be"
-                            " interpreted as normal map class",
-                            format(key_list).c_str());
-                        return 1;
-                    } else {
-                        out = next_node[key].as<T>();
-                        return 0;
-                    }
-                }
-                break;
-            case YAML::NodeType::Sequence:
-                if (i == key_size - 1) {
-                    if (!(std::is_same<T, std::vector<std::string>>::value or
-                            std::is_same<T, std::vector<char>>::value or
-                            std::is_same<T, std::vector<int>>::value or
-                            std::is_same<T, std::vector<long long>>::value or
-                            std::is_same<T, std::vector<float>>::value or
-                            std::is_same<T, std::vector<long double>>::value)) {
-                        LOG("config", L_WARN,
-                            "Config file node for %s cannot be"
-                            " interpreted as normal vector class",
-                            format(key_list).c_str());
-                        return 1;
-                    } else {
-                        out = next_node[key].as<T>();
-                        return 0;
-                    }
-                } else {
-                    LOG("config", L_WARN,
-                        "List type config node can not be "
-                        "indexed by \"%s\" in %s(@%d))",
-                        key.c_str(), format(key_list).c_str(), i);
-                    return 1;
-                }
-            case YAML::NodeType::Scalar:
-                if (i == key_size - 1) {
-                    if (!(std::is_same<T, std::string>::value or
-                            std::is_same<T, char>::value or
-                            std::is_same<T, int>::value or
-                            std::is_same<T, long long>::value or
-                            std::is_same<T, float>::value or
-                            std::is_same<T, long double>::value)) {
-                        LOG("config", L_WARN,
-                            "Config file node for %s cannot be"
-                            " interpreted as normal value type",
-                            format(key_list).c_str());
-                        return 1;
-                    } else {
-                        out = next_node[key].as<T>();
-                        return 0;
-                    }
-                } else {
-                    LOG("config", L_WARN,
-                        "Value type config node can not be "
-                        "indexed by \"%s\" in %s(@%d))",
-                        key.c_str(), format(key_list).c_str(), i);
-                    return 1;
-                }
-            default:
-                LOG("config", L_WARN,
-                    "Unknown config node type %d for \"%s\" in %s(@%d)",
-                    type, key.c_str(), format(key_list).c_str(), i);
-                return 1;
-        }
-        next_node = YAML::Node(next_node[key]);
-    }
-    /* Should never reach here */
-    return 1;
-}
 
 #endif //DNFSD_DNFS_CONFIG_H

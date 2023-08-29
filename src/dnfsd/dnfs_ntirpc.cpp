@@ -364,7 +364,7 @@ static string format_xprt_addr(SVCXPRT *xprt) {
     struct netbuf *phostaddr = svc_getcaller_netbuf(xprt);
     assert(phostaddr->len <= sizeof(sockaddr_storage) && phostaddr->buf != NULL);
     memcpy(&addr, phostaddr->buf, phostaddr->len);
-    return format(addr);
+    return format(&addr);
 }
 
 const char *xprt_stat_s[XPRT_DESTROYED + 1] = {

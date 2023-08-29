@@ -47,6 +47,107 @@ static const char default_config[] =
         "    formatter: \"%(levelname) <%(asctime)><PID-%(process)>: %(message)\"\n"
         "    path: /var/log/dnfsd/runtime.log\n";
 
+/* 该函数用于快速从配置文件中获取指定层级的数据，并将结果按照指定格式写入到变量中，返回成功标志 */
+/* 该函数用于快速从配置文件中获取指定层级的数据，
+ * 并将结果按照指定格式写入到变量中，返回成功标志 */
+template<typename T>
+[[maybe_unused]] int config_get(T& out, const YAML::Node& config,
+               const std::vector<std::string>& key_list) {
+    int key_size = key_list.size();
+    YAML::Node* next_node = new YAML::Node(config);
+    for (int i = 0; i < key_size; i++) {
+        const std::string& key = key_list[i];
+        YAML::NodeType::value type;
+        try {
+            type = (*next_node)[key].Type();
+        } catch (YAML::InvalidNode) {
+            LOG("config", L_WARN,
+                "Unknown config node \"%s\" in %s(@%d)",
+                key.c_str(), format(key_list).c_str(), i);
+            return 1;
+        }
+        YAML::Node* last_node = next_node;
+        next_node = new YAML::Node((*next_node)[key]);
+        delete last_node;
+        switch (type) {
+            case YAML::NodeType::Map:
+                if (i == key_size - 1) {
+                    if (!(std::is_same<T, std::map<std::string, std::string>>::value or
+                          std::is_same<T, std::map<std::string, char>>::value or
+                          std::is_same<T, std::map<std::string, int>>::value or
+                          std::is_same<T, std::map<std::string, long long>>::value or
+                          std::is_same<T, std::map<std::string, float>>::value or
+                          std::is_same<T, std::map<std::string, long double>>::value)) {
+                        LOG("config", L_WARN,
+                            "Config file node for %s cannot be"
+                            " interpreted as normal map class",
+                            format(key_list).c_str());
+                        return 1;
+                    } else {
+                        out = next_node->as<T>();
+                        return 0;
+                    }
+                }
+                break;
+            case YAML::NodeType::Sequence:
+                if (i == key_size - 1) {
+                    if (!(std::is_same<T, std::vector<std::string>>::value or
+                          std::is_same<T, std::vector<char>>::value or
+                          std::is_same<T, std::vector<int>>::value or
+                          std::is_same<T, std::vector<long long>>::value or
+                          std::is_same<T, std::vector<float>>::value or
+                          std::is_same<T, std::vector<long double>>::value)) {
+                        LOG("config", L_WARN,
+                            "Config file node for %s cannot be"
+                            " interpreted as normal vector class",
+                            format(key_list).c_str());
+                        return 1;
+                    } else {
+                        out = next_node->as<T>();
+                        return 0;
+                    }
+                } else {
+                    LOG("config", L_WARN,
+                        "List type config node can not be "
+                        "indexed by \"%s\" in %s(@%d))",
+                        key.c_str(), format(key_list).c_str(), i);
+                    return 1;
+                }
+            case YAML::NodeType::Scalar:
+                if (i == key_size - 1) {
+                    if (!(std::is_same<T, std::string>::value or
+                          std::is_same<T, char>::value or
+                          std::is_same<T, int>::value or
+                          std::is_same<T, long long>::value or
+                          std::is_same<T, float>::value or
+                          std::is_same<T, long double>::value)) {
+                        LOG("config", L_WARN,
+                            "Config file node for %s cannot be"
+                            " interpreted as normal value type",
+                            format(key_list).c_str());
+                        return 1;
+                    } else {
+                        out = next_node->as<T>();
+                        return 0;
+                    }
+                } else {
+                    LOG("config", L_WARN,
+                        "Value type config node can not be "
+                        "indexed by \"%s\" in %s(@%d))",
+                        key.c_str(), format(key_list).c_str(), i);
+                    return 1;
+                }
+            default:
+                LOG("config", L_WARN,
+                    "Unknown config node type %d for \"%s\" in %s(@%d)",
+                    type, key.c_str(), format(key_list).c_str(), i);
+                return 1;
+        }
+    }
+    /* Should never reach here */
+    return 1;
+}
+
 /* 创建一个默认初始化的配置 */
 static void init_default_config(const string& config_file_path) {
     string config_dir = config_file_path.substr(0,

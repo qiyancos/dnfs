@@ -35,7 +35,7 @@ void ThreadPool::set_thread_name(const string &name) {
         LOG(MODULE_NAME, EXIT_ERROR,
                    "Thread named \"%s\" already exists", name.c_str());
     }
-    thread_name_id_map[name] = tid;
+    thread_name_id_map.emplace(name, tid);
     if (thread_id_name_map.find(tid) != thread_id_name_map.end()) {
         LOG(MODULE_NAME,D_INFO,
                    "Reset thread name from \"%s\" to \"%s\" for thread-%d",
@@ -44,7 +44,7 @@ void ThreadPool::set_thread_name(const string &name) {
         LOG(MODULE_NAME,D_INFO,
                    "Set thread %ld name as \"%s\"", tid, name.c_str());
     }
-    thread_id_name_map[tid] = name;
+    thread_id_name_map.emplace(tid, name);
 }
 
 // 设置当前现成的名称与线程id绑定
@@ -69,4 +69,26 @@ string ThreadPool::get_target_thread_name(const std::thread::id& tid){
         tid_ss<<tid_str << tid;
         return tid_ss.str();
     }
+}
+
+/* 重新设置线程池的线程大小个数 */
+void ThreadPool::set_max_thread_size(const int max_thread_size) {
+    _max_thread_size = max_thread_size;
+}
+
+/* 等待系统关闭信号 */
+void ThreadPool::wait_shutdown() {
+    unique_lock<mutex> shutdown_lck(shutdown_lock);
+    shutdown_cond.wait(shutdown_lck);
+}
+
+/* 执行关闭操作所有的线程会在收到信号后关闭 */
+void ThreadPool::shutdown() {
+    unique_lock<mutex> shutdown_lck(shutdown_lock);
+    shutdown_cond.notify_all();
+}
+
+/* 等待所有线程退出 */
+void ThreadPool::join() {
+
 }

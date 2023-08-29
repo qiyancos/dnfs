@@ -5,7 +5,9 @@ include_directories(${YAML_INCLUDE_DIRS})
 add_executable(dnfsd
         dnfsd.cpp
         dnfs_init.cpp
-        dnfs_ntirpc.cpp dnfs_config.cpp ../../include/log/log_data.h ../log/log_output.cpp ../../include/log/log_output.h ../log/log_attr.cpp ../../include/log/log_attr.h)
+        dnfs_ntirpc.cpp
+        dnfs_config.cpp
+        dnfs_signal_proc.cpp dnfsd_exit.cpp)
 
 target_link_libraries(dnfsd
     PRIVATE
