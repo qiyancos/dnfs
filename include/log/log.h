@@ -54,9 +54,6 @@
 
 /*日志类*/
 class Logger {
-    friend class LogMessage;
-
-    friend class LoggerAttr;
 
 private:
 
@@ -305,6 +302,9 @@ public:
 
     /*将所有的模板设置为默认属性*/
     void set_all_module_attr_default();
+
+    /*获取log模块建立时间*/
+    [[nodiscard]] time_t get_log_init_time() const;
 
     ~Logger();
 

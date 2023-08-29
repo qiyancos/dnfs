@@ -31,7 +31,7 @@ string _indent_str = "    ";
 map<const void *, int> print_depth;
 
 /* 将二进制的socket地址转化为可读的字符串 */
-std::string format(const sockaddr_storage &out_data) {
+string format(const sockaddr_storage &out_data) {
     int port = 0;
     const char *name = NULL;
     char ipname[SOCK_NAME_MAX];
@@ -221,7 +221,7 @@ string get_record_time(const time_t &timeStamp, const string &format) {
  * */
 string pid_to_string(const thread::id &t) {
     /*建立操作实例*/
-    std::stringstream s_stream;
+    stringstream s_stream;
     /*将数据输入操作实例*/
     s_stream << t;
     /*返回结果*/
@@ -241,4 +241,9 @@ string format_message(const char *foramt, ...) {
     vsnprintf(buffer, 1024, foramt, va);
     va_end(va);
     return buffer;
+}
+
+/*获取调用错误调用堆栈*/
+string get_taceback() {
+    return "";
 }

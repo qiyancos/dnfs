@@ -33,6 +33,7 @@
 #include <regex>
 #include <sstream>
 #include <thread>
+#include <boost/stacktrace.hpp>
 
 #define SET_PTR_INFO(error_info, error_content) if(error_info != nullptr) *error_info = error_content;
 /*设置格式化缓存区默认大小*/
@@ -245,5 +246,9 @@ std::string get_record_time(const time_t &timeStamp, const std::string &format);
  * return:格式完成的数据
  * */
 std::string format_message(const char *foramt,...);
+
+
+/*获取调用错误调用堆栈*/
+std::string get_taceback();
 #endif //UTILS_COMMON_UTILS_H
 

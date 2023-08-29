@@ -77,7 +77,8 @@ LogMessage::LogMessage(const string &module_name,
             /*重定向结果指针*/
             buffer_message = buffer_message_new;
             /*格式化结果*/
-            message_len = vsnprintf(buffer_message, message_len, format, buffer);
+            message_len = vsnprintf(buffer_message, message_len, format,
+                                    buffer);
             /*如果添加失败*/
             if (message_len < 0) {
                 LOG("logger", L_ERROR,
@@ -113,18 +114,46 @@ LogMessage::LogMessage(const string &module_name,
 }
 
 /*生成日志信息
- * params error_info:错误信息
- * params log_message:生成的日志信息
- * return: 状态码 0 生成成功 其他 生成失败
+ * params format_message:生成的日志信息
  * */
-int
-LogMessage::grnarate_log_message(string &format_message,
-                                 std::string *error_info) {
+void
+LogMessage::ganerate_log_message(string &format_message) {
 
     /*生成消息*/
     log_attr->get_log_message(format_message,
                               log_level,
                               file_path, line_no, func_name, file_name,
                               record_time, tid, pid, log_message.get());
+}
+
+/*判断添加调用栈
+ * params format_message:生成的日志信息
+ * params error_info:错误信息
+ * return: 状态码 0 生成成功 其他 生成失败
+ * */
+int
+LogMessage::judge_traceback(string &format_message, string *error_info) {
+    /*判断是不是需要添加调用栈,是不是debug模式，是不是含有error*/
+    if (log_attr->get_debug() and
+        log_level_info_dict[log_level].first[0].find("ERROR") !=
+        string::npos) {
+        /*todo 使用boost打印调用栈*/
+        format_message += get_taceback();
+    }
     return 0;
+}
+
+/*调用输出方法
+ * params message:日志信息
+ * params error_info:错误信息
+ * return: 状态码 0 生成成功 其他 生成失败
+ * */
+int LogMessage::out_message(string &message, string *error_info) {
+    /*调用对应的模块属性日志*/
+    return log_attr->out_message(log_level, message, error_info);
+}
+
+/*得到日志记录时间*/
+time_t LogMessage::get_record_time() const {
+    return record_time;
 }

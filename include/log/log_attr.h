@@ -115,6 +115,17 @@ public:
      * */
     void judge_debug();
 
+    /*获取debug状态*/
+    [[nodiscard]] bool get_debug() const;
+
+    /*调用输出方法
+     * params message_log_level:输出日志等级
+     * params message:日志信息
+     * params error_info:错误信息
+     * return: 状态码 0 生成成功 其他 生成失败
+     * */
+    int out_message(const log_level_t &message_log_level, const std::string &message, std::string *error_info);
+
 };
 
 

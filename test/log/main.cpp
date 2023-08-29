@@ -37,18 +37,17 @@ int main() {
          << endl;
 
     /*建立模板*/
-    string w;
-    string *s = &w;
+    string s;
     logger.init_module("test");
     logger.init_module("yes");
 
     /*复制日志模板*/
     cout << "复制日志模板:"
-         << logger.copy_module_attr_from("yes", "test", s) << ":" << *s << endl;
+         << logger.copy_module_attr_from("yes", "test", &s) << ":" << s << endl;
 
     /*设置所有模块日志等级日志文件配置*/
     cout << "设置所有模块日志等级日志文件配置:" << logger.set_log_output(
-            "stderr:syslog:/tmp/@(time,MINUTE,30):/tmp/dasdad/", s) << ":" << *s
+            "stderr:syslog:/tmp/@(time,MINUTE,30):/tmp/dasdad/", &s) << ":" << s
          << endl;
 
     /*设置所有模块多个日志等级日志文件配置*/
@@ -57,34 +56,34 @@ int main() {
     cout << "设置所有模块多个日志等级日志文件配置:"
          << logger.set_log_output(log_level_list,
                                   "stderr:syslog:/tmp/yes/@(time,MINUTE,30):/tmp/dasdad/",
-                                  s) << ":" << *s << endl;
+                                  &s) << ":" << s << endl;
 
     /*设置指定日志等级日志文件配置*/
     /*设置全模式更改*/
     cout << "设置所有模块指定日志等级日志文件配置:"
          << logger.set_log_output(L_ERROR,
                                   "stderr:syslog:/tmp/text",
-                                  s) << ":" << *s << endl;
+                                  &s) << ":" << s << endl;
 
     /*设置指定模块日志等级日志文件配置*/
     cout << "设置指定模块日志等级日志文件配置:"
          << logger.set_module_log_output("yes",
                                          "stderr:syslog:/tmp/test/@(time,MINUTE,30):/tmp/dasdad/",
-                                         s) << ":" << *s << endl;
+                                         &s) << ":" << s << endl;
 
     /*设置指定日志等级日志文件配置*/
     cout << "设置指定模块单个日志等级日志文件配置:"
          << logger.set_module_log_output("yes",
                                          L_INFO,
                                          "stderr:syslog:/tmp/single/@(time,MINUTE,30):/tmp/dasdad/",
-                                         s) << ":" << *s << endl;
+                                         &s) << ":" << s << endl;
 
     /*设置多个日志等级日志文件配置*/
     cout << "设置指定模块多个日志等级日志文件配置:"
          << logger.set_module_log_output("yes",
                                          log_level_list,
                                          "stderr:syslog:/tmp/no/@(size,3gb,30):/tmp/dasdad",
-                                         s) << ":" << *s << endl;
+                                         &s) << ":" << s << endl;
 
     /*设置所有模块的日志等级，高于该等级的才可以输出*/
     cout << "设置所有模块的日志等级，高于该等级的才可以输出:" << endl;
@@ -92,19 +91,19 @@ int main() {
 
     /*设置指定模块日志等级，高于该等级的才可以输出*/
     cout << "设置指定模块日志等级，高于该等级的才可以输出:"
-         << logger.set_module_log_level("yes", D_INFO, s) << ":" << endl;
+         << logger.set_module_log_level("yes", D_INFO, &s) << ":" << endl;
 
     /*设置所有模块日志格式*/
     cout << "设置所有模块日志格式:"
-         << logger.set_formatter("%(program_name)-%(process)-%(asctime):%(message)", s)
+         << logger.set_formatter("%(program_name)-%(process)-%(asctime):%(message)", &s)
          << ":"
-         << *s << endl;
+         << s << endl;
 
     /*设置指定模块日志格式*/
     cout << "设置指定模块日志格式:" << logger.set_module_formatter("yes",
                                                                    "%(modulename)-%(levelname)-%(asctime):%(message)",
-                                                                   s) << ":"
-         << *s << endl;
+                                                                   &s) << ":"
+         << s << endl;
 
     /*判断模块日志debug状态*/
     cout << "判断模块日志debug状态:" << logger.is_module_debug_on("yes")
@@ -117,8 +116,8 @@ int main() {
 
     /*设置单独模块日志格式*/
     cout << "设置单独模块日志格式:"
-         << logger.set_module_date_format("yes", "%Y-%m-%d %H:%M:%S", s) << ":"
-         <<*s<< endl;
+         << logger.set_module_date_format("yes", "%Y-%m-%d %H:%M:%S", &s) << ":"
+         <<s<< endl;
 
     /*获取日期*/
     cout << get_record_time(time(nullptr), "") << endl;
@@ -129,12 +128,12 @@ int main() {
          << logger.format_module_log("yes", message, L_ERROR, __FILE__,
                                      __LINE__, __func__, "main.cpp",
                                      time(nullptr), this_thread::get_id(),
-                                     getpid(), "what fuck", s) << ":" << *s<<":"
+                                     getpid(), "what fuck", &s) << ":" << s<<":"
          <<"message:"<<message<< endl;
 
     /*设置默认模板*/
-    cout << "设置默认模板:" << logger.set_default_attr_from("yes", s)
-         << ":" << *s << endl;
+    cout << "设置默认模板:" << logger.set_default_attr_from("yes", &s)
+         << ":" << s << endl;
 
     /*将所有的模板设置为默认属性*/
     cout << "将所有的模板设置为默认属性:"<< endl;

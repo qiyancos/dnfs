@@ -21,12 +21,9 @@
 #include <atomic>
 #include <mutex>
 #include <condition_variable>
+#include <algorithm>
 
 #include "log_message.h"
-/*设置线程锁*/
-extern std::mutex mtx;
-/*设置条件锁通知缓存写文件线程*/
-extern std::condition_variable cond;
 /*日志输出Buffer，单独线程处理，需要对多线程做多队列*/
 class LogBuffer {
 private:
@@ -40,7 +37,16 @@ private:
     std::map<std::string, FILE *> file_handles;
 
     /*缓存最大限制，超出限制则将缓存落盘*/
-    int buffer_limit = 0;
+    int buffer_limit = 2;
+
+    /*设置线程id哈希锁*/
+    std::mutex mtx[10];
+
+    /*设置条件锁通知缓存写文件线程*/
+    std::condition_variable cond;
+
+    /*通知写线程锁*/
+    std::mutex write_mtx;
 
 public:
     /*将缓存写入文件,监听log_num*/

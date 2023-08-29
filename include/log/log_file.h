@@ -62,6 +62,7 @@ private:
 
     /*记录已经生成的日志数目*/
     int log_files = 0;
+
 public:
     /*默认构造函数*/
     LogFile();
@@ -72,6 +73,16 @@ public:
      * return: 状态码 0 生成成功 其他 生成失败
      * */
     int generate_data(const std::string &config_str, std::string *error_info);
+
+    /*输出日志信息
+     * params module_name:模块名称
+     * params message:日志信息
+     * params log_level_str:字符形式的日志等级
+     * params error_info:错误信息
+     * return: 状态码 0 生成成功 其他 生成失败
+     * */
+    int out_message(const std::string &module_name, const std::string &message,
+                    const std::string &log_level_str, std::string *error_info);
 };
 
 #endif //LOG_LOG_FILE_H

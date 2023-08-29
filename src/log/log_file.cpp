@@ -174,5 +174,19 @@ int LogFile::generate_data(const string &config_str, string *error_info) {
     }
     /*路径赋值*/
     log_directory_path = dir_path;
+    /*生成初始日志文件路径*/
+    return 0;
+}
+
+/*输出日志信息
+ * params module_name:模块名称
+ * params message:日志信息
+ * params log_level_str:字符形式的日志等级
+ * params error_info:错误信息
+ * return: 状态码 0 生成成功 其他 生成失败
+ * */
+int LogFile::out_message(const string &module_name, const string &message,
+                         const string &log_level_str, string *error_info) {
+    /*todo 写文件的所有操作*/
     return 0;
 }

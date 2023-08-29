@@ -24,6 +24,7 @@
 #include "log_data.h"
 #include "log_attr.h"
 
+
 /*日志信息对象，存放了单词输出的日志信息结构*/
 class LogMessage {
 private:
@@ -80,12 +81,26 @@ public:
                va_list args);
 
     /*生成日志信息
+     * params format_message:生成的日志信息
+     * */
+    void ganerate_log_message(std::string &format_message);
+
+    /*判断添加调用栈
+     * params format_message:生成的日志信息
      * params error_info:错误信息
-     * params log_message:生成的日志信息
      * return: 状态码 0 生成成功 其他 生成失败
      * */
-    int
-    grnarate_log_message(std::string &format_message, std::string *error_info);
+    int judge_traceback(std::string &format_message, std::string *error_info);
+
+    /*调用输出方法
+     * params message:日志信息
+     * params error_info:错误信息
+     * return: 状态码 0 生成成功 其他 生成失败
+     * */
+    int out_message(std::string &message, std::string *error_info);
+
+    /*得到日志记录时间*/
+    [[nodiscard]] time_t get_record_time() const;
 
 };
 

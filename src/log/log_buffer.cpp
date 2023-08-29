@@ -18,47 +18,60 @@
 
 using namespace std;
 
-/*设置线程锁*/
-mutex mtx;
-/*设置条件锁通知缓存写文件线程*/
-condition_variable cond;
-
 atomic<int> LogBuffer::log_num = 0;
 
 LogBuffer::LogBuffer() = default;
 
 /*将缓存写入文件,监听log_num*/
 void LogBuffer::output_thread() {
+    /*自动上锁*/
+    unique_lock<mutex> write_uk(write_mtx, defer_lock);
     while (true) {
-        /*自动上锁*/
-        std::unique_lock<std::mutex> uk(mtx);
+        /*加上锁，给wite使用*/
+        write_uk.lock();
         /*等待锁*/
-        cond.wait(uk);
+        cond.wait(write_uk);
+
         /*清空计数器*/
         log_num.store(0);
-        /*复制日志缓存数据*/
-        std::map<int, std::vector<LogMessage>> save_buffer;
+        /*日志信息存储列表*/
+        vector<LogMessage> log_massage_list;
 
-        copy(buffer_map.begin(),buffer_map.end(),inserter(save_buffer,save_buffer.begin()));
+        /*遍历添加日志信息*/
+        for (auto buffer: buffer_map) {
+            /*追加信息*/
+            log_massage_list.insert(log_massage_list.end(),
+                                    buffer.second.begin(), buffer.second.end());
+        }
+
         /*清空原本的信息*/
         buffer_map.clear();
+        /*复制完数据解锁*/
+        write_uk.unlock();
 
-        /*这里先直接遍历打印*/
-        for (auto &buffer: save_buffer) {
-            for (LogMessage &log_message: buffer.second) {
-                string result;
-                string *error_info;
-                string s;
-                error_info = &s;
-                if (log_message.grnarate_log_message(result, error_info) == 0) {
-                    cout << result << endl;
-                } else {
-                    cout << *error_info << endl;
-                }
-            }
+        /*日志信息排序*/
+        sort(log_massage_list.begin(), log_massage_list.end(),
+             [](LogMessage &x, LogMessage &y) -> bool {
+                 return x.get_record_time() < y.get_record_time();
+             });
+
+        /*直接遍历输出*/
+        for (LogMessage &log_message: log_massage_list) {
+            /*保存信息*/
+            string result;
+            /*生成日志信息*/
+            log_message.ganerate_log_message(result);
+            /*判断需不需要添加调用栈*/
+            log_message.judge_traceback(result, nullptr);
+
+            cout<<result<<endl;
+
+            /*进行输出*/
+            log_message.out_message(result, nullptr);
         }
     }
 }
+
 
 /*设置缓存限制
  * params b_limit:设置的缓存限制
@@ -75,25 +88,30 @@ void LogBuffer::set_limit(const int &b_limit) {
  * */
 void LogBuffer::add_log_buffer(const int &thread_id,
                                const LogMessage &log_message) {
-    /*所有的操作都要在锁内进行*/
-    /*自动上锁*/
-    std::unique_lock<std::mutex> uk(mtx);
 
     /*进行哈希计算*/
-    int hash_id=thread_id%10;
+    int hash_id = thread_id % 10;
 
-    /*查询是否已经存在thread_name对应的数据*/
-    if (buffer_map.find(hash_id) == buffer_map.end()) {
-        /*不存在,建立数据字典*/
-        buffer_map[hash_id] = {};
+    /*限制锁的范围*/
+    {
+        /*所有的操作都要在锁内进行*/
+        /*自动上锁*/
+        unique_lock<mutex> uk(mtx[hash_id]);
+
+        /*查询是否已经存在thread_name对应的数据*/
+        if (buffer_map.find(hash_id) == buffer_map.end()) {
+            /*不存在,建立数据字典*/
+            buffer_map[hash_id] = {};
+        }
+        /*已经存在进行添加*/
+        buffer_map[hash_id].push_back(log_message);
     }
-    /*已经存在进行添加*/
-    buffer_map[hash_id].push_back(log_message);
 
+    /*加入*/
     /*数据总数加1*/
     log_num += 1;
-    cout<<log_num<<endl;
-
+    cout << log_num << endl;
+    unique_lock<mutex> write_uk(write_mtx);
     /*如果数目大于设置的缓存限制*/
     if (log_num > buffer_limit) {
         cond.notify_one();

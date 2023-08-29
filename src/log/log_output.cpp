@@ -14,20 +14,21 @@
  */
 #include "log/log_output.h"
 #include "utils/common_utils.h"
+
 using namespace std;
 
 /*日志输出属性名默认构造函数*/
 LogOutputAttr::LogOutputAttr() = default;
 
 /*从配置字符串生成配置
+ * 比如 "stderr:syslog:/tmp/yes@(time,midnight,30):/tmp/no"
+ * 比如 "stderr:syslog:/tmp/yes@(size,10MB,30):/tmp/no"
  * params log_out_attr_str:日志文件设置
  * params error_info:错误信息
- * 比如 "stderr:syslog:/tmp/a.log@(time,midnight,30):/tmp/b.log"
- * 比如 "stderr:syslog:/tmp/a.log@(size,10MB,30):/tmp/b.log"
  * return: 状态码 0 生成成功 其他 生成失败
  * */
 int LogOutputAttr::generate_config(const string &log_out_attr_str,
-                               string *error_info) {
+                                   string *error_info) {
     /*设置切割保存结果*/
     vector<string> split_result;
 
@@ -54,6 +55,34 @@ int LogOutputAttr::generate_config(const string &log_out_attr_str,
             }
             log_files.push_back(log_file);
         }
+    }
+    return 0;
+}
+
+/*输出日志信息
+ * params module_name:模块名称
+ * params message:日志信息
+ * params log_level_str:字符形式的日志等级
+ * params error_info:错误信息
+ * return: 状态码 0 生成成功 其他 生成失败
+ * */
+int LogOutputAttr::out_message(const string &module_name,
+                               const string &message,
+                               const string &log_level_str,
+                               string *error_info) {
+    /*判断输出日志开关*/
+    if (stderr_on) {
+        /*todo 输出错误信息流*/
+    }
+    if (stdout_on) {
+        /*todo 输出流*/
+    }
+    if (syslog_on) {
+        /*todo 输出到系统日志*/
+    }
+    /*todo 遍历输出文件列表，进行输出*/
+    for (LogFile log_file: log_files) {
+        log_file.out_message(module_name, message, log_level_str, error_info);
     }
     return 0;
 }

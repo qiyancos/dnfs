@@ -55,8 +55,8 @@ void Logger::init(const string &program_name_in, const string &hostname_in) {
     /*直接注册logger的模板*/
     init_module("logger");
     /*开启buffer线程*/
-//    thread buffer_thread(&LogBuffer::output_thread,&log_buffer);
-//    buffer_thread.detach();
+    thread buffer_thread(&LogBuffer::output_thread, &log_buffer);
+    buffer_thread.detach();
 }
 
 /*使用默认日志属性初始化一个模块日志
@@ -109,7 +109,7 @@ Logger::set_default_attr_from(const string &module_name, string *error_info) {
     /*查到了设置日志属性*/
     default_attr = *module_attr[module_name];
     /*改变名字*/
-    default_attr.module_name="default";
+    default_attr.module_name = "default";
     return 0;
 }
 
@@ -139,7 +139,7 @@ int Logger::copy_module_attr_from(const string &target_module_name,
         /*复制数据*/
         auto *copy = new LoggerAttr(*module_attr[src_module_name]);
         /*更改名字*/
-        copy->module_name=target_module_name;
+        copy->module_name = target_module_name;
         /*重新构建数据*/
         module_attr[target_module_name] = copy;
     } else {
@@ -443,7 +443,7 @@ Logger::set_date_format(const string &date_format) {
 int
 Logger::set_module_date_format(const string &module_name,
                                const string &date_format,
-                               std::string *error_info) {
+                               string *error_info) {
     /*如果模块不存在，直接报错*/
     if (!judge_module_attr_exist(module_name)) {
         /*设置错误信息*/
@@ -479,7 +479,7 @@ void Logger::_log(const string &module_name, log_level_t log_level,
     }
 
     /*如果满足打印日志条件*/
-    if (LNOLOG < log_level) {
+    if (LNOLOG < log_level and module_attr[module_name]->log_level > LNOLOG) {
         /*先判断打印等级满满足要求*/
         if (module_attr[module_name]->log_level >= log_level) {
             /*获取线程id*/
@@ -497,18 +497,18 @@ void Logger::_log(const string &module_name, log_level_t log_level,
                                                 module_attr[module_name], args);
 
             va_end(args);
-            string result;
-            string *error_info;
-            string s;
-            error_info = &s;
-            if (log_message.grnarate_log_message(result, error_info) == 0) {
-                cout << result << endl;
-            } else {
-                cout << *error_info << endl;
-            }
+//            string result;
+//            string *error_info;
+//            string s;
+//            error_info = &s;
+//            if (log_message.ganerate_log_message(result, error_info) == 0) {
+//                cout << result << endl;
+//            } else {
+//                cout << *error_info << endl;
+//            }
 
             /*将LogMessage对象加到缓存*/
-//            log_buffer.add_log_buffer(*(int*)&tid, log_message);
+            log_buffer.add_log_buffer(*(int *) &tid, log_message);
 
         }
 
@@ -553,7 +553,7 @@ int Logger::format_module_log(const string &module_name, string &log_message,
                               const string &file_name,
                               const time_t &record_time, const thread::id &tid,
                               const int &pid, const string &message,
-                              std::string *error_info) {
+                              string *error_info) {
     /*如果模块不存在，直接报错*/
     if (!judge_module_attr_exist(module_name)) {
         /*设置错误信息*/
@@ -591,8 +591,12 @@ void Logger::set_all_module_attr_default() {
         /*复制属性*/
         auto *attr = new LoggerAttr(default_attr);
         /*设置名字*/
-        attr->module_name=log_attr.first;
+        attr->module_name = log_attr.first;
         /*建立属性*/
         module_attr[log_attr.first] = attr;
     }
+}
+
+time_t Logger::get_log_init_time() const {
+    return init_time;
 }
