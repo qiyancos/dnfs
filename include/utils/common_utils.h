@@ -246,8 +246,14 @@ std::string get_record_time(const time_t &timeStamp, const std::string &format);
  * params ... :参数
  * return:格式完成的数据
  * */
-std::string format_message(const char *foramt,...);
+std::string format_message(const char *format,...);
 
+/*按照格式格式化字符串
+ * params format:格式化字符串
+ * params args :参数列表
+ * return:格式完成的数据
+ * */
+std::string format_message(const char *format,va_list args);
 
 /*获取调用错误调用堆栈*/
 std::string get_taceback();

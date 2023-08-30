@@ -18,6 +18,9 @@
 
 #include <iostream>
 #include <unistd.h>
+#include <fstream>
+#include <log/log_data.h>
+
 class LogFile {
 private:
     /*日志文件的更新类型*/
@@ -61,52 +64,57 @@ private:
     int log_files = 0;
 
     /*当前使用日志建立的时间*/
-    time_t use_file_build_time;
+    time_t use_file_build_time = time(nullptr);
 
-    /*当前使用文件句柄*/
-    FILE *file_handles = nullptr;
+    /*todo 使用这个，使用open句柄*/
+//    std::ofstream file_stream;
 
     /*当前使用日志文件名*/
     std::string log_file;
+
+    /*设置对应模块名*/
+    std::string module_name = "default";
+
+    /*设置对应输出等级*/
+    log_level_t log_level = NOLOG;
 
 public:
     /*默认构造函数*/
     LogFile();
 
-    /*解析建立数据
-     * params config_str:日志文件配置信息
-     * params error_info:错误信息
-     * return: 状态码 0 生成成功 其他 生成失败
-     * */
+    /*解析建立数据*/
     int generate_data(const std::string &config_str, std::string *error_info);
 
-    /*输出日志信息
-     * params module_name:模块名称
-     * params message:日志信息
-     * params log_level_str:字符形式的日志等级
-     * params error_info:错误信息
-     * return: 状态码 0 生成成功 其他 生成失败
-     * */
-    int out_message(const std::string &module_name, const std::string &message,
-                    const std::string &log_level_str, std::string *error_info);
+    /*输出日志信息*/
+    int out_message(const std::string &message, std::string *error_info);
 
-    /*不切割日志
-     * params module_name:模块名称
-     * params log_level_str:字符形式的日志等级
-     * */
-    void not_rotate(const std::string &module_name,const std::string &log_level_str);
+    /*不切割日志*/
+    void not_rotate();
 
-    /*按时间切割数据方法
-     * params module_name:模块名称
-     * params log_level_str:字符形式的日志等级
-     * */
-    void rotate_by_time(const std::string &module_name,const std::string &log_level_str);
+    /*按时间切割数据方法*/
+    void rotate_by_time();
 
-    /*按大小切割数据方法
-     * params module_name:模块名称
-     * params log_level_str:字符形式的日志等级
+    /*按大小切割数据方法*/
+    void rotate_by_size();
+
+    /*判断并生成日志文件*/
+    void judge_and_create_log_file();
+
+    /*建立模块名和日志等级
+     * params use_module_name:模块名
+     * params out_log_level:日志输出等级
      * */
-    void rotate_by_size(const std::string &module_name,const std::string &log_level_str);
+    void set_module_name_log_level(const std::string &use_module_name,
+                                   const log_level_t &out_log_level);
+
+    /*适应单独更新模块名
+     * params use_module_name:模块名
+     * */
+    void set_module_name(const std::string &use_module_name);
+
+
+    /*复制构造函数*/
+//    LogFile(const LogFile &file);
 
 };
 

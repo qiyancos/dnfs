@@ -64,7 +64,7 @@ private:
     void (*exit_func)(int) =exit;
 
     /*退出函数退出码*/
-    int exit_code=0;
+    int exit_code = 0;
 
     /*不同模块的日志属性*/
     std::map<std::string, LoggerAttr *> module_attr;
@@ -74,6 +74,17 @@ private:
 
     /*缓存日志对象*/
     LogBuffer log_buffer = LogBuffer();
+
+    /*设置全模式更改*/
+    std::vector<log_level_t> all_log_level = {EXIT_ERROR,
+                                              L_ERROR,
+                                              L_WARN,
+                                              L_BACKTRACE,
+                                              L_INFO,
+                                              D_ERROR,
+                                              D_WARN,
+                                              D_BACKTRACE,
+                                              D_INFO};
 private:
     /*默认构造函数*/
     Logger();

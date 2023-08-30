@@ -25,6 +25,8 @@
 /*日志输出属性*/
 class LogOutputAttr {
 private:
+    /*输出日志等级*/
+    log_level_t log_level=NOLOG;
     /*是否输出到stderr*/
     bool stderr_on = false;
     /*是否输出到stdout*/
@@ -47,14 +49,24 @@ public:
     /*默认的构造函数*/
     LogOutputAttr();
 
+    /*建立模块名和日志等级
+     * params module_name:模块名
+     * params out_log_level:日志输出等级
+     * */
+    void set_module_name_log_level(const std::string& module_name,const log_level_t &out_log_level);
+
+    /*适应单独更新模块名
+     * params module_name:模块名
+     * */
+    void set_module_name(const std::string &module_name);
+
     /*输出日志信息
-     * params module_name:模块名称
      * params message:日志信息
-     * params log_level:日志等级
      * params error_info:错误信息
      * return: 状态码 0 生成成功 其他 生成失败
      * */
-    int out_message(const std::string& module_name,const std::string& message,const log_level_t& log_level,std::string *error_info,...);
+    int out_message(const std::string& message,std::string *error_info,...);
+
 };
 
 #endif //DNFSD_LOG_OUTPUT_H

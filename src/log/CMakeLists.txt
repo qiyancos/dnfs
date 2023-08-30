@@ -5,4 +5,4 @@ add_library(log
         log_buffer.cpp
         log_output.cpp
         log_attr.cpp
-        )
+        log_exception.cpp)

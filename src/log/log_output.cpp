@@ -38,7 +38,7 @@ int LogOutputAttr::generate_config(const string &log_out_attr_str,
     /*清空之前的结果*/
     log_files.clear();
 
-    for (string &param: split_result) {
+    for (const string &param: split_result) {
         /*判断输出流开关*/
         if (param == "stderr") {
             stderr_on = true;
@@ -66,27 +66,51 @@ int LogOutputAttr::generate_config(const string &log_out_attr_str,
  * params error_info:错误信息
  * return: 状态码 0 生成成功 其他 生成失败
  * */
-int LogOutputAttr::out_message(const string &module_name,
-                               const string &message,
-                               const log_level_t &log_level,
-                               string *error_info,...) {
+int LogOutputAttr::out_message(const string &message,
+                               string *error_info, ...) {
     /*判断输出日志开关*/
     if (stderr_on) {
-        fprintf(stderr,"%s\n",message.c_str());
+        fprintf(stderr, "%s\n", message.c_str());
     }
     if (stdout_on) {
-        fprintf(stdout,"%s\n",message.c_str());
+        fprintf(stdout, "%s\n", message.c_str());
     }
     if (syslog_on) {
         /*设置空参数*/
         va_list null_list;
-        va_start(null_list,error_info);
+        va_start(null_list, error_info);
         /*打印系统日志*/
-        vsyslog(log_level_info_dict[log_level].second,message.c_str(),null_list);
+        vsyslog(log_level_info_dict[log_level].second, message.c_str(),
+                null_list);
         va_end(null_list);
     }
-    for (LogFile log_file: log_files) {
-        log_file.out_message(module_name, message, log_level_info_dict[log_level].first[0], error_info);
+    for (LogFile &log_file: log_files) {
+        log_file.out_message(message,
+                             error_info);
     }
     return 0;
+}
+
+/*建立模块名和日志等级
+ * params module_name:模块名
+ * params out_log_level:日志输出等级
+ * */
+void LogOutputAttr::set_module_name_log_level(const std::string &module_name,
+                                              const log_level_t &out_log_level) {
+    /*保存日志等级*/
+    log_level = out_log_level;
+    /*遍历建立模块信息*/
+    for (LogFile &log_file: log_files) {
+        log_file.set_module_name_log_level(module_name, out_log_level);
+    }
+}
+
+/*适应单独更新模块名
+ * params module_name:模块名
+ * */
+void LogOutputAttr::set_module_name(const string &module_name) {
+    /*遍历建立模块信息*/
+    for (LogFile &log_file: log_files) {
+        log_file.set_module_name(module_name);
+    }
 }

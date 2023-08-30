@@ -126,6 +126,10 @@ public:
      * */
     int out_message(const log_level_t &message_log_level, const std::string &message, std::string *error_info);
 
+    /*更改内部log_file模块名
+     * params change_module_name:更改的模块名
+     * */
+    void set_module_name(const std::string& change_module_name);
 };
 
 

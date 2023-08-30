@@ -17,9 +17,11 @@
 #include <cstdarg>
 
 #include "log/log.h"
+#include "log/log_message.h"
+#include "log/log_exception.h"
 #include "utils/common_utils.h"
 #include "utils/thread_utils.h"
-#include "log/log_message.h"
+
 
 using namespace std;
 
@@ -72,6 +74,14 @@ void Logger::init_module(const string &module_name) {
         init_attr->module_name = module_name;
         /*将属性赋值*/
         module_attr[module_name] = init_attr;
+
+        /*遍历所有的output数据，更新模块名和日志等级*/
+        for (LogOutputAttr &log_out_put: module_attr[module_name]->log_level_output) {
+            for (const log_level_t &log_level: all_log_level) {
+                log_out_put.set_module_name_log_level(module_name, log_level);
+            }
+        }
+
     }
 }
 
@@ -110,6 +120,8 @@ Logger::set_default_attr_from(const string &module_name, string *error_info) {
     default_attr = *module_attr[module_name];
     /*改变名字*/
     default_attr.module_name = "default";
+    /*更改内部log_file模块名*/
+    default_attr.set_module_name("default");
     return 0;
 }
 
@@ -142,6 +154,8 @@ int Logger::copy_module_attr_from(const string &target_module_name,
         copy->module_name = target_module_name;
         /*重新构建数据*/
         module_attr[target_module_name] = copy;
+        /*更改内部log_file模块名*/
+        module_attr[target_module_name]->set_module_name(target_module_name);
     } else {
         /*设置错误信息*/
         SET_PTR_INFO(error_info,
@@ -181,18 +195,8 @@ Logger &Logger::get_instance() {
  * */
 int Logger::set_log_output(const string &log_file_config, string *error_info) {
 
-    /*设置全模式更改*/
-    vector<log_level_t> log_level_list = {EXIT_ERROR,
-                                          L_ERROR,
-                                          L_WARN,
-                                          L_BACKTRACE,
-                                          L_INFO,
-                                          D_ERROR,
-                                          D_WARN,
-                                          D_BACKTRACE,
-                                          D_INFO};
     /*设置所有模块多个日志等级日志文件路径*/
-    if (set_log_output(log_level_list, log_file_config, error_info) != 0) {
+    if (set_log_output(all_log_level, log_file_config, error_info) != 0) {
         return 1;
     }
 
@@ -238,7 +242,11 @@ int Logger::set_log_output(const vector<log_level_t> &log_level_list,
     /*遍历选中模式更改数据*/
     for (auto &attr: module_attr) {
         for (auto &log_level: log_level_list) {
+            /*设置输出属性*/
             attr.second->log_level_output[log_level] = generate_output_attr;
+            /*设置模块名称和日志等级*/
+            attr.second->log_level_output[log_level].set_module_name_log_level(
+                    attr.first, log_level);
         }
     }
     return 0;
@@ -320,6 +328,9 @@ int Logger::set_module_log_output(const string &module_name,
                 log_file_config, error_info) != 0) {
             return 1;
         }
+        /*设置模块名和日志等级*/
+        module_attr[module_name]->log_level_output[log_level].set_module_name_log_level(
+                module_name, log_level);
     }
 
     return 0;
@@ -475,7 +486,8 @@ void Logger::_log(const string &module_name, log_level_t log_level,
 
     /*如果模块不存在，直接报错*/
     if (!judge_module_attr_exist(module_name)) {
-        throw "the module what set lof message is not exist";
+        throw LogException(
+                "The module that outputs log information does not exist");
     }
 
     /*如果满足打印日志条件*/
@@ -587,9 +599,12 @@ void Logger::set_all_module_attr_default() {
         attr->module_name = log_attr.first;
         /*建立属性*/
         module_attr[log_attr.first] = attr;
+        /*更改内部log_file模块名*/
+        module_attr[log_attr.first]->set_module_name(log_attr.first);
     }
 }
 
+/*获取log模块建立时间*/
 time_t Logger::get_log_init_time() const {
     return init_time;
 }

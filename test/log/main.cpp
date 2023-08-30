@@ -138,7 +138,6 @@ int main() {
     /*将所有的模板设置为默认属性*/
     cout << "将所有的模板设置为默认属性:"<< endl;
     logger.set_all_module_attr_default();
-
     LOG("yes", L_ERROR, "%s", "what fuck1");
     cout << "--------" << endl;
     this_thread::sleep_for(chrono::seconds(2));

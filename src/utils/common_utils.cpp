@@ -32,7 +32,7 @@ string _indent_str = "    ";
 map<const void *, int> print_depth;
 
 /* 将二进制的socket地址转化为可读的字符串 */
-std::string format(sockaddr_storage* out_data) {
+std::string format(sockaddr_storage *out_data) {
     int port = 0;
     const char *name = NULL;
     char ipname[SOCK_NAME_MAX];
@@ -234,13 +234,25 @@ string pid_to_string(const thread::id &t) {
  * params ... :参数
  * return:格式完成的数据
  * */
-string format_message(const char *foramt, ...) {
+string format_message(const char *format, ...) {
     char buffer[ONE_MB];
     va_list va;
-    va_start(va, foramt);
+    va_start(va, format);
     /*格式化字符串*/
-    vsnprintf(buffer, 1024, foramt, va);
+    vsnprintf(buffer, 1024, format, va);
     va_end(va);
+    return buffer;
+}
+
+/*按照格式格式化字符串
+ * params format:格式化字符串
+ * params args :参数列表
+ * return:格式完成的数据
+ * */
+std::string format_message(const char *format, va_list args) {
+    char buffer[ONE_MB];
+    /*格式化字符串*/
+    vsnprintf(buffer, 1024, format, args);
     return buffer;
 }
 

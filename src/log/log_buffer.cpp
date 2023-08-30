@@ -38,7 +38,7 @@ void LogBuffer::output_thread() {
         vector<LogMessage> log_massage_list;
 
         /*遍历添加日志信息*/
-        for (auto buffer: buffer_map) {
+        for (const auto &buffer: buffer_map) {
             /*追加信息*/
             log_massage_list.insert(log_massage_list.end(),
                                     buffer.second.begin(), buffer.second.end());
