@@ -28,7 +28,7 @@
 /*日志信息对象，存放了单词输出的日志信息结构*/
 class LogMessage {
 private:
-    /*日志的记录内容的格式*/
+    /*用户需要打印的日志信息*/
     std::shared_ptr<char> log_message;
 
     /*模块名，用来查询默认的日志格式*/

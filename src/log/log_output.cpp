@@ -85,7 +85,6 @@ int LogOutputAttr::out_message(const string &module_name,
         vsyslog(log_level_info_dict[log_level].second,message.c_str(),null_list);
         va_end(null_list);
     }
-    /*todo 遍历输出文件列表，进行输出*/
     for (LogFile log_file: log_files) {
         log_file.out_message(module_name, message, log_level_info_dict[log_level].first[0], error_info);
     }

@@ -508,7 +508,7 @@ void Logger::_log(const string &module_name, log_level_t log_level,
 //            }
 
             /*将LogMessage对象加到缓存*/
-            log_buffer.add_log_buffer(*(int *) &tid, log_message);
+            log_buffer.add_log_buffer(*(unsigned int *) &tid, log_message);
 
         }
 

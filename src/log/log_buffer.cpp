@@ -83,11 +83,11 @@ void LogBuffer::set_limit(const int &b_limit) {
  * params log_message:打印信息保存对象
  * return
  * */
-void LogBuffer::add_log_buffer(const int &thread_id,
+void LogBuffer::add_log_buffer(const unsigned int &thread_id,
                                const LogMessage &log_message) {
 
     /*进行哈希计算*/
-    int hash_id = thread_id % 10;
+    unsigned int hash_id = thread_id % 10;
 
     /*限制锁的范围*/
     {

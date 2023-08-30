@@ -31,10 +31,7 @@ private:
     static std::atomic<int> log_num;
 
     /*保存每个线程日志缓存列表 线程标识 日志信息列表*/
-    std::map<int, std::vector<LogMessage>> buffer_map;
-
-    /*保存文件句柄的字典 文件路径 文件句柄*/
-    std::map<std::string, FILE *> file_handles;
+    std::map<unsigned int, std::vector<LogMessage>> buffer_map;
 
     /*缓存最大限制，超出限制则将缓存落盘*/
     int buffer_limit = 2;
@@ -66,7 +63,7 @@ public:
      * params log_message:打印信息保存对象
      * return
      * */
-    void add_log_buffer(const int &thread_id,
+    void add_log_buffer(const unsigned int &thread_id,
                         const LogMessage &log_message);
 };
 

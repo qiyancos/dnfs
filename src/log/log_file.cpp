@@ -38,15 +38,10 @@ int LogFile::generate_data(const string &config_str, string *error_info) {
     /*数字判定正则表达式*/
     regex number_regex_str("\\d+");
 
-    /*路径判断正则表达式*/
-    /*这个是非法字符匹配*/
-/*
-    regex path_regex_str("[<>?*\\s]+");
-*/
-    /*这个是合法字符匹配*/
+    /*文件目录合法字符匹配*/
     regex path_regex_str("(/[\\w]*)*");
 
-    /*如果存在*/
+    /*如果存在文件切割设置*/
     if (args_index != string::npos) {
         /*获取参数*/
         string args_str = config_str.substr(args_index + 2,
@@ -95,21 +90,21 @@ int LogFile::generate_data(const string &config_str, string *error_info) {
                 return 1;
             }
             /*转换数字*/
-            limit_size = stoll(size_str);
+            log_limit.size_limit = stoll(size_str);
             /*判断单位*/
             if (unit_b == "kb") {
-                limit_size <<= 10;
+                log_limit.size_limit <<= 10;
             } else if (unit_b == "mb") {
-                limit_size <<= 20;
+                log_limit.size_limit <<= 20;
             } else if (unit_b == "gb") {
-                if (limit_size > 3) {
+                if (log_limit.size_limit > 3) {
                     SET_PTR_INFO(error_info, format_message(
                             "Split logs by size must be less than 4gb,you set is %d GB",
-                            limit_size)
+                            log_limit.size_limit)
                     )
                     return 1;
                 }
-                limit_size <<= 30;
+                log_limit.size_limit <<= 30;
             } else {
                 SET_PTR_INFO(error_info, format_message(
                         "Cutting logs by size must be selected among (kb,mb,gb), and case is ignored,you set is %s",
@@ -123,19 +118,33 @@ int LogFile::generate_data(const string &config_str, string *error_info) {
             /*日期模式转为大写*/
             to_upper(args[1]);
             if (args[1] == "NEVER") {
+                /*设置不切割参数*/
                 when = NEVER;
+                log_limit.when_interval = 0;
             } else if (args[1] == "SECOND") {
+                /*设置按秒切割*/
                 when = SECOND;
+                log_limit.when_interval = 1;
             } else if (args[1] == "MINUTE") {
+                /*设置按分钟切割*/
                 when = MINUTE;
+                log_limit.when_interval = 60;
             } else if (args[1] == "HOUR") {
+                /*设置按小时切割*/
                 when = HOUR;
+                log_limit.when_interval = 3600;
             } else if (args[1] == "DAY") {
+                /*设置按天分割*/
                 when = DAY;
+                log_limit.when_interval = 86400;
             } else if (args[1] == "MIDNIGHT") {
+                /*设置午夜切割*/
                 when = MIDNIGHT;
+                log_limit.when_interval = 86400;
             } else if (args[1] == "WEEK") {
+                /*设置按周切割*/
                 when = WEEK;
+                log_limit.when_interval = 604800;
             } else {
                 SET_PTR_INFO(error_info, format_message(
                         "Cutting logs by time must be selected in the list below:\n"
@@ -172,6 +181,7 @@ int LogFile::generate_data(const string &config_str, string *error_info) {
     if (creat_directory(dir_path, error_info) != 0) {
         return 1;
     }
+    /*todo 判断文件夹操作权限，权限不足，直接返回错误提示*/
     /*路径赋值*/
     log_directory_path = dir_path;
     /*生成初始日志文件路径*/
@@ -187,6 +197,60 @@ int LogFile::generate_data(const string &config_str, string *error_info) {
  * */
 int LogFile::out_message(const string &module_name, const string &message,
                          const string &log_level_str, string *error_info) {
-    /*todo 写文件的所有操作*/
+    /*生成文件句柄等写入文件操作的实例*/
+    switch (rotate_type) {
+        case 0:
+            /*不切割日志*/
+            not_rotate(module_name, log_level_str);
+        case 1:
+            /*按照时间切割*/
+            rotate_by_time(module_name, log_level_str);
+        case 2:
+            /*按照大小切割*/
+            rotate_by_size(module_name, log_level_str);
+        default:
+            /*返回未知的切割类型*/
+            SET_PTR_INFO(error_info, "Unknown log file rotate type")
+            return 1;
+    }
+
     return 0;
+}
+
+/*不切割日志
+ * params module_name:模块名称
+ * params log_level_str:字符形式的日志等级
+ * */
+void
+LogFile::not_rotate(const string &module_name, const string &log_level_str) {
+    /*先判定日志文件名*/
+    if (log_file.empty()) {
+        /*不切割只使用模块名和*/
+        log_file =
+                log_directory_path + "/" + module_name + "_" + log_level_str +
+                ".log";
+    }
+    /*判断日志文件存不存在,并且需要写权限，不存在创建，并获取文件句柄*/
+    if(access(log_file.c_str(), R_OK) == 0){
+
+    }
+
+}
+
+/*按时间切割数据方法
+ * params module_name:模块名称
+ * params log_level_str:字符形式的日志等级
+ * */
+void LogFile::rotate_by_time(const string &module_name,
+                             const string &log_level_str) {
+
+}
+
+/*按大小切割数据方法
+ * params module_name:模块名称
+ * params log_level_str:字符形式的日志等级
+ * */
+void LogFile::rotate_by_size(const string &module_name,
+                             const string &log_level_str) {
+
 }
