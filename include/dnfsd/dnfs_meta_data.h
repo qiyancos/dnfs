@@ -34,63 +34,61 @@ struct dnfs_request_lookahead {
 typedef struct nfs_core_param {
     /** An array of port numbers, one for each protocol.  Set by
         the NFS_Port, MNT_Port, NLM_Port, and Rquota_Port options. */
-    uint16_t port;
-    /** The IPv4 or IPv6 address to which to bind for our
+    uint16_t port = 2049;
+    /* 原始的绑定地址字符串 */
+    std::string bind_addr_str = "0.0.0.0";
+    /** The IPv4 address to which to bind for our
         listening port.  Set by the Bind_Addr option. */
-    sockaddr_storage bind_addr;
+    sockaddr_in bind_addr = {AF_INET, 0, {0}};
     /** An array of RPC program numbers.  The correct values, by
         default, they may be set to incorrect values with the
         NFS_Program, MNT_Program, NLM_Program, and
         Rquota_Program.  It is debatable whether this is a
         worthwhile option to have. */
-    uint32_t program;
+    uint32_t program = NFS_PROGRAM;
     /** Parameters affecting the relation with TIRPC.   */
     struct {
         /** Maximum number of connections for TIRPC.
             Defaults to 1024 and settable by
             RPC_Max_Connections. */
-        uint32_t max_connections;
+        uint32_t max_connections = 1024;
         /** Size of RPC send buffer.  Defaults to
             NFS_DEFAULT_SEND_BUFFER_SIZE and is settable by
             MaxRPCSendBufferSize.  */
-        uint32_t max_send_buffer_size;
+        uint32_t max_send_buffer_size = 1048576;
         /** Size of RPC receive buffer.  Defaults to
             NFS_DEFAULT_RECV_BUFFER_SIZE and is settable by
             MaxRPCRecvBufferSize. */
-        uint32_t max_recv_buffer_size;
+        uint32_t max_recv_buffer_size = 1048576;
         /** Idle timeout (seconds).  Defaults to 5m */
-        uint32_t idle_timeout_s;
+        uint32_t idle_timeout_s = 300;
         /** TIRPC ioq min simultaneous io threads.  Defaults to
             2 and settable by rpc_ioq_thrdmin. */
-        uint32_t ioq_thrd_min;
+        uint32_t ioq_thrd_min = 2;
         /** TIRPC ioq max simultaneous io threads.  Defaults to
             200 and settable by RPC_Ioq_ThrdMax. */
-        uint32_t ioq_thrd_max;
+        uint32_t ioq_thrd_max = 200;
         struct {
             /** Partitions in GSS ctx cache table (default 13). */
-            uint32_t ctx_hash_partitions;
+            uint32_t ctx_hash_partitions = 13;
             /** Max GSS contexts in cache (i.e.,
              * max GSS clients, default 16K)
              */
-            uint32_t max_ctx;
+            uint32_t max_ctx = 16384;
             /** Max entries to expire in one idle
              * check (default 200)
              */
-            uint32_t max_gc;
+            uint32_t max_gc = 200;
         } gss;
     } rpc;
-    /** Protocols to support.  Should probably be renamed.
-        Defaults to CORE_OPTION_ALL_VERS and is settable with
-        NFS_Protocols (as a comma-separated list of 3 and 4.) */
-    unsigned int core_options;
     /** Whether tcp sockets should use SO_KEEPALIVE */
-    bool enable_tcp_keepalive;
+    bool enable_tcp_keepalive = true;
     /** Maximum number of TCP probes before dropping the connection */
-    uint32_t tcp_keepcnt;
+    uint32_t tcp_keepcnt = 0;
     /** Idle time before TCP starts to send keepalive probes */
-    uint32_t tcp_keepidle;
+    uint32_t tcp_keepidle = 0;
     /** Time between each keepalive probe */
-    uint32_t tcp_keepintvl;
+    uint32_t tcp_keepintvl = 0;
 } nfs_core_parameter_t;
 
 typedef struct nfs_param {

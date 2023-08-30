@@ -26,15 +26,20 @@ extern "C" {
 #include <string.h>
 #include <signal.h>
 #include <sys/stat.h>
+#include <arpa/inet.h>
 #include <netinet/tcp.h>
+#include <sys/socket.h>
 
 #include "nfs/nfs23.h"
 #include "nfs/nfsv41.h"
 #include "log/log.h"
 #include "utils/common_utils.h"
+#include "utils/thread_utils.h"
+#include "dnfsd/dnfsd.h"
 #include "dnfsd/dnfs_config.h"
 #include "dnfsd/dnfs_init.h"
 #include "dnfsd/dnfs_ntirpc.h"
+#include "dnfsd/dnfs_signal_proc.h"
 
 using namespace std;
 
@@ -98,42 +103,6 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
     logger.set_default_attr_from(MODULE_NAME, nullptr);
 }
 
-/* 崩溃信号默认处理函数 */
-static void crash_handler(int signo, [[maybe_unused]] siginfo_t *info,
-                          [[maybe_unused]] void *ctx) {
-    LOG("Crash Handler", L_BACKTRACE, "");
-    /* re-raise the signal for the default signal handler to dump core */
-    raise(signo);
-}
-
-/* 将处理函数挂载到对应的信号处理上 */
-static void install_sighandler(int signo,
-                               void (*handler)(int, siginfo_t *, void *)) {
-    struct sigaction sa = {};
-    int ret;
-
-    sa.sa_sigaction = handler;
-    /* set SA_RESETHAND to restore default handler */
-    /* SA_SIGINFO：使用更加详细的handler类型，传递三个参数而不是一个，获取更多的信息 */
-    /* SA_RESETHAND：在执行过一次信号对应的处理函数后，重置handler为缺省的处理函数 */
-    /* SA_NODEFER：执行处理函数的时候不会阻塞信号，即可以持续接收新的信号 */
-    sa.sa_flags = SA_SIGINFO | SA_RESETHAND | SA_NODEFER;
-
-    sigemptyset(&sa.sa_mask);
-
-    /* sigaction函数用于改变进程接收到特定信号后的行为。该函数的第一个参数为信号的值，
-     * 可以为除SIGKILL及SIGSTOP外的任何一个特定有效的信号（为这两个信号定义自己的处理函数，
-     * 将导致信号安装错误）。第二个参数是指向结构sigaction的一个实例的指针，
-     * 在结构sigaction的实例中，指定了对特定信号的处理，可以为空，进程会以缺省方式对信号处理；
-     * 第三个参数oldact指向的对象用来保存原来对相应信号的处理，可指定oldact为NULL。*/
-    ret = sigaction(signo, &sa, NULL);
-    if (ret) {
-        LOG(MODULE_NAME, L_WARN,
-                "Install handler for signal (%s) failed",
-                strsignal(signo));
-    }
-}
-
 /* 初始化错误信号的处理函数 */
 void init_crash_handlers(void) {
     LOG(MODULE_NAME, L_INFO, "Start init crash handler for main thread");
@@ -180,6 +149,8 @@ int init_thread_signal_mask() {
     sigset_t signals_to_block;
     sigemptyset(&signals_to_block);
     /* SIGTERM 终止进程 软件终止信号 */
+    sigaddset(&signals_to_block, SIGINT);
+    /* SIGTERM 终止进程 软件终止信号 */
     sigaddset(&signals_to_block, SIGTERM);
     /* SIGHUP 终止进程 终端线路挂断 */
     sigaddset(&signals_to_block, SIGHUP);
@@ -206,7 +177,7 @@ int udp_socket;
 int tcp_socket;
 
 /* 为已经分配的套接字设置相关的属性信息 */
-static int alloc_socket_setopts() {
+static int socket_setopts() {
     int one = 1;
     const struct nfs_core_param *nfs_cp = &nfs_param.core_param;
 
@@ -376,7 +347,7 @@ proto_data nfsv3_sock_info;
 /* 将已经申请到的套接字绑定到指定的端口号上 */
 static void bind_udp_sockets() {
     LOG(MODULE_NAME, D_INFO, "Binding to UDP address %s",
-        format(nfs_param.core_param.bind_addr).c_str());
+        format((sockaddr_storage*)&(nfs_param.core_param.bind_addr)).c_str());
 
     proto_data *pdatap = &nfsv3_sock_info;
 
@@ -387,9 +358,7 @@ static void bind_udp_sockets() {
 
     /* all interfaces */
     pdatap->sinaddr_udp.sin_addr.s_addr =
-            ((struct sockaddr_in *)
-                    &nfs_param.core_param.bind_addr)->
-                    sin_addr.s_addr;
+            nfs_param.core_param.bind_addr.sin_addr.s_addr;
     pdatap->sinaddr_udp.sin_port =
             htons(nfs_param.core_param.port);
 
@@ -412,7 +381,7 @@ static void bind_udp_sockets() {
     }
 
     LOG(MODULE_NAME, D_INFO, "Binding UDP socket to address %s",
-        format(*((sockaddr_storage*)pdatap->bindaddr_udp6.addr.buf)).c_str());
+        format((sockaddr_storage*)pdatap->bindaddr_udp6.addr.buf).c_str());
 
     int rc = bind(udp_socket,
               (struct sockaddr *)
@@ -428,7 +397,7 @@ static void bind_udp_sockets() {
 /* 将已经申请到的套接字绑定到指定的端口号上 */
 static void bind_tcp_sockets() {
     LOG(MODULE_NAME, D_INFO, "Binding to TCP address %s",
-        format(nfs_param.core_param.bind_addr).c_str());
+        format((sockaddr_storage*)&(nfs_param.core_param.bind_addr)).c_str());
 
     proto_data *pdatap = &nfsv3_sock_info;
 
@@ -437,8 +406,7 @@ static void bind_tcp_sockets() {
     pdatap->sinaddr_tcp.sin_family = AF_INET;
     /* all interfaces */
     pdatap->sinaddr_tcp.sin_addr.s_addr =
-            ((struct sockaddr_in *)
-                    &nfs_param.core_param.bind_addr)->sin_addr.s_addr;
+            nfs_param.core_param.bind_addr.sin_addr.s_addr;
     pdatap->sinaddr_tcp.sin_port =
             htons(nfs_param.core_param.port);
 
@@ -458,7 +426,7 @@ static void bind_tcp_sockets() {
     }
 
     LOG(MODULE_NAME, D_INFO, "Binding TCP socket to address %s",
-        format(*((sockaddr_storage*)pdatap->bindaddr_tcp6.addr.buf)).c_str());
+        format((sockaddr_storage*)pdatap->bindaddr_tcp6.addr.buf).c_str());
 
     int rc = bind(tcp_socket,
               (struct sockaddr *)
@@ -567,7 +535,16 @@ static void register_rpc_program() {
 }
 
 /* 初始化nfs服务相关的接口注册操作 */
-static void dnfs_init_svc(void) {
+static void dnfs_init_svc() {
+    /* 初始化默认运行配置中的绑定地址数据 */
+    if (!inet_pton(nfs_param.core_param.bind_addr.sin_family,
+              nfs_param.core_param.bind_addr_str.c_str(),
+              &nfs_param.core_param.bind_addr.sin_addr)) {
+        LOG(MODULE_NAME, EXIT_ERROR, "Illegal bing ipv4 addr \"%s\" for nfsv3",
+            nfs_param.core_param.bind_addr_str.c_str());
+    }
+    nfs_param.core_param.bind_addr.sin_port = htons(nfs_param.core_param.port);
+
     /* 初始化NTIRPC的基本参数 */
     if (setup_ntirpc_params()) {
         LOG(MODULE_NAME, EXIT_ERROR, "Failed to setup ntirpc params");
@@ -584,7 +561,7 @@ static void dnfs_init_svc(void) {
         tcp_socket, udp_socket);
 
     /* 对分配的socket的属性进行设置 */
-    if (alloc_socket_setopts()) {
+    if (socket_setopts()) {
         LOG(MODULE_NAME, EXIT_ERROR,
             "Error setting socket option for NFS_V3");
     }
@@ -604,6 +581,15 @@ static void dnfs_init_svc(void) {
     register_rpc_program();
 }
 
+/* 启动关键的处理线程 */
+static void dnfs_init_threads() {
+    /* 启动停止信号处理线程 */
+    term_signal_handler_thread = ThreadPool::start_thread(
+            "term_signal_handler", term_signal_handler);
+    LOG(MODULE_NAME, D_INFO, "signal process thread start @%ld",
+        term_signal_handler_thread->get_id());
+}
+
 /* dnfs启动处理函数 */
 void dnfs_start() {
     if (nfs_start_info.dump_default_config) {
@@ -616,6 +602,9 @@ void dnfs_start() {
 
     /* RPC Initialisation - exits on failure */
     dnfs_init_svc();
+
+    /* 启动关键的处理线程 */
+    dnfs_init_threads();
 
     LOG(MODULE_NAME, L_INFO,
         "-------------------------------------------------");

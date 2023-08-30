@@ -16,6 +16,8 @@
 #ifndef DNFS_DNFSD_H
 #define DNFS_DNFSD_H
 
+#include <thread>
+
 #include <stdbool.h>
 
 /* 主机名称的最大长度 */
@@ -44,5 +46,14 @@
 
 /* 针对配置文件严重错误是否退出进程 */
 [[maybe_unused]] extern bool config_errors_fatal;
+
+/* 主线程池的默认线程个数 */
+#define MAXTHREADSIZE 8
+
+/* 主线程池 */
+extern ThreadPool main_thread_pool;
+
+/* 终止信号处理线程指针 */
+extern std::thread* term_signal_handler_thread;
 
 #endif //DNFS_DNFSD_H

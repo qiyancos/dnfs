@@ -25,6 +25,7 @@
 #include "dnfsd/dnfs_ntirpc.h"
 #include "dnfsd/dnfs_config.h"
 #include "dnfsd/dnfs_init.h"
+#include "dnfsd/dnfsd_exit.h"
 
 using namespace std;
 
@@ -86,6 +87,12 @@ string nfs_host_name = "localhost";
 
 // 日志文件完整路径
 string log_path;
+
+/* 终止信号处理线程指针 */
+std::thread* term_signal_handler_thread = nullptr;
+
+/* 主线程池 */
+ThreadPool main_thread_pool(MAXTHREADSIZE);
 
 // 主程序运行参数解析
 static void arg_parser(int argc, char** argv) {
@@ -188,17 +195,12 @@ static void arg_parser(int argc, char** argv) {
     }
 }
 
-/* 该函数用于处理程序退出的时候需要执行的操作 */
-void exit_process(const int exit_code) {
-    exit(exit_code);
-}
-
 // 主程序入口
 int main(int argc, char ** argv) {
     // 解析主程序参数并初始化部分状态变量
     arg_parser(argc, argv);
 
-    // 初始化配置文件解析处理
+    // 初始化配置文件解析处理(优先加载日志相关的配置)
     init_config(nfs_config_path);
 
     // 初始化日志
@@ -206,8 +208,12 @@ int main(int argc, char ** argv) {
     init_logging(exec_name, nfs_host_name, debug_level,
                  detach_flag, log_path);
 
-    // 设置当前线程名称
+    // 设置当前线程名称以及主线程池的大小
     ThreadPool::set_thread_name(exec_name + "_main");
+    if (dnfs_config.run_config.max_thead_size) {
+        main_thread_pool.set_max_thread_size(
+                dnfs_config.run_config.max_thead_size);
+    }
 
     // 初始化崩溃信号处理函数hook
     if (dump_trace) {
@@ -237,6 +243,12 @@ int main(int argc, char ** argv) {
 
 	/* Everything seems to be OK! We can now start service threads */
 	dnfs_start();
+
+    /* 等待终止信号处理线程退出 */
+    term_signal_handler_thread->join();
+
+    /* 等待所有线程退出 */
+    main_thread_pool.join();
 
 	return 0;
 }

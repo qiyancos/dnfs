@@ -67,7 +67,7 @@ inline std::string format(const std::string &out_data) {
     return out_data;
 }
 
-std::string format(const sockaddr_storage &out_data);
+std::string format(sockaddr_storage* out_data);
 
 /*将pid转为字符串
  * params t:任意类型字符串
