@@ -68,7 +68,7 @@ int main() {
     /*设置指定模块日志等级日志文件配置*/
     cout << "设置指定模块日志等级日志文件配置:"
          << logger.set_module_log_output("yes",
-                                         "stderr:syslog:/tmp/test/@(time,MINUTE,30):/tmp/dasdad/",
+                                         "stderr:syslog:stdout:/tmp/test/@(time,MINUTE,30):/tmp/dasdad/",
                                          &s) << ":" << s << endl;
 
     /*设置指定日志等级日志文件配置*/

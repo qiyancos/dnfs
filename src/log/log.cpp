@@ -575,13 +575,6 @@ int Logger::format_module_log(const string &module_name, string &log_message,
     return 0;
 }
 
-/*析构函数*/
-Logger::~Logger() {
-    for (const auto &attr: module_attr) {
-        delete attr.second;
-    }
-}
-
 /*将所有的模板设置为默认属性*/
 void Logger::set_all_module_attr_default() {
     /*遍历建立所有默认属性*/
@@ -599,4 +592,19 @@ void Logger::set_all_module_attr_default() {
 
 time_t Logger::get_log_init_time() const {
     return init_time;
+}
+
+/*设置缓存大小
+ * params buffer_limit:设置的缓存大小
+ * */
+void Logger::set_buffer_limit(const int &buffer_limit) {
+    log_buffer.set_limit(buffer_limit);
+}
+
+
+/*析构函数*/
+Logger::~Logger() {
+    for (const auto &attr: module_attr) {
+        delete attr.second;
+    }
 }

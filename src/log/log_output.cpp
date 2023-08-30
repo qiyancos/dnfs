@@ -62,27 +62,32 @@ int LogOutputAttr::generate_config(const string &log_out_attr_str,
 /*输出日志信息
  * params module_name:模块名称
  * params message:日志信息
- * params log_level_str:字符形式的日志等级
+ * params log_level:日志等级
  * params error_info:错误信息
  * return: 状态码 0 生成成功 其他 生成失败
  * */
 int LogOutputAttr::out_message(const string &module_name,
                                const string &message,
-                               const string &log_level_str,
-                               string *error_info) {
+                               const log_level_t &log_level,
+                               string *error_info,...) {
     /*判断输出日志开关*/
     if (stderr_on) {
-        /*todo 输出错误信息流*/
+        fprintf(stderr,"%s\n",message.c_str());
     }
     if (stdout_on) {
-        /*todo 输出流*/
+        fprintf(stdout,"%s\n",message.c_str());
     }
     if (syslog_on) {
-        /*todo 输出到系统日志*/
+        /*设置空参数*/
+        va_list null_list;
+        va_start(null_list,error_info);
+        /*打印系统日志*/
+        vsyslog(log_level_info_dict[log_level].second,message.c_str(),null_list);
+        va_end(null_list);
     }
     /*todo 遍历输出文件列表，进行输出*/
     for (LogFile log_file: log_files) {
-        log_file.out_message(module_name, message, log_level_str, error_info);
+        log_file.out_message(module_name, message, log_level_info_dict[log_level].first[0], error_info);
     }
     return 0;
 }

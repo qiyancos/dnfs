@@ -306,6 +306,11 @@ public:
     /*获取log模块建立时间*/
     [[nodiscard]] time_t get_log_init_time() const;
 
+    /*设置缓存大小
+     * params buffer_limit:设置的缓存大小
+     * */
+    void set_buffer_limit(const int &buffer_limit);
+
     ~Logger();
 
 };

@@ -63,9 +63,6 @@ void LogBuffer::output_thread() {
             log_message.ganerate_log_message(result);
             /*判断需不需要添加调用栈*/
             log_message.judge_traceback(result, nullptr);
-
-            cout<<result<<endl;
-
             /*进行输出*/
             log_message.out_message(result, nullptr);
         }
@@ -110,7 +107,6 @@ void LogBuffer::add_log_buffer(const int &thread_id,
     /*加入*/
     /*数据总数加1*/
     log_num += 1;
-    cout << log_num << endl;
     unique_lock<mutex> write_uk(write_mtx);
     /*如果数目大于设置的缓存限制*/
     if (log_num > buffer_limit) {

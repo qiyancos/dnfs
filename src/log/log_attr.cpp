@@ -229,7 +229,7 @@ int LoggerAttr::out_message(const log_level_t &message_log_level,
                             std::string *error_info) {
     /*调用对应的输出模块*/
     return log_level_output[message_log_level].out_message(module_name, message,
-                                                           log_level_info_dict[message_log_level].first[0],
+                                                           message_log_level,
                                                            error_info);
 }
 

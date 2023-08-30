@@ -17,7 +17,10 @@
 
 #include <string>
 #include <vector>
+#include <syslog.h>
+#include <cstdarg>
 #include <log/log_file.h>
+#include <log/log_data.h>
 
 /*日志输出属性*/
 class LogOutputAttr {
@@ -47,11 +50,11 @@ public:
     /*输出日志信息
      * params module_name:模块名称
      * params message:日志信息
-     * params log_level_str:字符形式的日志等级
+     * params log_level:日志等级
      * params error_info:错误信息
      * return: 状态码 0 生成成功 其他 生成失败
      * */
-    int out_message(const std::string& module_name,const std::string& message,const std::string& log_level_str,std::string *error_info);
+    int out_message(const std::string& module_name,const std::string& message,const log_level_t& log_level,std::string *error_info,...);
 };
 
 #endif //DNFSD_LOG_OUTPUT_H

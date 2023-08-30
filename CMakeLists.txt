@@ -45,7 +45,7 @@ include_directories(${CMAKE_SOURCE_DIR}/src/libntirpc/ntirpc)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
         "${CMAKE_SOURCE_DIR}/src/libntirpc/cmake/modules/")
 
-set(BOOST_ROOT /usr/include)
+#[[set(BOOST_ROOT /usr/include)
 find_package(Boost)
 if(Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS})
@@ -53,7 +53,7 @@ if(Boost_FOUND)
     MESSAGE( STATUS "Boost_INCLUDE_DIRS = ${Boost_INCLUDE_DIRS}.")
     MESSAGE( STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}.")
     MESSAGE( STATUS "Boost_LIB_VERSION = ${Boost_LIB_VERSION}.")
-endif ()
+endif ()]]
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/src/libntirpc)
 add_subdirectory(src/utils)
