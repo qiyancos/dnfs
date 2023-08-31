@@ -17,7 +17,6 @@
 #include "log/log_file.h"
 #include "utils/common_utils.h"
 #include "log/log_exception.h"
-#include <cerrno>
 
 #define FILE_MODEL_644 (S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)
 using namespace std;
@@ -258,6 +257,20 @@ void LogFile::rotate_by_time() {
                 log_level_info_dict[log_level].first[0] +
                 "_" + "time" + ".log";
     }
+
+//    /*获取现在的时间*/
+//    time_t now_time=time(nullptr);
+//
+//    /*如果已经建立了写入日志，并且超过了时间限制,进行切割*/
+//    if(use_file_build_time!=0 and (now_time-use_file_build_time)>log_limit.when_interval){
+//        /*先关闭之前的文件*/
+//        if(file_handler>-1){
+//            close(file_handler);
+//        }
+//        /*生成切分的日志文件名称，当前的日期加上编号*/
+//        string rotate_path=log_file_path+"."+get_record_time(now_time,"%Y-%m-%d");
+//
+//    }
     /*判断并生成日志文件*/
     judge_and_create_log_file();
 }

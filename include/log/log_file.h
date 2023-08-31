@@ -66,12 +66,15 @@ private:
     int log_files = 0;
 
     /*当前使用日志建立的时间*/
-    time_t use_file_build_time = time(nullptr);
+    time_t use_file_build_time = 0;
 
     int file_handler=-1;
 
     /*当前使用日志文件名*/
     std::string log_file_path;
+
+    /*最早切取得文件路径，用来超过限制删除*/
+    std::string del_file_path;
 
     /*设置对应模块名*/
     std::string module_name = "default";
