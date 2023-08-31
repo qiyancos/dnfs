@@ -172,10 +172,11 @@ int creat_directory(const string &judge_dir, string *error_info) {
 
 /*将时间戳转化为日志
  * params timeStamp:转化的时间戳
+ * params dis_millseconds:转化的毫秒
  * params format:转化的日期格式
  * return: 转化完成的日期字符串
  * */
-string get_record_time(const time_t &timeStamp, const string &format) {
+string format(const time_t &timeStamp,const uint64_t &dis_millseconds, const string &format) {
 
     /*%Y-%m-%d %H:%M:%S*/
 
@@ -201,14 +202,6 @@ string get_record_time(const time_t &timeStamp, const string &format) {
         /*使用默认的格式*/
         strftime(time_buffer, 30, default_time_format, info);
 
-        /*获取系统当前时间*/
-        auto now = chrono::system_clock::now();
-
-        /*通过不同精度获取相差的毫秒数*/
-        uint64_t dis_millseconds = chrono::duration_cast<chrono::milliseconds>(
-                now.time_since_epoch()).count()
-                                   - chrono::duration_cast<chrono::seconds>(
-                now.time_since_epoch()).count() * 1000;
         /*添加毫秒数据*/
         sprintf(time_buffer, default_msec_format, time_buffer,
                 (int) dis_millseconds);
@@ -221,7 +214,7 @@ string get_record_time(const time_t &timeStamp, const string &format) {
  * params t:任意类型字符串
  * return: 转化完成的字符串
  * */
-string pid_to_string(const thread::id &t) {
+string format(const thread::id &t) {
     /*建立操作实例*/
     stringstream s_stream;
     /*将数据输入操作实例*/

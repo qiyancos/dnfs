@@ -49,6 +49,7 @@ int main() {
     cout << "设置所有模块日志等级日志文件配置:" << logger.set_log_output(
             "stderr:syslog:/home/jy/Public/log/@(time,MINUTE,30):/home/jy/Public/log/dasdad/", &s) << ":" << s
          << endl;
+    LOG("yes", L_ERROR, "%s", "what fuck1");
 
     /*设置所有模块多个日志等级日志文件配置*/
     /*单个模式更改*/
@@ -57,6 +58,7 @@ int main() {
          << logger.set_log_output(log_level_list,
                                   "stderr:syslog:/home/jy/Public/log/yes/@(time,MINUTE,30):/home/jy/Public/log/dasdad/",
                                   &s) << ":" << s << endl;
+    LOG("yes", L_ERROR, "%s", "what fuck2");
 
     /*设置指定日志等级日志文件配置*/
     /*设置全模式更改*/
@@ -64,12 +66,14 @@ int main() {
          << logger.set_log_output(L_ERROR,
                                   "stderr:syslog:/home/jy/Public/log/text",
                                   &s) << ":" << s << endl;
+    LOG("yes", L_ERROR, "%s", "what fuck3");
 
     /*设置指定模块日志等级日志文件配置*/
     cout << "设置指定模块日志等级日志文件配置:"
          << logger.set_module_log_output("yes",
                                          "stderr:syslog:stdout:/home/jy/Public/log/test/@(time,MINUTE,30):/home/jy/Public/log/dasdad/",
                                          &s) << ":" << s << endl;
+    LOG("yes", L_ERROR, "%s", "what fuck4");
 
     /*设置指定日志等级日志文件配置*/
     cout << "设置指定模块单个日志等级日志文件配置:"
@@ -77,6 +81,7 @@ int main() {
                                          L_INFO,
                                          "stderr:syslog:/home/jy/Public/log/single/@(time,MINUTE,30):/home/jy/Public/log/dasdad/",
                                          &s) << ":" << s << endl;
+    LOG("yes", L_ERROR, "%s", "what fuck5");
 
     /*设置多个日志等级日志文件配置*/
     cout << "设置指定模块多个日志等级日志文件配置:"
@@ -84,6 +89,7 @@ int main() {
                                          log_level_list,
                                          "stderr:syslog:/home/jy/Public/log/no/@(size,3gb,30):/home/jy/Public/log/dasdad",
                                          &s) << ":" << s << endl;
+    LOG("yes", L_ERROR, "%s", "what fuck6");
 
     /*设置所有模块的日志等级，高于该等级的才可以输出*/
     cout << "设置所有模块的日志等级，高于该等级的才可以输出:" << endl;
@@ -95,15 +101,17 @@ int main() {
 
     /*设置所有模块日志格式*/
     cout << "设置所有模块日志格式:"
-         << logger.set_formatter("%(program_name)-%(process)-%(asctime):%(message)", &s)
+         << logger.set_formatter("%(asctime):%(message)", &s)
          << ":"
          << s << endl;
+    LOG("yes", L_ERROR, "%s", "what fuck7");
 
     /*设置指定模块日志格式*/
     cout << "设置指定模块日志格式:" << logger.set_module_formatter("yes",
                                                                    "%(modulename)-%(levelname)-%(asctime):%(message)",
                                                                    &s) << ":"
          << s << endl;
+    LOG("yes", L_ERROR, "%s", "what fuck8");
 
     /*判断模块日志debug状态*/
     cout << "判断模块日志debug状态:" << logger.is_module_debug_on("yes")
@@ -113,23 +121,14 @@ int main() {
     cout << "设置所有模块日志格式:"
          <<endl;
     logger.set_date_format("");
+    LOG("yes", L_ERROR, "%s", "what fuck9");
+
 
     /*设置单独模块日志格式*/
     cout << "设置单独模块日志格式:"
          << logger.set_module_date_format("yes", "%Y-%m-%d %H:%M:%S", &s) << ":"
          <<s<< endl;
-
-    /*获取日期*/
-    cout << get_record_time(time(nullptr), "") << endl;
-
-    /*格式化模块日志*/
-    string message;
-    cout << "格式化模块日志:"
-         << logger.format_module_log("yes", message, L_ERROR, __FILE__,
-                                     __LINE__, __func__, "main.cpp",
-                                     time(nullptr), this_thread::get_id(),
-                                     getpid(), "what fuck", &s) << ":" << s<<":"
-         <<"message:"<<message<< endl;
+    LOG("yes", L_ERROR, "%s", "what fuck10");
 
     /*设置默认模板*/
     cout << "设置默认模板:" << logger.set_default_attr_from("yes", &s)
@@ -138,12 +137,12 @@ int main() {
     /*将所有的模板设置为默认属性*/
     cout << "将所有的模板设置为默认属性:"<< endl;
     logger.set_all_module_attr_default();
-    LOG("yes", L_ERROR, "%s", "what fuck1");
+    LOG("yes", L_ERROR, "%s", "what fuck11");
     cout << "--------" << endl;
 //    this_thread::sleep_for(chrono::seconds(2));
-    LOG("test", L_ERROR, "%s", "what fuck2");
+    LOG("test", L_ERROR, "%s", "what fuck12");
 //    this_thread::sleep_for(chrono::seconds(2));
-    LOG("test", L_ERROR, "%s", "what fuck3");
+    LOG("test", L_ERROR, "%s", "what fuck13");
     while(true);
 
     return 0;

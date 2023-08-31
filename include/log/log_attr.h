@@ -25,7 +25,7 @@ class Logger;
 class LoggerAttr {
     friend class Logger;
 
-private:
+public:
     /*设置程序名*/
     std::string module_name = "default";
     /*输出日志的基本格式字符串*/
@@ -87,29 +87,6 @@ public:
      * return: 状态码 0 生成成功 其他 生成失败
      * */
      int init_log_formatter(std::string *error_info);
-
-    /*根据formatter得到日志信息
-     * params log_message:根据设置的formatter生成的日志消息
-     * params log_le:输出的日志级别
-     * params file:调用文件完整路径
-     * params line:调用行号
-     * params func:调用方法名
-     * params file_name:调用文件名
-     * params record_time:创建时间
-     * params tid:线程id
-     * params pid:进程id
-     * params message:用户打印的消息
-     * return
-     * */
-    void
-    get_log_message(std::string &log_message, log_level_t log_le,
-                    const std::string &file,
-                    const int &line, const std::string &func,
-                    const std::string &file_name,
-                    const time_t &record_time,
-                    const std::thread::id &tid,
-                    const int &pid,
-                    const std::string & message);
 
     /*判断debug模式
      * return

@@ -20,54 +20,26 @@ using namespace std;
 
 atomic<int> LogBuffer::log_num = 0;
 
-LogBuffer::LogBuffer() = default;
+LogBuffer::LogBuffer() {
+    /*初始化buffer map数据*/
+    for (int i = 0; i < 10; i++) {
+        buffer_map[i] = {};
+    }
+}
 
 /*将缓存写入文件,监听log_num
  * return
  * */
 void LogBuffer::output_thread() {
-    /*自动上锁*/
-    unique_lock<mutex> write_uk(write_mtx, defer_lock);
     while (true) {
-        /*加上锁，给wite使用*/
-        write_uk.lock();
+        /*自动上锁*/
+        unique_lock<mutex> write_uk(write_mtx);
         /*等待锁*/
         cond.wait(write_uk);
 
-        /*清空计数器*/
-        log_num.store(0);
-
-        /*遍历添加日志信息*/
-        for (const auto &buffer: buffer_map) {
-            /*追加信息*/
-            log_massage_list.insert(log_massage_list.end(),
-                                    buffer.second.begin(), buffer.second.end());
-        }
-
-        /*清空原本的信息*/
-        buffer_map.clear();
-        /*复制完数据解锁*/
-        write_uk.unlock();
-
-        /*日志信息排序*/
-        sort(log_massage_list.begin(), log_massage_list.end(),
-             [](LogMessage &x, LogMessage &y) -> bool {
-                 return x.get_record_time() < y.get_record_time();
-             });
-
-        /*输出信息*/
-        for (LogMessage &log_message: log_massage_list) {
-            /*保存信息*/
-            string result;
-            /*生成日志信息*/
-            log_message.ganerate_log_message(result);
-            /*判断需不需要添加调用栈*/
-            log_message.judge_traceback(result, nullptr);
-            /*进行输出*/
-            log_message.out_message(result, nullptr);
-        }
-        /*清空信息*/
-        log_massage_list.clear();
+        /*谁有flush锁谁操作*/
+        unique_lock<mutex> flush_uk(flush_mtx);
+        out();
     }
 }
 
@@ -97,11 +69,6 @@ void LogBuffer::add_log_buffer(const unsigned int &thread_id,
         /*自动上锁*/
         unique_lock<mutex> uk(mtx[hash_id]);
 
-        /*查询是否已经存在thread_name对应的数据*/
-        if (buffer_map.find(hash_id) == buffer_map.end()) {
-            /*不存在,建立数据字典*/
-            buffer_map[hash_id] = {};
-        }
         /*已经存在进行添加*/
         buffer_map[hash_id].push_back(log_message);
     }
@@ -116,8 +83,53 @@ void LogBuffer::add_log_buffer(const unsigned int &thread_id,
     }
 }
 
-/*退出前清空日志*/
-void LogBuffer::wait_out() {
-    while (!log_massage_list.empty()){}
-    fflush(stdout);
+/*更新属性前强制flush*/
+void LogBuffer::flush() {
+    /*强制推送*/
+    {
+        unique_lock<mutex> write_uk(write_mtx);
+        cond.notify_one();
+    }
+    {
+        /*谁有flush锁谁操作*/
+        unique_lock<mutex> flush_uk(flush_mtx);
+        out();
+    }
+
+}
+
+void LogBuffer::out() {
+    /*清空计数器*/
+    log_num.store(0);
+
+    /*遍历添加日志信息*/
+    for (unsigned int i = 0; i < 10; i++) {
+        /*枷锁进行添加删除*/
+        unique_lock<mutex> uk(mtx[i]);
+        /*追加信息*/
+        log_massage_list.insert(log_massage_list.end(),
+                                buffer_map[i].begin(), buffer_map[i].end());
+        /*清空原本的信息*/
+        buffer_map[i].clear();
+    }
+
+    /*日志信息排序*/
+    sort(log_massage_list.begin(), log_massage_list.end(),
+         [](LogMessage &x, LogMessage &y) -> bool {
+             return x.record_time < y.record_time;
+         });
+
+    /*输出信息*/
+    for (LogMessage &log_message: log_massage_list) {
+        /*保存信息*/
+        string result;
+        /*生成日志信息*/
+        log_message.ganerate_log_message(result);
+        /*判断需不需要添加调用栈*/
+        log_message.judge_traceback(result, nullptr);
+        /*进行输出*/
+        log_message.out_message(result, nullptr);
+    }
+    /*清空信息*/
+    log_massage_list.clear();
 }

@@ -54,7 +54,7 @@
 
 /*日志类*/
 class Logger {
-
+    friend LogMessage;
 private:
 
     /*默认日志属性，新建日志默认使用该属性*/
@@ -66,11 +66,11 @@ private:
     /*退出函数退出码*/
     int exit_code = 0;
 
-    /*不同模块的日志属性*/
-    std::map<std::string, LoggerAttr *> module_attr;
-
     /*设置创建时间*/
     time_t init_time = time(nullptr);
+
+    /*不同模块的日志属性*/
+    std::map<std::string, LoggerAttr *> module_attr;
 
     /*缓存日志对象*/
     LogBuffer log_buffer = LogBuffer();
@@ -285,33 +285,6 @@ public:
      * return: true 开启debug false 关闭debug
      * */
     bool is_module_debug_on(const std::string &module_name);
-
-    /*按照模型的日志模板格式化日志
-     * params module_name:模型名
-     * params log_message:根据设置的formatter生成的日志消息
-     * params log_le:输出的日志级别
-     * params file:调用文件完整路径
-     * params line:调用行号
-     * params func:调用方法名
-     * params file_name:调用文件名
-     * params record_time:创建时间
-     * params tid:线程id
-     * params pid:进程id
-     * params message:用户打印的消息
-     * params error_info:错误信息
-     * return: 状态码 0 生成成功 其他 生成失败
-     * */
-    int format_module_log(const std::string &module_name,
-                          std::string &log_message,
-                          log_level_t log_le,
-                          const std::string &file,
-                          const int &line, const std::string &func,
-                          const std::string &file_name,
-                          const time_t &record_time,
-                          const std::thread::id &tid,
-                          const int &pid,
-                          const std::string &message,
-                          std::string *error_info);
 
     /*将所有的模板设置为默认属性
      * return

@@ -23,6 +23,7 @@
 #include <memory>
 #include "log_data.h"
 #include "log_attr.h"
+#include "utils/time_utils.h"
 
 
 /*日志信息对象，存放了单词输出的日志信息结构*/
@@ -46,9 +47,6 @@ private:
     /*调用方法名*/
     std::string func_name;
 
-    /*记录时间戳,用来同一个文件写入时排序*/
-    time_t record_time;
-
     /*记录日志级别*/
     LogLevel log_level = NOLOG;
 
@@ -57,9 +55,9 @@ private:
     /*进程id*/
     pid_t pid;
 
-    /*保存对应的日志属性*/
-    LoggerAttr *log_attr;
-
+public:
+    /*获取记录时间*/
+    Time_T record_time=Time_T();
 public:
     /*初始化参数
      * params module_name:模块名
@@ -69,7 +67,6 @@ public:
      * params func:调用方法名
      * params format:用户信息日志格式
      * params tid:线程id
-     * params log_attr:对应的日志打印属性
      * params args:用户信息参数，需对应format
      * */
     LogMessage(const std::string &module_name,
@@ -77,7 +74,6 @@ public:
                const std::string &file, const int &line,
                const std::string &func, const char *format,
                const std::thread::id &tid,
-               LoggerAttr *log_attr,
                va_list args);
 
     /*生成日志信息
@@ -99,12 +95,6 @@ public:
      * return: 状态码 0 生成成功 其他 生成失败
      * */
     int out_message(std::string &message, std::string *error_info);
-
-    /*得到日志记录时间
-     * return 获取的日志记录时间
-     * */
-    [[nodiscard]] time_t get_record_time() const;
-
 };
 
 #endif //LOG_LOG_MESSAGE_H

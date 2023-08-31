@@ -54,7 +54,7 @@ log_level_t Logger::decode_log_level(const string &log_level_str) {
 void Logger::init(const string &program_name_in, const string &hostname_in) {
     hostname = hostname_in;
     program_name = program_name_in;
-    /*直接注册logger的模板*/
+    /*直接注册logger的模块*/
     init_module("logger");
     /*开启buffer线程*/
     thread buffer_thread(&LogBuffer::output_thread, &log_buffer);
@@ -140,6 +140,9 @@ int Logger::copy_module_attr_from(const string &target_module_name,
     }
     /*判断目标模块存不存在，不存在，创建在赋值,存在直接赋值*/
     if (judge_module_attr_exist(target_module_name)) {
+        /*刷新缓存*/
+        log_buffer.flush();
+
         /*存在，直接赋值*/
         /*先复制模块的数据*/
         delete module_attr[target_module_name];
@@ -226,6 +229,9 @@ int Logger::set_log_output(const log_level_t &log_level,
 int Logger::set_log_output(const vector<log_level_t> &log_level_list,
                            const string &log_file_config,
                            string *error_info) {
+    /*刷新缓存*/
+    log_buffer.flush();
+
     /*先构造一个日志输出对象，用来生成日志路径*/
     LogOutputAttr generate_output_attr = LogOutputAttr();
     /*解析配置,如果解析错误*/
@@ -316,6 +322,10 @@ int Logger::set_module_log_output(const string &module_name,
                              module_name.c_str()))
         return 1;
     }
+
+    /*刷新缓存*/
+    log_buffer.flush();
+
     /*设置选择模式的日志文件属性*/
     for (auto &log_level: log_level_list) {
         /*重新生成数据对象,错误直接返回*/
@@ -336,6 +346,9 @@ int Logger::set_module_log_output(const string &module_name,
  * return
  * */
 void Logger::set_log_level(const log_level_t &log_level) {
+    /*刷新缓存*/
+    log_buffer.flush();
+
     /*遍历所有属性进行设置*/
     for (auto &md: module_attr) {
         md.second->log_level = log_level;
@@ -363,6 +376,10 @@ int Logger::set_module_log_level(const string &module_name,
                              module_name.c_str()))
         return 1;
     }
+
+    /*刷新缓存*/
+    log_buffer.flush();
+
     /*更改属性设置*/
     module_attr[module_name]->log_level = log_level;
     /*判断debug模式*/
@@ -378,6 +395,8 @@ int Logger::set_module_log_level(const string &module_name,
  * */
 int
 Logger::set_formatter(const string &format_str, string *error_info) {
+    /*刷新缓存*/
+    log_buffer.flush();
 
     /*遍历所有模块进行创建*/
     for (auto &md_attr: module_attr) {
@@ -412,6 +431,8 @@ int Logger::set_module_formatter(const string &module_name,
                              module_name.c_str()))
         return 1;
     }
+    /*刷新缓存*/
+    log_buffer.flush();
 
     /*设置格式*/
     module_attr[module_name]->formatter = format_str;
@@ -434,6 +455,8 @@ int Logger::set_module_formatter(const string &module_name,
  * */
 void
 Logger::set_date_format(const string &date_format) {
+    /*刷新缓存*/
+    log_buffer.flush();
     /*遍历添加日志格式字符串*/
     for (const auto &md_attr: module_attr) {
         md_attr.second->date_format = date_format;
@@ -459,6 +482,9 @@ Logger::set_module_date_format(const string &module_name,
                              module_name.c_str()))
         return 1;
     }
+
+    /*刷新缓存*/
+    log_buffer.flush();
 
     /*设置日期格式*/
     module_attr[module_name]->date_format = date_format;
@@ -502,7 +528,7 @@ void Logger::_log(const string &module_name, log_level_t log_level,
                                                 log_level,
                                                 file, line,
                                                 func, format, tid,
-                                                module_attr[module_name], args);
+                                                args);
 
             va_end(args);
 
@@ -510,14 +536,12 @@ void Logger::_log(const string &module_name, log_level_t log_level,
             log_buffer.add_log_buffer(*(unsigned int *) &tid, log_message);
 
         }
-
-        /*如果是退出标志*/
-        if (log_level == LEXIT) {
-            log_buffer.wait_out();
-            exit_func(exit_code);
-        }
     }
-
+    /*如果是退出标志*/
+    if (log_level == LEXIT) {
+        flush();
+        exit_func(exit_code);
+    }
 }
 
 /*判断模块日志debug状态
@@ -532,53 +556,12 @@ bool Logger::is_module_debug_on(const string &module_name) {
     return module_attr[module_name]->debug_on;
 }
 
-/*按照模型的日志模板格式化日志
- * params module_name:模型名
- * params log_message:根据设置的formatter生成的日志消息
- * params log_le:输出的日志级别
- * params file:调用文件完整路径
- * params line:调用行号
- * params func:调用方法名
- * params file_name:调用文件名
- * params record_time:创建时间
- * params tid:线程id
- * params pid:进程id
- * params message:用户打印的消息
- * params error_info:错误信息
- * return: 状态码 0 生成成功 其他 生成失败
- * */
-int Logger::format_module_log(const string &module_name, string &log_message,
-                              log_level_t log_le, const string &file,
-                              const int &line, const string &func,
-                              const string &file_name,
-                              const time_t &record_time, const thread::id &tid,
-                              const int &pid, const string &message,
-                              string *error_info) {
-    /*如果模块不存在，直接报错*/
-    if (!judge_module_attr_exist(module_name)) {
-        /*设置错误信息*/
-        SET_PTR_INFO(error_info,
-                     format_message(
-                             "the module '%s' that format log message does not exist",
-                             module_name.c_str()))
-        return 1;
-    }
-
-    /*直接格式化设置日志*/
-    module_attr[module_name]->get_log_message(log_message,
-                                              log_le, file,
-                                              line, func,
-                                              file_name,
-                                              record_time, tid,
-                                              pid, message);
-
-    return 0;
-}
-
 /*将所有的模板设置为默认属性
  * return
  * */
 void Logger::set_all_module_attr_default() {
+    /*刷新缓存*/
+    log_buffer.flush();
     /*遍历建立所有默认属性*/
     for (auto &log_attr: module_attr) {
         /*先删除之前的属性*/
@@ -617,5 +600,5 @@ Logger::~Logger() {
 
 /*清空缓存*/
 void Logger::flush() {
-    log_buffer.wait_out();
+    log_buffer.flush();
 }

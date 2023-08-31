@@ -18,6 +18,7 @@
 #include "log/log_message.h"
 #include "utils/common_utils.h"
 #include "log/log.h"
+#include "utils/thread_utils.h"
 
 using namespace std;
 
@@ -36,7 +37,6 @@ LogMessage::LogMessage(const string &module_name,
                        const string &file, const int &line,
                        const string &func, const char *format,
                        const thread::id &tid,
-                       LoggerAttr *log_attr,
                        va_list args) {
 
     /*建立临时缓存存储数据*/
@@ -98,11 +98,9 @@ LogMessage::LogMessage(const string &module_name,
     this->module_name = module_name;
     this->log_level = log_level;
     this->tid = tid;
-    this->log_attr = log_attr;
     file_path = file;
     line_no = line;
     func_name = func;
-    record_time = time(nullptr);
 
     /*切割路径获取文件名*/
     vector<string> path_split;
@@ -120,11 +118,119 @@ LogMessage::LogMessage(const string &module_name,
 void
 LogMessage::ganerate_log_message(string &format_message) {
 
-    /*生成消息*/
-    log_attr->get_log_message(format_message,
-                              log_level,
-                              file_path, line_no, func_name, file_name,
-                              record_time, tid, pid, log_message.get());
+    /*获取设置的日志格式进行判断替换*/
+    format_message = logger.module_attr[module_name]->formatter + "\n";
+
+    /*循环判定选中的格式，选中就替换*/
+    for (unsigned int i = 0; i < FMT_LOG_FORMAT_COUNT; i++) {
+        /*如果选择了*/
+        if (logger.module_attr[module_name]->log_formatter_select[i]) {
+            /*直接判定进行正则替换*/
+            switch (i) {
+                case 0:
+                    /*项目名称*/
+                    format_message = regex_replace(format_message,
+                                                   regex(
+                                                           "%\\(program_name\\)"),
+                                                   logger.program_name);
+                    break;
+                case 1:
+                    /*主机名*/
+                    format_message = regex_replace(format_message,
+                                                   regex("%\\(hostname\\)"),
+                                                   logger.program_name);
+                    break;
+                case 2:
+                    /*日志级别数字*/
+                    format_message = regex_replace(format_message,
+                                                   regex("%\\(levelname\\)"),
+                                                   log_level_info_dict[log_level].first[0]);
+                    break;
+                case 3:
+                    /*输出模块的完整路径名*/
+                    format_message = regex_replace(format_message,
+                                                   regex("%\\(pathname\\)"),
+                                                   file_path);
+                    break;
+                case 4:
+                    /*输出模块的文件名*/
+                    format_message = regex_replace(format_message,
+                                                   regex("%\\(filename\\)"),
+                                                   file_name);
+                    break;
+                case 5:
+                    /*模块名*/
+                    format_message = regex_replace(format_message,
+                                                   regex("%\\(modulename\\)"),
+                                                   module_name);
+                    break;
+                case 6:
+                    /*调用方法名*/
+                    format_message = regex_replace(format_message,
+                                                   regex("%\\(funcName\\)"),
+                                                   func_name);
+                    break;
+                case 7:
+                    /*调用行号*/
+                    format_message = regex_replace(format_message,
+                                                   regex("%\\(lineno\\)"),
+                                                   to_string(line_no));
+                    break;
+                case 8:
+                    /*当前时间，UNIX浮点数表示*/
+                    format_message = regex_replace(format_message,
+                                                   regex("%\\(created\\)"),
+                                                   to_string(
+                                                           record_time.seconds));
+                    break;
+                case 9:
+                    /*自logger创建以来的毫秒数*/
+                    format_message = regex_replace(format_message,
+                                                   regex(
+                                                           "%\\(relativeCreated\\)"),
+                                                   to_string(
+                                                           logger.get_log_init_time() -
+                                                           time(nullptr)));
+                    break;
+                case 10:
+                    /* 字符串形式的当前时间 默认为2023-08-18 11:18:45998*/
+                    format_message = regex_replace(format_message,
+                                                   regex("%\\(asctime\\)"),
+                                                   record_time.format(
+                                                           logger.module_attr[module_name]->date_format));
+                    break;
+                case 11:
+                    /*打印线程id*/
+                    /*将pid转化为字符串*/
+                    format_message = regex_replace(format_message,
+                                                   regex("%\\(thread\\)"),
+                                                   format(tid));
+                    break;
+                case 12:
+                    /*打印线程名*/
+                    format_message = regex_replace(format_message,
+                                                   regex("%\\(threadName\\)"),
+                                                   ThreadPool::get_target_thread_name(
+                                                           tid));
+                    break;
+                case 13:
+                    /*打印进程id*/
+                    format_message = regex_replace(format_message,
+                                                   regex("%\\(process\\)"),
+                                                   to_string(pid));
+                    break;
+                case 14:
+                    /*打印用户信息*/
+                    format_message = regex_replace(format_message,
+                                                   regex("%\\(message\\)"),
+                                                   log_message.get());
+                    break;
+                default:
+                    break;
+            }
+        }
+
+    }
 }
 
 /*判断添加调用栈
@@ -135,7 +241,7 @@ LogMessage::ganerate_log_message(string &format_message) {
 int
 LogMessage::judge_traceback(string &format_message, string *error_info) {
     /*判断是不是需要添加调用栈,是不是debug模式，是不是含有error*/
-    if (log_attr->get_debug() and
+    if (logger.module_attr[module_name]->get_debug() and
         log_level_info_dict[log_level].first[0].find("ERROR") !=
         string::npos) {
         /*todo 使用boost打印调用栈*/
@@ -151,12 +257,5 @@ LogMessage::judge_traceback(string &format_message, string *error_info) {
  * */
 int LogMessage::out_message(string &message, string *error_info) {
     /*调用对应的模块属性日志*/
-    return log_attr->out_message(log_level, message, error_info);
-}
-
-/*得到日志记录时间
- * return 获取的日志记录时间
- * */
-time_t LogMessage::get_record_time() const {
-    return record_time;
+    return logger.module_attr[module_name]->out_message(log_level, message, error_info);
 }

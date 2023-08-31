@@ -73,7 +73,7 @@ std::string format(sockaddr_storage* out_data);
  * params t:任意类型字符串
  * return: 转化完成的字符串
  * */
-std::string pid_to_string(const std::thread::id &t);
+std::string format(const std::thread::id &t);
 
 /* 对输入的指定类型进行格式化，返回一个格式化后的字符串 */
 #define AUTO_DEF_GEN1(Type, Left_Bracket, Right_Bracket) \
@@ -231,10 +231,11 @@ int creat_directory(const std::string &judge_dir, std::string *error_info);
 
 /*将时间戳转化为日志
  * params timeStamp:转化的时间戳
+ * params dis_millseconds:转化的毫秒
  * params format:转化的日期格式
  * return: 转化完成的日期字符串
  * */
-std::string get_record_time(const time_t &timeStamp, const std::string &format);
+std::string format(const time_t &timeStamp,const uint64_t &dis_millseconds, const std::string &format);
 
 /* 从一个结构体成员变量指针推断出结构体本身的地址 */
 #define get_parent_struct_addr(addr, type, member) ({			\
