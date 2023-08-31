@@ -222,12 +222,16 @@ void LogFile::out_message(const string &message) {
     ssize_t result = write(file_handler, message.c_str(), size(message));
     /*写入出错抛出异常*/
     if (result == -1) {
-        cout << errno << endl;
+        throw LogException(
+                "Failed to write information to file '%s' with module '%s' output level '%s'",
+                log_file_path.c_str(), module_name.c_str(),
+                log_level_info_dict[log_level].first[0].c_str());
     }
-    return 0;
 }
 
-/*不切割日志*/
+/*不切割日志
+ * return
+ * */
 void
 LogFile::not_rotate() {
     /*先判定日志文件名*/
@@ -242,7 +246,9 @@ LogFile::not_rotate() {
     judge_and_create_log_file();
 }
 
-/*按时间切割数据方法*/
+/*按时间切割数据方法
+ * return
+ * */
 void LogFile::rotate_by_time() {
     /*先判定日志文件名，这里为空默认初始化*/
     if (log_file_path.empty()) {
@@ -256,7 +262,9 @@ void LogFile::rotate_by_time() {
     judge_and_create_log_file();
 }
 
-/*按大小切割数据方法*/
+/*按大小切割数据方法
+ * return
+ * */
 void LogFile::rotate_by_size() {
     /*先判定日志文件名，这里为空默认初始化*/
     if (log_file_path.empty()) {

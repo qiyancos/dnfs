@@ -112,25 +112,25 @@ int LogOutputAttr::out_message(const string &message,
         va_end(null_list);
     }
     /*捕获写日志文件的异常,除了问题将信息写入系统日志*/
-    try{
-        for (LogFile &log_file: log_files) {
+    for (LogFile &log_file: log_files) {
+        try {
+            /*写日志文件*/
             log_file.out_message(message);
+        } catch (LogException &e) {
+            /*将日志信息写入系统日志*/
+            if (!syslog_on) {
+                /*设置空参数*/
+                va_list null_list;
+                va_start(null_list, error_info);
+                /*打印系统日志*/
+                vsyslog(log_level_info_dict[log_level].second, message.c_str(),
+                        null_list);
+                va_end(null_list);
+            }
+            /*写文件出错*/
+            SET_PTR_INFO(error_info, e.what())
+            return 1;
         }
-    }catch(LogException &e){
-        printf("%s\n",e.what());
-        /*将日志信息写入系统日志*/
-        if(!syslog_on){
-            /*设置空参数*/
-            va_list null_list;
-            va_start(null_list, error_info);
-            /*打印系统日志*/
-            vsyslog(log_level_info_dict[log_level].second, message.c_str(),
-                    null_list);
-            va_end(null_list);
-        }
-        /*写文件出错*/
-        SET_PTR_INFO(error_info, e.what())
-        return 1;
     }
     return 0;
 }

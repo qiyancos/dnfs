@@ -96,13 +96,19 @@ public:
      * */
     void out_message(const std::string &message);
 
-    /*不切割日志*/
+    /*不切割日志
+     * return
+     * */
     void not_rotate();
 
-    /*按时间切割数据方法*/
+    /*按时间切割数据方法
+     * return
+     * */
     void rotate_by_time();
 
-    /*按大小切割数据方法*/
+    /*按大小切割数据方法
+     * return
+     * */
     void rotate_by_size();
 
     /*判断并生成日志文件*/
