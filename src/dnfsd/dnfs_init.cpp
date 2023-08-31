@@ -55,6 +55,8 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
     string log_path;
     if (arg_log_path.size()) {
         log_path = dnfs_config.log_config.path = arg_log_path;
+    } else {
+        log_path = dnfs_config.log_config.path;
     }
     /*初始化日志管理器*/
     logger.init(exec_name, nfs_host_name);
