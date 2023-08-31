@@ -17,7 +17,9 @@
 #include "log/log_file.h"
 #include "utils/common_utils.h"
 #include "log/log_exception.h"
+#include <cerrno>
 
+#define FILE_MODEL_644 (S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)
 using namespace std;
 
 /*默认构造函数*/
@@ -198,27 +200,30 @@ int LogFile::generate_data(const string &config_str, string *error_info) {
 
 /*输出日志信息
  * params message:日志信息
- * params error_info:错误信息
- * return: 状态码 0 生成成功 其他 生成失败
+ * return
  * */
-int LogFile::out_message(const string &message, string *error_info) {
+void LogFile::out_message(const string &message) {
     /*生成文件句柄等写入文件操作的实例*/
     switch (rotate_type) {
         case 0:
             /*不切割日志*/
             not_rotate();
+            break;
         case 1:
             /*按照时间切割*/
             rotate_by_time();
+            break;
         case 2:
             /*按照大小切割*/
             rotate_by_size();
-        default:
-            /*返回未知的切割类型*/
-            SET_PTR_INFO(error_info, "Unknown log file rotate type")
-            return 1;
+            break;
     }
-
+    /*写文件*/
+    ssize_t result = write(file_handler, message.c_str(), size(message));
+    /*写入出错抛出异常*/
+    if (result == -1) {
+        cout << errno << endl;
+    }
     return 0;
 }
 
@@ -226,10 +231,10 @@ int LogFile::out_message(const string &message, string *error_info) {
 void
 LogFile::not_rotate() {
     /*先判定日志文件名*/
-    if (log_file.empty()) {
+    if (log_file_path.empty()) {
         /*不切割只使用模块名和日志等级*/
-        log_file =
-                log_directory_path + "/" + module_name + "_" +
+        log_file_path =
+                log_directory_path + module_name + "_" +
                 log_level_info_dict[log_level].first[0] +
                 ".log";
     }
@@ -240,12 +245,12 @@ LogFile::not_rotate() {
 /*按时间切割数据方法*/
 void LogFile::rotate_by_time() {
     /*先判定日志文件名，这里为空默认初始化*/
-    if (log_file.empty()) {
+    if (log_file_path.empty()) {
         /*不只使用模块名，日志等级，时间标志 time*/
-        log_file =
-                log_directory_path + "/" + module_name + "_" +
+        log_file_path =
+                log_directory_path + module_name + "_" +
                 log_level_info_dict[log_level].first[0] +
-                "_" + "size" + ".log";
+                "_" + "time" + ".log";
     }
     /*判断并生成日志文件*/
     judge_and_create_log_file();
@@ -253,6 +258,14 @@ void LogFile::rotate_by_time() {
 
 /*按大小切割数据方法*/
 void LogFile::rotate_by_size() {
+    /*先判定日志文件名，这里为空默认初始化*/
+    if (log_file_path.empty()) {
+        /*不只使用模块名，日志等级，时间标志 time*/
+        log_file_path =
+                log_directory_path + module_name + "_" +
+                log_level_info_dict[log_level].first[0] +
+                "_" + "size" + ".log";
+    }
     /*判断并生成日志文件*/
     judge_and_create_log_file();
 
@@ -260,49 +273,53 @@ void LogFile::rotate_by_size() {
 
 /*判断并生成日志文件*/
 void LogFile::judge_and_create_log_file() {
-    /*todo 使用open获取句柄进行判定*/
     /*创建日志文件并获取句柄*/
-//    if (access(log_file.c_str(), F_OK) != 0) {
-//        /*尝试打开文件*/
-//        file_stream.open(log_file, ios::app);
-//        /*如果文件流没有成功打开*/
-//        if (!file_stream.is_open()) {
-//            throw LogException(
-//                    "The log file corresponding to the log level '%s' of the module '%s' failed to be created",
-//                    log_level_info_dict[log_level].first[0].c_str(),
-//                    module_name.c_str());
-//        }
-//        /*建立构造时间*/
-//        use_file_build_time = time(nullptr);
-//    }
-//    /*如果没有写权限*/
-//    if (access(log_file.c_str(), W_OK) != 0) {
-//        /*清空日志路径*/
-//        log_file = "";
-//        /*如果保存了文件流关闭*/
-//        if (file_stream.is_open()) {
-//            file_stream.close();
-//        }
-//        throw LogException(
-//                "The module that outputs log information does not exist");
-//    }
-//    /*如果没有获取输出文件流，获取*/
-//    if (!file_stream.is_open()) {
-//        /*尝试打开文件*/
-//        file_stream.open(log_file, ios::app);
-//        /*如果文件流没有成功打开*/
-//        if (!file_stream.is_open()) {
-//            throw LogException(
-//                    "Failed to write the log file corresponding to the log level '%s' of the module '%s'",
-//                    log_level_info_dict[log_level].first[0].c_str(),
-//                    module_name.c_str());
-//        }
-//    }
+    if (access(log_file_path.c_str(), F_OK) != 0) {
+        /*尝试打开文件*/
+        file_handler = open(log_file_path.c_str(), O_CREAT | O_WRONLY,
+                            FILE_MODEL_644);
+        /*如果文件流没有成功打开*/
+        if (file_handler == -1) {
+            throw LogException(
+                    "The log file '%s' corresponding to the log level '%s' of the module '%s' failed to be created",
+                    log_file_path.c_str(),
+                    log_level_info_dict[log_level].first[0].c_str(),
+                    module_name.c_str());
+        }
+        /*建立构造时间*/
+        use_file_build_time = time(nullptr);
+    }
+    /*如果没有写权限*/
+    if (access(log_file_path.c_str(), W_OK) != 0) {
+        /*如果保存了文件流关闭*/
+        if (file_handler > -1) {
+            close(file_handler);
+        }
+        throw LogException(
+                "The log file '%s' with module '%s' which log level is '%s' does not have write permission",
+                log_file_path.c_str(),
+                log_level_info_dict[log_level].first[0].c_str(),
+                module_name.c_str());
+    }
+    /*文件存在，但没有获取输出文件流，获取*/
+    if (file_handler == -1) {
+        /*尝试打开文件,追加方式*/
+        file_handler = open(log_file_path.c_str(), O_WRONLY | O_APPEND);
+        /*如果文件流没有成功打开*/
+        if (file_handler == -1) {
+            log_file_path = "";
+            throw LogException(
+                    "Failed to write the log file corresponding to the log level '%s' of the module '%s'",
+                    log_level_info_dict[log_level].first[0].c_str(),
+                    module_name.c_str());
+        }
+    }
 }
 
 /*建立模块名和日志等级
  * params use_module_name:模块名
  * params out_log_level:日志输出等级
+ * return
  * */
 void LogFile::set_module_name_log_level(const string &use_module_name,
                                         const log_level_t &out_log_level) {
@@ -312,20 +329,11 @@ void LogFile::set_module_name_log_level(const string &use_module_name,
 
 /*适应单独更新数据
  * params use_module_name:模块名
+ * return
  * */
 void LogFile::set_module_name(const string &use_module_name) {
     module_name = use_module_name;
 }
 
-///*复制构造函数*/
-//LogFile::LogFile(const LogFile &file) {
-//    rotate_type = file.rotate_type;
-//    when = file.when;
-//    backup_count = file.backup_count;
-//    log_directory_path = file.log_directory_path;
-//    log_files = file.log_files;
-//    use_file_build_time = file.use_file_build_time;
-//    log_file = file.log_file;
-//}
 
 

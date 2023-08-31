@@ -112,10 +112,13 @@ public:
                     const std::string & message);
 
     /*判断debug模式
+     * return
      * */
     void judge_debug();
 
-    /*获取debug状态*/
+    /*获取debug状态
+     * return 是否debug模式
+     * */
     [[nodiscard]] bool get_debug() const;
 
     /*调用输出方法

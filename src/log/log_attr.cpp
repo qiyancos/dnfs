@@ -98,7 +98,7 @@ LoggerAttr::get_log_message(string &log_message, log_level_t log_le,
                             const int &pid,
                             const string &message) {
     /*获取设置的日志格式进行判断替换*/
-    log_message = formatter;
+    log_message = formatter+"\n";
 
     /*循环判定选中的格式，选中就替换*/
     for (unsigned int i = 0; i < FMT_LOG_FORMAT_COUNT; i++) {
@@ -112,46 +112,55 @@ LoggerAttr::get_log_message(string &log_message, log_level_t log_le,
                                                 regex(
                                                         "%\\(program_name\\)"),
                                                 logger.program_name);
+                    break;
                 case 1:
                     /*主机名*/
                     log_message = regex_replace(log_message,
                                                 regex("%\\(hostname\\)"),
                                                 logger.program_name);
+                    break;
                 case 2:
                     /*日志级别数字*/
                     log_message = regex_replace(log_message,
                                                 regex("%\\(levelname\\)"),
                                                 log_level_info_dict[log_le].first[0]);
+                    break;
                 case 3:
                     /*输出模块的完整路径名*/
                     log_message = regex_replace(log_message,
                                                 regex("%\\(pathname\\)"),
                                                 file);
+                    break;
                 case 4:
                     /*输出模块的文件名*/
                     log_message = regex_replace(log_message,
                                                 regex("%\\(filename\\)"),
                                                 file_name);
+                    break;
                 case 5:
                     /*模块名*/
                     log_message = regex_replace(log_message,
                                                 regex("%\\(modulename\\)"),
                                                 module_name);
+                    break;
                 case 6:
                     /*调用方法名*/
                     log_message = regex_replace(log_message,
                                                 regex("%\\(funcName\\)"),
                                                 func);
+                    break;
                 case 7:
                     /*调用行号*/
                     log_message = regex_replace(log_message,
                                                 regex("%\\(lineno\\)"),
                                                 to_string(line));
+                    break;
                 case 8:
                     /*当前时间，UNIX浮点数表示*/
                     log_message = regex_replace(log_message,
                                                 regex("%\\(created\\)"),
                                                 to_string(record_time));
+                    break;
                 case 9:
                     /*自logger创建以来的毫秒数*/
                     log_message = regex_replace(log_message,
@@ -160,36 +169,42 @@ LoggerAttr::get_log_message(string &log_message, log_level_t log_le,
                                                 to_string(
                                                         logger.get_log_init_time() -
                                                         time(nullptr)));
+                    break;
                 case 10:
                     /* 字符串形式的当前时间 默认为2023-08-18 11:18:45998*/
                     log_message = regex_replace(log_message,
                                                 regex("%\\(asctime\\)"),
                                                 get_record_time(record_time,
                                                                 date_format));
+                    break;
                 case 11:
                     /*打印线程id*/
                     /*将pid转化为字符串*/
                     log_message = regex_replace(log_message,
                                                 regex("%\\(thread\\)"),
                                                 pid_to_string(tid));
+                    break;
                 case 12:
                     /*打印线程名*/
                     log_message = regex_replace(log_message,
                                                 regex("%\\(threadName\\)"),
                                                 ThreadPool::get_target_thread_name(
                                                         tid));
+                    break;
                 case 13:
                     /*打印进程id*/
                     log_message = regex_replace(log_message,
                                                 regex("%\\(process\\)"),
                                                 to_string(pid));
+                    break;
                 case 14:
                     /*打印用户信息*/
                     log_message = regex_replace(log_message,
                                                 regex("%\\(message\\)"),
                                                 message);
+                    break;
                 default:
-                    continue;
+                    break;
             }
         }
 
@@ -198,8 +213,7 @@ LoggerAttr::get_log_message(string &log_message, log_level_t log_le,
 
 
 /*判断debug模式
- * params log_attr:需要判定的日志属性结构体对象，直接更改其属性
- * params log_level:判定的日志等级
+ * return
  * */
 void LoggerAttr::judge_debug() {
     /*遍历别名列表*/
@@ -214,7 +228,9 @@ void LoggerAttr::judge_debug() {
         }
 }
 
-/*获取debug状态*/
+/*获取debug状态
+ * return 是否debug模式
+ * */
 bool LoggerAttr::get_debug() const {
     return debug_on;
 }

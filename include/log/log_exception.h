@@ -14,17 +14,24 @@
  */
 #ifndef DNFSD_LOG_EXCEPTION_H
 #define DNFSD_LOG_EXCEPTION_H
+
 #include <iostream>
 #include <exception>
 #include <utility>
-class LogException :public std::exception{
+
+class LogException : public std::exception {
 private:
     /*需要显示的错误信息*/
     std::string error_message;
 public:
-    explicit LogException(const char *format,...);
-    /*返回错误信息*/
-    [[nodiscard]] char const* what() const  _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_USE_NOEXCEPT override;;
+    /*构造函数*/
+    explicit LogException(const char *format, ...);
+
+    /*返回错误信息
+     * return 错误信息
+     * */
+    [[nodiscard]] char const *
+    what() const _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_USE_NOEXCEPT override;;
 };
 
 

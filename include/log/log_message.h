@@ -82,6 +82,7 @@ public:
 
     /*生成日志信息
      * params format_message:生成的日志信息
+     * return
      * */
     void ganerate_log_message(std::string &format_message);
 
@@ -99,7 +100,9 @@ public:
      * */
     int out_message(std::string &message, std::string *error_info);
 
-    /*得到日志记录时间*/
+    /*得到日志记录时间
+     * return 获取的日志记录时间
+     * */
     [[nodiscard]] time_t get_record_time() const;
 
 };

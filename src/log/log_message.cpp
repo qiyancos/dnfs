@@ -115,6 +115,7 @@ LogMessage::LogMessage(const string &module_name,
 
 /*生成日志信息
  * params format_message:生成的日志信息
+ * return
  * */
 void
 LogMessage::ganerate_log_message(string &format_message) {
@@ -153,7 +154,9 @@ int LogMessage::out_message(string &message, string *error_info) {
     return log_attr->out_message(log_level, message, error_info);
 }
 
-/*得到日志记录时间*/
+/*得到日志记录时间
+ * return 获取的日志记录时间
+ * */
 time_t LogMessage::get_record_time() const {
     return record_time;
 }

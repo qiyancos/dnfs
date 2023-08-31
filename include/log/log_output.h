@@ -52,11 +52,13 @@ public:
     /*建立模块名和日志等级
      * params module_name:模块名
      * params out_log_level:日志输出等级
+     * return
      * */
     void set_module_name_log_level(const std::string& module_name,const log_level_t &out_log_level);
 
     /*适应单独更新模块名
      * params module_name:模块名
+     * return
      * */
     void set_module_name(const std::string &module_name);
 

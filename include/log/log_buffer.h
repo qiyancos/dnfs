@@ -46,7 +46,9 @@ private:
     std::mutex write_mtx;
 
 public:
-    /*将缓存写入文件,监听log_num*/
+    /*将缓存写入文件,监听log_num
+     * return
+     * */
     void output_thread();
 
     /*无参构造函数，使用默认的缓存限制*/

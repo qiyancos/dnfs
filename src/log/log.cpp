@@ -85,15 +85,10 @@ void Logger::init_module(const string &module_name) {
     }
 }
 
-/*默认构造函数*/
-//Logger::Logger() {
-//    /*开启缓存线程*/
-//    log_buffer.output_thread();
-//}
-
 /*设置退出函数,和退出状态码
  * params e_code:错误码
  * params exit_f:执行错误函数
+ * return
  * */
 void Logger::set_exit_func(int e_code, void (*exit_f)(int)) {
     exit_func = exit_f;
@@ -479,6 +474,7 @@ Logger::set_module_date_format(const string &module_name,
  * params func:调用方法名
  * params format:用户打印信息格式
  * params ...:用户打印信息,需对应format
+ * return
  * */
 void Logger::_log(const string &module_name, log_level_t log_level,
                   const string &file, const int &line, const string &func,
@@ -509,15 +505,6 @@ void Logger::_log(const string &module_name, log_level_t log_level,
                                                 module_attr[module_name], args);
 
             va_end(args);
-//            string result;
-//            string *error_info;
-//            string s;
-//            error_info = &s;
-//            if (log_message.ganerate_log_message(result, error_info) == 0) {
-//                cout << result << endl;
-//            } else {
-//                cout << *error_info << endl;
-//            }
 
             /*将LogMessage对象加到缓存*/
             log_buffer.add_log_buffer(*(unsigned int *) &tid, log_message);
@@ -587,7 +574,9 @@ int Logger::format_module_log(const string &module_name, string &log_message,
     return 0;
 }
 
-/*将所有的模板设置为默认属性*/
+/*将所有的模板设置为默认属性
+ * return
+ * */
 void Logger::set_all_module_attr_default() {
     /*遍历建立所有默认属性*/
     for (auto &log_attr: module_attr) {
@@ -611,6 +600,7 @@ time_t Logger::get_log_init_time() const {
 
 /*设置缓存大小
  * params buffer_limit:设置的缓存大小
+ * return
  * */
 void Logger::set_buffer_limit(const int &buffer_limit) {
     log_buffer.set_limit(buffer_limit);

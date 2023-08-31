@@ -22,7 +22,9 @@ atomic<int> LogBuffer::log_num = 0;
 
 LogBuffer::LogBuffer() = default;
 
-/*将缓存写入文件,监听log_num*/
+/*将缓存写入文件,监听log_num
+ * return
+ * */
 void LogBuffer::output_thread() {
     /*自动上锁*/
     unique_lock<mutex> write_uk(write_mtx, defer_lock);

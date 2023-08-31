@@ -18,7 +18,9 @@
 
 #include <iostream>
 #include <unistd.h>
-#include <fstream>
+#include<sys/types.h>
+#include<sys/stat.h>
+#include<fcntl.h>
 #include <log/log_data.h>
 
 class LogFile {
@@ -66,11 +68,10 @@ private:
     /*当前使用日志建立的时间*/
     time_t use_file_build_time = time(nullptr);
 
-    /*todo 使用这个，使用open句柄*/
-//    std::ofstream file_stream;
+    int file_handler=-1;
 
     /*当前使用日志文件名*/
-    std::string log_file;
+    std::string log_file_path;
 
     /*设置对应模块名*/
     std::string module_name = "default";
@@ -82,11 +83,18 @@ public:
     /*默认构造函数*/
     LogFile();
 
-    /*解析建立数据*/
+    /*解析建立数据
+     * params config_str:日志文件配置信息
+     * params error_info:错误信息
+     * return: 状态码 0 生成成功 其他 生成失败
+     * */
     int generate_data(const std::string &config_str, std::string *error_info);
 
-    /*输出日志信息*/
-    int out_message(const std::string &message, std::string *error_info);
+    /*输出日志信息
+     * params message:日志信息
+     * return
+     * */
+    void out_message(const std::string &message);
 
     /*不切割日志*/
     void not_rotate();
@@ -103,18 +111,17 @@ public:
     /*建立模块名和日志等级
      * params use_module_name:模块名
      * params out_log_level:日志输出等级
+     * return
      * */
     void set_module_name_log_level(const std::string &use_module_name,
                                    const log_level_t &out_log_level);
 
     /*适应单独更新模块名
      * params use_module_name:模块名
+     * return
      * */
     void set_module_name(const std::string &use_module_name);
 
-
-    /*复制构造函数*/
-//    LogFile(const LogFile &file);
 
 };
 

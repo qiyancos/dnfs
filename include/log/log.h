@@ -128,6 +128,7 @@ public:
     /*设置退出函数,和退出状态码
      * params e_code:错误码
      * params exit_f:执行错误函数
+     * return
      * */
     void set_exit_func(int e_code, void (*exit_f)(int));
 
@@ -273,6 +274,7 @@ public:
      * params func:调用方法名
      * params format:用户打印信息格式
      * params ...:用户打印信息,需对应format
+     * return
      * */
     void _log(const std::string &module_name, log_level_t log_level,
               const std::string &file, const int &line,
@@ -311,7 +313,9 @@ public:
                           const std::string &message,
                           std::string *error_info);
 
-    /*将所有的模板设置为默认属性*/
+    /*将所有的模板设置为默认属性
+     * return
+     * */
     void set_all_module_attr_default();
 
     /*获取log模块建立时间*/
@@ -319,6 +323,7 @@ public:
 
     /*设置缓存大小
      * params buffer_limit:设置的缓存大小
+     * return
      * */
     void set_buffer_limit(const int &buffer_limit);
 
