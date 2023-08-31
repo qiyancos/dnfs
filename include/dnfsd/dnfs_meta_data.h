@@ -22,6 +22,8 @@ extern "C" {
 #include "rpc/svc.h"
 }
 
+#include <string>
+
 #include "nfs/nfsv41.h"
 #include "nfs/nfs23.h"
 
@@ -129,8 +131,8 @@ typedef struct nfs_function_desc__ {
 typedef struct nfs_request {
     struct svc_req svc;
     struct dnfs_request_lookahead lookahead;
-//    nfs_arg_t arg_nfs;
-//    nfs_res_t *res_nfs;
+    nfs_arg_t arg_nfs;
+    nfs_res_t *res_nfs;
     const nfs_function_desc_t *funcdesc;
     void *proc_data;
     /** This request may be queued up pending completion of the request
@@ -138,6 +140,23 @@ typedef struct nfs_request {
      */
     TAILQ_ENTRY(nfs_request) dupes;
 } nfs_request_t;
+
+typedef enum dupreq_status {
+    DUPREQ_SUCCESS = 0,
+    DUPREQ_BEING_PROCESSED,
+    DUPREQ_EXISTS,
+    DUPREQ_DROP,
+} dupreq_status_t;
+
+enum nfs_req_result {
+    NFS_REQ_OK,
+    NFS_REQ_DROP,
+    NFS_REQ_ERROR,
+    NFS_REQ_REPLAY,
+    NFS_REQ_ASYNC_WAIT,
+    NFS_REQ_XPRT_DIED,
+    NFS_REQ_AUTH_ERR,
+};
 
 #define NOTHING_SPECIAL 0x0000	/* Nothing to be done for this kind of
 				   request */

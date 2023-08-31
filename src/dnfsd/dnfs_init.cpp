@@ -478,6 +478,8 @@ SVCXPRT *tcp_xprt;
 /* 给每一个协议创建相应的svcxprt网络传输句柄，每一个协议对应的每一个网络协议都
  * 有一个单独的XPRT传输句柄，用来执行后续的处理操作 */
 void create_svcxprts() {
+    LOG(MODULE_NAME, D_INFO, "Create new svc xprts");
+
     /* 创建UDP相关的XPRT */
     udp_xprt = svc_dg_create(udp_socket,
                              nfs_param.core_param.rpc.max_send_buffer_size,

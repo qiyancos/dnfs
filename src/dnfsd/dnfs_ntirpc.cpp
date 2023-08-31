@@ -16,6 +16,7 @@
 extern "C" {
 #include "rpc/rpc.h"
 #include "rpc/svc.h"
+#include "rpc/svc_auth.h"
 }
 
 #include <assert.h>
@@ -30,6 +31,8 @@ extern "C" {
 #include "dnfsd/dnfs_meta_data.h"
 #include "dnfsd/dnfs_ntirpc.h"
 #include "dnfsd/dnfs_config.h"
+#include "dnfsd/dnfs_auth.h"
+#include "dnfsd/dnfs_exports.h"
 
 using namespace std;
 
@@ -409,9 +412,162 @@ static enum xprt_stat nfs_rpc_noprog(nfs_request_t *reqdata) {
     return svcerr_noprog(&reqdata->svc);
 }
 
+static enum nfs_req_result complete_request(
+        nfs_request_t *reqdata, enum nfs_req_result rc) {
+    SVCXPRT *xprt = reqdata->svc.rq_xprt;
+    const nfs_function_desc_t *reqdesc = reqdata->funcdesc;
+
+    /* If request is dropped, no return to the client */
+    if (rc == NFS_REQ_DROP) {
+        /* The request was dropped */
+        LOG(MODULE_NAME, D_INFO,
+            "Drop request rpc_xid=%" PRIu32
+            ", program %" PRIu32
+            ", version %" PRIu32
+            ", function %" PRIu32,
+            reqdata->svc.rq_msg.rm_xid,
+            reqdata->svc.rq_msg.cb_prog,
+            reqdata->svc.rq_msg.cb_vers,
+            reqdata->svc.rq_msg.cb_proc);
+        return rc;
+    }
+
+    LOG(MODULE_NAME, D_INFO,
+        "Before svc_sendreply on socket %d", xprt->xp_fd);
+
+    reqdata->svc.rq_msg.RPCM_ack.ar_results.where = reqdata->res_nfs;
+    reqdata->svc.rq_msg.RPCM_ack.ar_results.proc =
+            reqdesc->xdr_encode_func;
+
+    if (svc_sendreply(&reqdata->svc) >= XPRT_DIED) {
+        LOG(MODULE_NAME, D_INFO,
+            "NFS DISPATCHER: FAILURE: Error while calling svc_sendreply on"
+            " a new request. rpcxid=%" PRIu32
+            " socket=%d function:%s program:%" PRIu32
+            " nfs version:%" PRIu32
+            " proc:%" PRIu32
+            " errno: %d",
+            reqdata->svc.rq_msg.rm_xid,
+            xprt->xp_fd,
+            reqdesc->funcname,
+            reqdata->svc.rq_msg.cb_prog,
+            reqdata->svc.rq_msg.cb_vers,
+            reqdata->svc.rq_msg.cb_proc,
+            errno);
+        SVC_DESTROY(xprt);
+        rc = NFS_REQ_XPRT_DIED;
+    }
+
+    LOG(MODULE_NAME, D_INFO,
+        "After svc_sendreply on socket %d", xprt->xp_fd);
+
+    return rc;
+}
+
 /* RPC处理主程序入口 */
-static enum xprt_stat nfs_rpc_process_request(nfs_request_t *reqdata) {
-    return svcerr_auth(&reqdata->svc, AUTH_FAILED);
+static enum xprt_stat nfs_rpc_process_request(nfs_request_t *reqdata, bool retry) {
+    const nfs_function_desc_t *reqdesc = reqdata->funcdesc;
+    nfs_arg_t *arg_nfs = &reqdata->arg_nfs;
+    SVCXPRT *xprt = reqdata->svc.rq_xprt;
+    XDR *xdrs = reqdata->svc.rq_xdrs;
+    enum auth_stat auth_rc = AUTH_OK;
+    int rc = NFS_REQ_OK;
+    bool no_dispatch = false;
+
+    if (retry)
+        goto retry_after_drc_suspend;
+
+    LOG(MODULE_NAME, D_INFO,
+        "About to authenticate Prog=%" PRIu32
+        ", vers=%" PRIu32 ", proc=%" PRIu32
+        ", xid=%" PRIu32 ", SVCXPRT=%p, fd=%d",
+        reqdata->svc.rq_msg.cb_prog,
+        reqdata->svc.rq_msg.cb_vers,
+        reqdata->svc.rq_msg.cb_proc,
+        reqdata->svc.rq_msg.rm_xid,
+        xprt, xprt->xp_fd);
+
+    /* If authentication is AUTH_NONE or AUTH_UNIX, then the value of
+     * no_dispatch remains false and the request proceeds normally.
+     *
+     * If authentication is RPCSEC_GSS, no_dispatch may have value true,
+     * this means that gc->gc_proc != RPCSEC_GSS_DATA and that the message
+     * is in fact an internal negotiation message from RPCSEC_GSS using
+     * GSSAPI. It should not be processed by the worker and SVC_STAT
+     * should be returned to the dispatcher.
+     */
+    auth_rc = svc_auth_authenticate(&reqdata->svc, &no_dispatch);
+    if (auth_rc != AUTH_OK) {
+        LOG(MODULE_NAME, L_INFO,
+            "Could not authenticate request... rejecting with AUTH_STAT=%s",
+            auth_stat2str(auth_rc));
+        return svcerr_auth(&reqdata->svc, auth_rc);
+    }
+
+    /*
+     * Extract RPC argument.
+     */
+    LOG(MODULE_NAME, D_INFO,
+        "Before SVCAUTH_CHECKSUM on SVCXPRT %p fd %d",
+        xprt, xprt->xp_fd);
+
+    memset(arg_nfs, 0, sizeof(nfs_arg_t));
+    reqdata->svc.rq_msg.rm_xdr.where = arg_nfs;
+    reqdata->svc.rq_msg.rm_xdr.proc = reqdesc->xdr_decode_func;
+    xdrs->x_public = &reqdata->lookahead;
+
+    if (!SVCAUTH_CHECKSUM(&reqdata->svc)) {
+        LOG(MODULE_NAME, D_INFO,
+            "SVCAUTH_CHECKSUM failed for Program %" PRIu32
+            ", Version %" PRIu32
+            ", Function %" PRIu32
+            ", xid=%" PRIu32
+            ", SVCXPRT=%p, fd=%d",
+            reqdata->svc.rq_msg.cb_prog,
+            reqdata->svc.rq_msg.cb_vers,
+            reqdata->svc.rq_msg.cb_proc,
+            reqdata->svc.rq_msg.rm_xid,
+            xprt, xprt->xp_fd);
+
+        if (!xdr_free(reqdesc->xdr_decode_func, arg_nfs)) {
+            LOG(MODULE_NAME, L_ERROR,
+                "%s FAILURE: Bad xdr_free for %s",
+                __func__, reqdesc->funcname);
+        }
+        return svcerr_decode(&reqdata->svc);
+    }
+
+    /* Set up initial export permissions that don't allow anything. */
+    export_check_access();
+
+retry_after_drc_suspend:
+    /* If we come here on a retry after drc suspend, then we already did
+     * the stuff above.
+     */
+
+    /* Don't waste time for null or invalid ops
+     * null op code in all valid protos == 0
+     * and invalid protos all point to invalid_funcdesc
+     * NFS v2 is set to invalid_funcdesc in nfs_rpc_get_funcdesc()
+     */
+    if (reqdesc == &invalid_funcdesc
+        || reqdata->svc.rq_msg.cb_proc == NFSPROC_NULL) {
+
+        rc = reqdesc->service_function(arg_nfs, &reqdata->svc,
+                                       reqdata->res_nfs);
+
+        if (rc == NFS_REQ_ASYNC_WAIT) {
+            /* The request is suspended, don't touch the request in
+             * any way because the resume may already be scheduled
+             * and running on nother thread. The xp_resume_cb has
+             * already been set up before we started processing
+             * ops on this request at all.
+             */
+            return XPRT_SUSPEND;
+        }
+    }
+    rc = complete_request(reqdata, static_cast<nfs_req_result>(rc));
+    return SVC_STAT(xprt);
 }
 
 /* 如果处理协议存在但是相应的函数不存在，那么会执行该函数处理错误 */
@@ -453,7 +609,7 @@ enum xprt_stat nfs_rpc_valid_NFS(struct svc_req *req) {
         if (req->rq_msg.cb_proc <= NFSPROC3_COMMIT) {
             reqdata->funcdesc =
                     &nfs3_func_desc[req->rq_msg.cb_proc];
-            return nfs_rpc_process_request(reqdata);
+            return nfs_rpc_process_request(reqdata, false);
         }
         return nfs_rpc_noproc(reqdata);
     }
