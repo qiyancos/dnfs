@@ -36,8 +36,6 @@ void LogBuffer::output_thread() {
 
         /*清空计数器*/
         log_num.store(0);
-        /*日志信息存储列表*/
-        vector<LogMessage> log_massage_list;
 
         /*遍历添加日志信息*/
         for (const auto &buffer: buffer_map) {
@@ -57,7 +55,7 @@ void LogBuffer::output_thread() {
                  return x.get_record_time() < y.get_record_time();
              });
 
-        /*直接遍历输出*/
+        /*输出信息*/
         for (LogMessage &log_message: log_massage_list) {
             /*保存信息*/
             string result;
@@ -68,6 +66,8 @@ void LogBuffer::output_thread() {
             /*进行输出*/
             log_message.out_message(result, nullptr);
         }
+        /*清空信息*/
+        log_massage_list.clear();
     }
 }
 
@@ -114,4 +114,10 @@ void LogBuffer::add_log_buffer(const unsigned int &thread_id,
     if (log_num > buffer_limit) {
         cond.notify_one();
     }
+}
+
+/*退出前清空日志*/
+void LogBuffer::wait_out() {
+    while (!log_massage_list.empty()){}
+    fflush(stdout);
 }

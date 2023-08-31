@@ -327,6 +327,9 @@ public:
      * */
     void set_buffer_limit(const int &buffer_limit);
 
+    /*清空缓存*/
+    void flush();
+
     ~Logger();
 
 };

@@ -34,7 +34,7 @@ private:
     std::map<unsigned int, std::vector<LogMessage>> buffer_map;
 
     /*缓存最大限制，超出限制则将缓存落盘*/
-    int buffer_limit = 2;
+    int buffer_limit = 1;
 
     /*设置线程id哈希锁*/
     std::mutex mtx[10];
@@ -44,6 +44,9 @@ private:
 
     /*通知写线程锁*/
     std::mutex write_mtx;
+
+    /*日志信息存储列表*/
+    std::vector<LogMessage> log_massage_list;
 
 public:
     /*将缓存写入文件,监听log_num
@@ -67,6 +70,9 @@ public:
      * */
     void add_log_buffer(const unsigned int &thread_id,
                         const LogMessage &log_message);
+
+    /*退出前清空日志*/
+    void wait_out();
 };
 
 #endif //LOG_LOG_BUFFER_H

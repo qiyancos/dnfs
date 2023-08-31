@@ -513,6 +513,7 @@ void Logger::_log(const string &module_name, log_level_t log_level,
 
         /*如果是退出标志*/
         if (log_level == LEXIT) {
+            log_buffer.wait_out();
             exit_func(exit_code);
         }
     }
@@ -612,4 +613,9 @@ Logger::~Logger() {
     for (const auto &attr: module_attr) {
         delete attr.second;
     }
+}
+
+/*清空缓存*/
+void Logger::flush() {
+    log_buffer.wait_out();
 }
