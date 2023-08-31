@@ -7,7 +7,9 @@ add_executable(dnfsd
         dnfs_init.cpp
         dnfs_ntirpc.cpp
         dnfs_config.cpp
-        dnfs_signal_proc.cpp dnfsd_exit.cpp)
+        dnfs_signal_proc.cpp
+        dnfsd_exit.cpp
+        dnfs_auth.cpp dnfs_exports.cpp)
 
 target_link_libraries(dnfsd
     PRIVATE
