@@ -598,7 +598,6 @@ Logger::~Logger() {
     log_buffer.set_stop_buffer_flag();
     /*阻塞主线程直到，buffer线程结束*/
     buffer_thread_mv.join();
-    cout<<"buffer thread stop"<<endl;
 
     /*删除new 定义的模块属性*/
     for (const auto &attr: module_attr) {

@@ -18,11 +18,12 @@
 
 #include <iostream>
 #include <unistd.h>
+#include <regex>
+#include <dirent.h>
 #include<sys/types.h>
 #include<sys/stat.h>
 #include<fcntl.h>
 #include <log/log_data.h>
-
 class LogFile {
 private:
     /*日志文件的更新类型*/
@@ -68,13 +69,17 @@ private:
     /*当前使用日志建立的时间*/
     time_t use_file_build_time = 0;
 
+    /*文件句柄*/
     int file_handler=-1;
+
+    /*文件名*/
+    std::string file_name;
 
     /*当前使用日志文件名*/
     std::string log_file_path;
 
     /*最早切取得文件路径，用来超过限制删除*/
-    std::string del_file_path;
+    std::vector<std::string> file_path_list;
 
     /*设置对应模块名*/
     std::string module_name = "default";
@@ -131,7 +136,27 @@ public:
      * */
     void set_module_name(const std::string &use_module_name);
 
+    /*读取日志目录下的所有文件
+     * return 获取的文件字符串
+     * */
+    std::string get_dir_file();
 
+    /*获取切割文件编号
+     * params search_file_name:需排序的文件名
+     * return 获取的文件名
+     * */
+    std::string get_file_number(const std::string &search_file_name);
+
+    /*获取午夜的时间戳
+     * return 获取的午夜时间
+     * */
+    static time_t get_mid_night(const time_t &now_time);
+
+    /*切割文件重命名
+     * params now_time:记录的时间
+     * return
+     * */
+    void rotate_log_file(const time_t &now_time);
 };
 
 #endif //LOG_LOG_FILE_H

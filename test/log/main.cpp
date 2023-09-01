@@ -78,7 +78,7 @@ int main() {
     /*设置指定模块日志等级日志文件配置*/
     cout << "设置指定模块日志等级日志文件配置:"
          << logger.set_module_log_output("yes",
-                                         "stderr:syslog:stdout:/home/jy/Public/log/test/@(time,MINUTE,30):/home/jy/Public/log/dasdad/",
+                                         "stderr:syslog:stdout:/home/jy/Public/log/test@(time,MINUTE,30):/home/jy/Public/log/dasdad/",
                                          &s) << ":" << s << endl;
     logger.unlock_out_put();
     LOG("yes", L_ERROR, "%s", "what fuck4");
@@ -98,7 +98,7 @@ int main() {
     cout << "设置指定模块多个日志等级日志文件配置:"
          << logger.set_module_log_output("yes",
                                          log_level_list,
-                                         "stderr:syslog:/home/jy/Public/log/no/@(size,3gb,30):/home/jy/Public/log/dasdad",
+                                         "stderr:syslog:/home/jy/Public/log/no@(size,3gb,30):/home/jy/Public/log/dasdad",
                                          &s) << ":" << s << endl;
     logger.unlock_out_put();
     LOG("yes", L_ERROR, "%s", "what fuck6");

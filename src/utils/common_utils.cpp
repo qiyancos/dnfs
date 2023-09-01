@@ -35,7 +35,7 @@ map<const void *, int> print_depth;
 /* 将二进制的socket地址转化为可读的字符串 */
 std::string format(sockaddr_storage *out_data) {
     int port = 0;
-    const char *name = NULL;
+    const char *name = nullptr;
     char ipname[SOCK_NAME_MAX];
 
     switch (out_data->ss_family) {
@@ -59,7 +59,7 @@ std::string format(sockaddr_storage *out_data) {
             return ((struct sockaddr_un *) out_data)->sun_path;
     }
 
-    if (name == NULL) {
+    if (name == nullptr) {
         return "<unknown>";
     } else {
         return string(name) + ":" + to_string(port);

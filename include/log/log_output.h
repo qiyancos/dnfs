@@ -21,7 +21,8 @@
 #include <cstdarg>
 #include <log/log_file.h>
 #include <log/log_data.h>
-
+/*todo 打印到一个日志文件*/
+#define ONE_FILE true
 /*日志输出属性*/
 class LogOutputAttr {
 private:

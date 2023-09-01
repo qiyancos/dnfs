@@ -14,6 +14,8 @@
  */
 
 #include <vector>
+#include<sys/stat.h>
+#include<unistd.h>
 #include "log/log_file.h"
 #include "utils/common_utils.h"
 #include "log/log_exception.h"
@@ -235,11 +237,11 @@ void
 LogFile::not_rotate() {
     /*先判定日志文件名*/
     if (log_file_path.empty()) {
+        /*构造文件名*/
+        file_name = module_name + ".log";
         /*不切割只使用模块名和日志等级*/
         log_file_path =
-                log_directory_path + module_name + "_" +
-                log_level_info_dict[log_level].first[0] +
-                ".log";
+                log_directory_path + "/" + file_name;
     }
     /*判断并生成日志文件*/
     judge_and_create_log_file();
@@ -251,26 +253,29 @@ LogFile::not_rotate() {
 void LogFile::rotate_by_time() {
     /*先判定日志文件名，这里为空默认初始化*/
     if (log_file_path.empty()) {
+        /*构造文件名*/
+        file_name = module_name + "_" + "time" + ".log";
         /*不只使用模块名，日志等级，时间标志 time*/
         log_file_path =
-                log_directory_path + module_name + "_" +
-                log_level_info_dict[log_level].first[0] +
-                "_" + "time" + ".log";
+                log_directory_path + "/" + file_name;
+
+        /*判断并生成日志文件*/
+        judge_and_create_log_file();
     }
 
-//    /*获取现在的时间*/
-//    time_t now_time=time(nullptr);
-//
-//    /*如果已经建立了写入日志，并且超过了时间限制,进行切割*/
-//    if(use_file_build_time!=0 and (now_time-use_file_build_time)>log_limit.when_interval){
-//        /*先关闭之前的文件*/
-//        if(file_handler>-1){
-//            close(file_handler);
-//        }
-//        /*生成切分的日志文件名称，当前的日期加上编号*/
-//        string rotate_path=log_file_path+"."+get_record_time(now_time,"%Y-%m-%d");
-//
-//    }
+    /*获取现在的时间*/
+    time_t now_time = time(nullptr);
+
+    /*如果已经建立了写入日志，并且超过了时间限制,进行切割*/
+    if (use_file_build_time != 0 and
+        (now_time - use_file_build_time) > log_limit.when_interval) {
+        /*进行午夜判定*/
+        if (when != MIDNIGHT or get_mid_night(now_time) == now_time) {
+            /*切割文件*/
+            rotate_log_file(now_time);
+        }
+
+    }
     /*判断并生成日志文件*/
     judge_and_create_log_file();
 }
@@ -283,10 +288,26 @@ void LogFile::rotate_by_size() {
     if (log_file_path.empty()) {
         /*不只使用模块名，日志等级，时间标志 time*/
         log_file_path =
-                log_directory_path + module_name + "_" +
-                log_level_info_dict[log_level].first[0] +
+                log_directory_path + "/" + module_name +
                 "_" + "size" + ".log";
+
+        /*判断并生成日志文件*/
+        judge_and_create_log_file();
     }
+
+    /*文件信息保存*/
+    struct stat log_file_stat = {};
+    /*获取文件信息*/
+    fstat(file_handler, &log_file_stat);
+    /*获取现在的时间*/
+    time_t now_time = time(nullptr);
+
+    /*对比文件的大小*/
+    if (log_file_stat.st_size > log_limit.size_limit) {
+        /*切割文件*/
+        rotate_log_file(now_time);
+    }
+
     /*判断并生成日志文件*/
     judge_and_create_log_file();
 
@@ -302,9 +323,8 @@ void LogFile::judge_and_create_log_file() {
         /*如果文件流没有成功打开*/
         if (file_handler == -1) {
             throw LogException(
-                    "The log file '%s' corresponding to the log level '%s' of the module '%s' failed to be created",
+                    "The log file '%s' of the module '%s' failed to be created",
                     log_file_path.c_str(),
-                    log_level_info_dict[log_level].first[0].c_str(),
                     module_name.c_str());
         }
         /*建立构造时间*/
@@ -317,9 +337,8 @@ void LogFile::judge_and_create_log_file() {
             close(file_handler);
         }
         throw LogException(
-                "The log file '%s' with module '%s' which log level is '%s' does not have write permission",
+                "The log file '%s' with module '%s' which does not have write permission",
                 log_file_path.c_str(),
-                log_level_info_dict[log_level].first[0].c_str(),
                 module_name.c_str());
     }
     /*文件存在，但没有获取输出文件流，获取*/
@@ -330,9 +349,8 @@ void LogFile::judge_and_create_log_file() {
         if (file_handler == -1) {
             log_file_path = "";
             throw LogException(
-                    "Failed to write the log file corresponding to the log level '%s' of the module '%s'",
-                    log_level_info_dict[log_level].first[0].c_str(),
-                    module_name.c_str());
+                    "Failed to open module '%s' log file '%s'",
+                    module_name.c_str(), log_file_path.c_str());
         }
     }
 }
@@ -354,6 +372,136 @@ void LogFile::set_module_name_log_level(const string &use_module_name,
  * */
 void LogFile::set_module_name(const string &use_module_name) {
     module_name = use_module_name;
+}
+
+/*读取日志目录下的所有文件
+ * return 获取的文件字符串
+ * */
+std::string LogFile::get_dir_file() {
+    /*文件名拼接字符串*/
+    string file_str;
+
+    /*设置文件目录读取指针*/
+    DIR *dirp;
+
+    /*设置文件读取指针*/
+    struct dirent *dir_entry;
+
+    /*读取日志目录*/
+    if ((dirp = opendir(log_directory_path.c_str())) == nullptr) {
+        return file_str;
+    }
+
+    /*遍历目录*/
+    while ((dir_entry = readdir(dirp)) != nullptr) {
+        /*判断是不是文件*/
+        if (dir_entry->d_type == DT_REG) {
+            /*添加结果*/
+            file_str += ":";
+            file_str += dir_entry->d_name;
+        }
+    }
+    /*关闭文件目录句柄*/
+    closedir(dirp);
+    /*返回结果*/
+    return file_str;
+}
+
+/*获取切割文件编号
+ * params search_file_name:需排序的文件名
+ * return 获取的文件名
+ * */
+std::string
+LogFile::get_file_number(const string &search_file_name) {
+    /*获取目录下所有的文件名*/
+    string file_str = get_dir_file();
+
+    /*如果没有获取文件列表,直接返回1*/
+    if (file_str.empty()) {
+        return "1";
+    }
+
+    /*进行正则遍历*/
+    /*正则结果保存*/
+    smatch file_match;
+
+    /*设置正则匹配规则*/
+    regex pattern(search_file_name + ".\\d+");
+
+    /*遍历查找数据*/
+    /*设置查询范围*/
+    string::const_iterator iter_begin = file_str.cbegin();
+    string::const_iterator iter_end = file_str.cend();
+
+    /*文件序号*/
+    long int file_number = 1;
+
+    /*开始查找*/
+    while (regex_match(iter_begin, iter_end, file_match, pattern)) {
+        /*分割结果保存*/
+        vector<string> result;
+        /*用文件名切割数据*/
+        split_str(file_match[0].str(), search_file_name + '.', result);
+
+        /*获取标号*/
+        long int now_number = strtol(result[0].c_str(), nullptr, 0);
+        /*获取最大的标号*/
+        if (now_number > file_number) {
+            file_number = now_number;
+        }
+        /*更新迭代器位置*/
+        iter_begin = file_match[0].second;
+    }
+    return to_string(file_number + 1);
+}
+
+/*获取午夜的时间戳
+ * return 获取的午夜时间
+ * */
+time_t LogFile::get_mid_night(const time_t &now_time) {
+    struct tm *tm = localtime(&now_time);
+    /*将小时之下的时间置为0*/
+    tm->tm_hour = 0;
+    tm->tm_min = 0;
+    tm->tm_sec = 0;
+    return mktime(tm);
+}
+
+/*切割文件重命名
+ * params now_time:记录的时间
+ * return
+ * */
+void LogFile::rotate_log_file(const time_t &now_time) {
+    /*先关闭之前的文件*/
+    if (file_handler > -1) {
+        close(file_handler);
+    }
+    /*构造文件名*/
+    string mv_file_name =
+            file_name + "." + format(now_time, 0, "%Y-%m-%d");
+    /*生成切分的日志文件名称，当前的日期加上编号*/
+    string rotate_path = log_directory_path + "/" + mv_file_name + "." +
+                         get_file_number(mv_file_name);
+
+    /*将日志文件重命名*/
+    rename(log_file_path.c_str(), rotate_path.c_str());
+
+    /*记录新的文件路径*/
+    file_path_list.push_back(rotate_path);
+
+    /*日志文件总数加1*/
+    log_files += 1;
+
+    /*判断日志文件数目,超过限制删除*/
+    if (log_files > backup_count) {
+        /*删除文件路径记录的第一条数据*/
+        if (remove(file_path_list[0].c_str()) != 0) {
+            throw LogException("Failed to delete module '%s' log file '%s'",
+                               module_name.c_str(), file_path_list[0].c_str());
+        }
+        /*移除路径记录*/
+        file_path_list.erase(file_path_list.begin());
+    }
 }
 
 
