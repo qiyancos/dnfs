@@ -45,72 +45,92 @@ int main() {
     cout << "复制日志模板:"
          << logger.copy_module_attr_from("yes", "test", &s) << ":" << s << endl;
 
+    logger.lock_out_put();
     /*设置所有模块日志等级日志文件配置*/
     cout << "设置所有模块日志等级日志文件配置:" << logger.set_log_output(
             "stderr:syslog:/home/jy/Public/log/@(time,MINUTE,30):/home/jy/Public/log/dasdad/", &s) << ":" << s
          << endl;
+    logger.unlock_out_put();
     LOG("yes", L_ERROR, "%s", "what fuck1");
 
     /*设置所有模块多个日志等级日志文件配置*/
     /*单个模式更改*/
     vector<log_level_t> log_level_list = {EXIT_ERROR};
+    logger.lock_out_put();
     cout << "设置所有模块多个日志等级日志文件配置:"
          << logger.set_log_output(log_level_list,
                                   "stderr:syslog:/home/jy/Public/log/yes/@(time,MINUTE,30):/home/jy/Public/log/dasdad/",
                                   &s) << ":" << s << endl;
+    logger.unlock_out_put();
     LOG("yes", L_ERROR, "%s", "what fuck2");
 
     /*设置指定日志等级日志文件配置*/
     /*设置全模式更改*/
+    logger.lock_out_put();
     cout << "设置所有模块指定日志等级日志文件配置:"
          << logger.set_log_output(L_ERROR,
                                   "stderr:syslog:/home/jy/Public/log/text",
                                   &s) << ":" << s << endl;
+    logger.unlock_out_put();
     LOG("yes", L_ERROR, "%s", "what fuck3");
 
+    logger.lock_out_put();
     /*设置指定模块日志等级日志文件配置*/
     cout << "设置指定模块日志等级日志文件配置:"
          << logger.set_module_log_output("yes",
                                          "stderr:syslog:stdout:/home/jy/Public/log/test/@(time,MINUTE,30):/home/jy/Public/log/dasdad/",
                                          &s) << ":" << s << endl;
+    logger.unlock_out_put();
     LOG("yes", L_ERROR, "%s", "what fuck4");
 
     /*设置指定日志等级日志文件配置*/
+    logger.lock_out_put();
     cout << "设置指定模块单个日志等级日志文件配置:"
          << logger.set_module_log_output("yes",
                                          L_INFO,
                                          "stderr:syslog:/home/jy/Public/log/single/@(time,MINUTE,30):/home/jy/Public/log/dasdad/",
                                          &s) << ":" << s << endl;
+    logger.unlock_out_put();
     LOG("yes", L_ERROR, "%s", "what fuck5");
 
     /*设置多个日志等级日志文件配置*/
+    logger.lock_out_put();
     cout << "设置指定模块多个日志等级日志文件配置:"
          << logger.set_module_log_output("yes",
                                          log_level_list,
                                          "stderr:syslog:/home/jy/Public/log/no/@(size,3gb,30):/home/jy/Public/log/dasdad",
                                          &s) << ":" << s << endl;
+    logger.unlock_out_put();
     LOG("yes", L_ERROR, "%s", "what fuck6");
 
     /*设置所有模块的日志等级，高于该等级的才可以输出*/
     cout << "设置所有模块的日志等级，高于该等级的才可以输出:" << endl;
+    logger.lock_out_put();
     logger.set_log_level(L_INFO);
+    logger.unlock_out_put();
 
     /*设置指定模块日志等级，高于该等级的才可以输出*/
+    logger.lock_out_put();
     cout << "设置指定模块日志等级，高于该等级的才可以输出:"
          << logger.set_module_log_level("yes", D_INFO, &s) << ":" << endl;
+    logger.unlock_out_put();
 
     /*设置所有模块日志格式*/
+    logger.lock_out_put();
     cout << "设置所有模块日志格式:"
          << logger.set_formatter("%(asctime):%(message)", &s)
          << ":"
          << s << endl;
+    logger.unlock_out_put();
     LOG("yes", L_ERROR, "%s", "what fuck7");
 
     /*设置指定模块日志格式*/
+    logger.lock_out_put();
     cout << "设置指定模块日志格式:" << logger.set_module_formatter("yes",
                                                                    "%(modulename)-%(levelname)-%(asctime):%(message)",
                                                                    &s) << ":"
          << s << endl;
+    logger.unlock_out_put();
     LOG("yes", L_ERROR, "%s", "what fuck8");
 
     /*判断模块日志debug状态*/
@@ -120,14 +140,18 @@ int main() {
     /*设置所有模块日志格式*/
     cout << "设置所有模块日志格式:"
          <<endl;
+    logger.lock_out_put();
     logger.set_date_format("");
+    logger.unlock_out_put();
     LOG("yes", L_ERROR, "%s", "what fuck9");
 
 
     /*设置单独模块日志格式*/
+    logger.lock_out_put();
     cout << "设置单独模块日志格式:"
          << logger.set_module_date_format("yes", "%Y-%m-%d %H:%M:%S", &s) << ":"
          <<s<< endl;
+    logger.unlock_out_put();
     LOG("yes", L_ERROR, "%s", "what fuck10");
 
     /*设置默认模板*/
@@ -135,15 +159,18 @@ int main() {
          << ":" << s << endl;
 
     /*将所有的模板设置为默认属性*/
+    logger.lock_out_put();
     cout << "将所有的模板设置为默认属性:"<< endl;
     logger.set_all_module_attr_default();
+    logger.unlock_out_put();
     LOG("yes", L_ERROR, "%s", "what fuck11");
     cout << "--------" << endl;
 //    this_thread::sleep_for(chrono::seconds(2));
     LOG("test", L_ERROR, "%s", "what fuck12");
+    this_thread::sleep_for(chrono::seconds(2));
 //    this_thread::sleep_for(chrono::seconds(2));
     LOG("test", L_ERROR, "%s", "what fuck13");
-    while(true);
+//    while(true);
 
     return 0;
 }

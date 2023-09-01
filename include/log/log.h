@@ -85,6 +85,8 @@ private:
                                               D_WARN,
                                               D_BACKTRACE,
                                               D_INFO};
+    /*缓存线程指针*/
+    std::thread buffer_thread_mv;
 private:
     /*默认构造函数*/
     Logger();
@@ -302,6 +304,16 @@ public:
 
     /*清空缓存*/
     void flush();
+
+    /*锁住整个buffer
+     * return
+     * */
+    void lock_out_put();
+
+    /*解锁buffer
+     * return
+     * */
+    void unlock_out_put();
 
     ~Logger();
 

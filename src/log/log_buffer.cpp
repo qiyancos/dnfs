@@ -34,12 +34,18 @@ void LogBuffer::output_thread() {
     while (true) {
         /*自动上锁*/
         unique_lock<mutex> write_uk(write_mtx);
-        /*等待锁*/
-        cond.wait(write_uk);
+        /*todo加上时间限制*/
+        /*等待锁,并且设置延时*/
+        cond.wait_for(write_uk,chrono::seconds(WAIT_TIME));
 
         /*谁有flush锁谁操作*/
         unique_lock<mutex> flush_uk(flush_mtx);
         out();
+
+        /*判断是否结束线程*/
+        if(stop_buffer){
+            break;
+        }
     }
 }
 
@@ -65,8 +71,9 @@ void LogBuffer::add_log_buffer(const unsigned int &thread_id,
 
     /*限制锁的范围*/
     {
-        /*所有的操作都要在锁内进行*/
-        /*自动上锁*/
+        /*加入buffer锁*/
+        unique_lock<mutex> bk(buffer_mtx);
+        /*加入buffer单独队列锁*/
         unique_lock<mutex> uk(mtx[hash_id]);
 
         /*已经存在进行添加*/
@@ -83,21 +90,19 @@ void LogBuffer::add_log_buffer(const unsigned int &thread_id,
     }
 }
 
-/*更新属性前强制flush*/
+/*更新属性前强制flush
+ * return
+ * */
 void LogBuffer::flush() {
-    /*强制推送*/
-    {
-        unique_lock<mutex> write_uk(write_mtx);
-        cond.notify_one();
-    }
-    {
-        /*谁有flush锁谁操作*/
-        unique_lock<mutex> flush_uk(flush_mtx);
-        out();
-    }
+    /*谁有flush锁谁操作*/
+    unique_lock<mutex> flush_uk(flush_mtx);
+    out();
 
 }
 
+/*生成数据
+ * return
+ * */
 void LogBuffer::out() {
     /*清空计数器*/
     log_num.store(0);
@@ -132,4 +137,25 @@ void LogBuffer::out() {
     }
     /*清空信息*/
     log_massage_list.clear();
+}
+
+/*锁住整个buffer
+ * return
+ * */
+void LogBuffer::lock_out_put() {
+    buffer_mtx.lock();
+}
+
+/*解锁buffer
+ * return
+ * */
+void LogBuffer::unlock_out_put() {
+    buffer_mtx.unlock();
+}
+
+/*设置buffer结束标志
+ * return
+ * */
+void LogBuffer::set_stop_buffer_flag() {
+    stop_buffer= true;
 }

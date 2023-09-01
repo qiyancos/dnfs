@@ -58,7 +58,8 @@ void Logger::init(const string &program_name_in, const string &hostname_in) {
     init_module("logger");
     /*开启buffer线程*/
     thread buffer_thread(&LogBuffer::output_thread, &log_buffer);
-    buffer_thread.detach();
+    /*同过交换线程保存线程对象*/
+    buffer_thread_mv.swap(buffer_thread);
 }
 
 /*使用默认日志属性初始化一个模块日志
@@ -593,6 +594,13 @@ void Logger::set_buffer_limit(const int &buffer_limit) {
 
 /*析构函数*/
 Logger::~Logger() {
+    /*停止buffer线程*/
+    log_buffer.set_stop_buffer_flag();
+    /*阻塞主线程直到，buffer线程结束*/
+    buffer_thread_mv.join();
+    cout<<"buffer thread stop"<<endl;
+
+    /*删除new 定义的模块属性*/
     for (const auto &attr: module_attr) {
         delete attr.second;
     }
@@ -602,3 +610,18 @@ Logger::~Logger() {
 void Logger::flush() {
     log_buffer.flush();
 }
+
+/*锁住整个buffer
+ * return
+ * */
+void Logger::lock_out_put() {
+    log_buffer.lock_out_put();
+}
+
+/*解锁buffer
+ * return
+ * */
+void Logger::unlock_out_put() {
+    log_buffer.unlock_out_put();
+}
+

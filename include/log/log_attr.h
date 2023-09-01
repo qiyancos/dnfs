@@ -48,7 +48,7 @@ public:
     * */
     std::string formatter = "%(message)";
 
-    /*每一个日志级别可以对应单独的输出日志文件*/
+    /*todo 一个模块一个日志文件，写一个总的日志文件*/
     LogOutputAttr log_level_output[LEVEL_COUNT];
 
     /*日志等级开关，比他小的都可以输出*/
