@@ -47,60 +47,64 @@ int main() {
 
     logger.lock_out_put();
     /*设置所有模块日志等级日志文件配置*/
+//    cout << "设置所有模块日志等级日志文件配置:" << logger.set_log_output(
+//            "stderr:syslog:/home/jy/Public/log/@(time,second,5):/home/jy/Public/log/dasdad/", &s) << ":" << s
+//         << endl;
     cout << "设置所有模块日志等级日志文件配置:" << logger.set_log_output(
-            "stderr:syslog:/home/jy/Public/log/@(time,MINUTE,30):/home/jy/Public/log/dasdad/", &s) << ":" << s
+            "stderr:syslog:/home/jy/Public/log/@(size,1kb,2):/home/jy/Public/log/dasdad/", &s) << ":" << s
          << endl;
     logger.unlock_out_put();
     LOG("yes", L_ERROR, "%s", "what fuck1");
 
     /*设置所有模块多个日志等级日志文件配置*/
     /*单个模式更改*/
-    vector<log_level_t> log_level_list = {EXIT_ERROR};
-    logger.lock_out_put();
-    cout << "设置所有模块多个日志等级日志文件配置:"
-         << logger.set_log_output(log_level_list,
-                                  "stderr:syslog:/home/jy/Public/log/yes/@(time,MINUTE,30):/home/jy/Public/log/dasdad/",
-                                  &s) << ":" << s << endl;
-    logger.unlock_out_put();
+//    vector<log_level_t> log_level_list = {EXIT_ERROR};
+//    logger.lock_out_put();
+//    cout << "设置所有模块多个日志等级日志文件配置:"
+//         << logger.set_log_output(log_level_list,
+//                                  "stderr:syslog:/home/jy/Public/log/yes/@(time,MINUTE,30):/home/jy/Public/log/dasdad/",
+//                                  &s) << ":" << s << endl;
+//    logger.unlock_out_put();
     LOG("yes", L_ERROR, "%s", "what fuck2");
 
     /*设置指定日志等级日志文件配置*/
     /*设置全模式更改*/
-    logger.lock_out_put();
-    cout << "设置所有模块指定日志等级日志文件配置:"
-         << logger.set_log_output(L_ERROR,
-                                  "stderr:syslog:/home/jy/Public/log/text",
-                                  &s) << ":" << s << endl;
-    logger.unlock_out_put();
+//    logger.lock_out_put();
+//    cout << "设置所有模块指定日志等级日志文件配置:"
+//         << logger.set_log_output(L_ERROR,
+//                                  "stderr:syslog:/home/jy/Public/log/text",
+//                                  &s) << ":" << s << endl;
+//    logger.unlock_out_put();
     LOG("yes", L_ERROR, "%s", "what fuck3");
 
-    logger.lock_out_put();
     /*设置指定模块日志等级日志文件配置*/
-    cout << "设置指定模块日志等级日志文件配置:"
-         << logger.set_module_log_output("yes",
-                                         "stderr:syslog:stdout:/home/jy/Public/log/test@(time,MINUTE,30):/home/jy/Public/log/dasdad/",
-                                         &s) << ":" << s << endl;
-    logger.unlock_out_put();
+//    logger.lock_out_put();
+//    cout << "设置指定模块日志等级日志文件配置:"
+//         << logger.set_module_log_output("yes",
+//                                         "stderr:syslog:stdout:/home/jy/Public/log/test@(time,MINUTE,30):/home/jy/Public/log/dasdad/",
+//                                         &s) << ":" << s << endl;
+//    logger.unlock_out_put();
     LOG("yes", L_ERROR, "%s", "what fuck4");
 
     /*设置指定日志等级日志文件配置*/
-    logger.lock_out_put();
-    cout << "设置指定模块单个日志等级日志文件配置:"
-         << logger.set_module_log_output("yes",
-                                         L_INFO,
-                                         "stderr:syslog:/home/jy/Public/log/single/@(time,MINUTE,30):/home/jy/Public/log/dasdad/",
-                                         &s) << ":" << s << endl;
-    logger.unlock_out_put();
+//    logger.lock_out_put();
+//    cout << "设置指定模块单个日志等级日志文件配置:"
+//         << logger.set_module_log_output("yes",
+//                                         L_INFO,
+//                                         "stderr:syslog:/home/jy/Public/log/single/@(time,MINUTE,30):/home/jy/Public/log/dasdad/",
+//                                         &s) << ":" << s << endl;
+//    logger.unlock_out_put();
     LOG("yes", L_ERROR, "%s", "what fuck5");
+    this_thread::sleep_for(chrono::seconds(3));
 
     /*设置多个日志等级日志文件配置*/
-    logger.lock_out_put();
-    cout << "设置指定模块多个日志等级日志文件配置:"
-         << logger.set_module_log_output("yes",
-                                         log_level_list,
-                                         "stderr:syslog:/home/jy/Public/log/no@(size,3gb,30):/home/jy/Public/log/dasdad",
-                                         &s) << ":" << s << endl;
-    logger.unlock_out_put();
+//    logger.lock_out_put();
+//    cout << "设置指定模块多个日志等级日志文件配置:"
+//         << logger.set_module_log_output("yes",
+//                                         log_level_list,
+//                                         "stderr:syslog:/home/jy/Public/log/no@(size,3gb,30):/home/jy/Public/log/dasdad",
+//                                         &s) << ":" << s << endl;
+//    logger.unlock_out_put();
     LOG("yes", L_ERROR, "%s", "what fuck6");
 
     /*设置所有模块的日志等级，高于该等级的才可以输出*/
@@ -123,6 +127,7 @@ int main() {
          << s << endl;
     logger.unlock_out_put();
     LOG("yes", L_ERROR, "%s", "what fuck7");
+    this_thread::sleep_for(chrono::seconds(3));
 
     /*设置指定模块日志格式*/
     logger.lock_out_put();
@@ -153,6 +158,7 @@ int main() {
          <<s<< endl;
     logger.unlock_out_put();
     LOG("yes", L_ERROR, "%s", "what fuck10");
+    this_thread::sleep_for(chrono::seconds(3));
 
     /*设置默认模板*/
     cout << "设置默认模板:" << logger.set_default_attr_from("yes", &s)

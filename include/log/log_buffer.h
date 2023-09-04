@@ -37,7 +37,7 @@ private:
     std::map<unsigned int, std::vector<LogMessage>> buffer_map;
 
     /*缓存最大限制，超出限制则将缓存落盘*/
-    int buffer_limit = 4;
+    int buffer_limit = 2;
 
     /*设置线程id哈希锁*/
     std::mutex mtx[10];

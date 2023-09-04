@@ -26,6 +26,16 @@ using namespace std;
 /*默认构造函数*/
 LogFile::LogFile() = default;
 
+/*时间模板*/
+std::map<rotate_when, std::string> LogFile::time_format = {
+        {SECOND,   "%Y-%m-%d-%H:%M:%S"},
+        {MINUTE,   "%Y-%m-%d-%H:%M"},
+        {HOUR,     "%Y-%m-%d-%H"},
+        {DAY,      "%Y-%m-%d"},
+        {MIDNIGHT, "%Y-%m-%d"},
+        {WEEK,     "%Y-%m-%d-%W"},
+};
+
 /*解析建立数据
  * params config_str:日志文件配置信息
  * params error_info:错误信息
@@ -255,9 +265,8 @@ void LogFile::rotate_by_time() {
     if (log_file_path.empty()) {
         /*构造文件名*/
         file_name = module_name + "_" + "time" + ".log";
-        /*不只使用模块名，日志等级，时间标志 time*/
-        log_file_path =
-                log_directory_path + "/" + file_name;
+        /*构造文件路径*/
+        log_file_path = log_directory_path + "/" + file_name;
 
         /*判断并生成日志文件*/
         judge_and_create_log_file();
@@ -286,10 +295,10 @@ void LogFile::rotate_by_time() {
 void LogFile::rotate_by_size() {
     /*先判定日志文件名，这里为空默认初始化*/
     if (log_file_path.empty()) {
-        /*不只使用模块名，日志等级，时间标志 time*/
-        log_file_path =
-                log_directory_path + "/" + module_name +
-                "_" + "size" + ".log";
+        /*构造文件名*/
+        file_name = module_name + "_" + "size" + ".log";
+        /*构造文件路径*/
+        log_file_path = log_directory_path + "/" + file_name;
 
         /*判断并生成日志文件*/
         judge_and_create_log_file();
@@ -352,6 +361,10 @@ void LogFile::judge_and_create_log_file() {
                     "Failed to open module '%s' log file '%s'",
                     module_name.c_str(), log_file_path.c_str());
         }
+        /*todo 获取文件最后改变的时间作为创建时间*/
+        struct stat file_stat = {};
+        fstat(file_handler, &file_stat);
+        use_file_build_time = file_stat.st_ctim.tv_sec;
     }
 }
 
@@ -434,10 +447,10 @@ LogFile::get_file_number(const string &search_file_name) {
     string::const_iterator iter_end = file_str.cend();
 
     /*文件序号*/
-    long int file_number = 1;
+    long int file_number = 0;
 
     /*开始查找*/
-    while (regex_match(iter_begin, iter_end, file_match, pattern)) {
+    while (regex_search(iter_begin, iter_end, file_match, pattern)) {
         /*分割结果保存*/
         vector<string> result;
         /*用文件名切割数据*/
@@ -467,7 +480,7 @@ time_t LogFile::get_mid_night(const time_t &now_time) {
     return mktime(tm);
 }
 
-/*切割文件重命名
+/*切割文件重命名，时间切割使用对应的时间模板重命名，大小则使用编号
  * params now_time:记录的时间
  * return
  * */
@@ -477,11 +490,23 @@ void LogFile::rotate_log_file(const time_t &now_time) {
         close(file_handler);
     }
     /*构造文件名*/
-    string mv_file_name =
-            file_name + "." + format(now_time, 0, "%Y-%m-%d");
+    string mv_file_name;
+
+    switch (rotate_type) {
+        case 1:
+            /*按照时间切割，以时间为后缀*/
+            mv_file_name =
+                    file_name + "." + format(now_time, 0, time_format[when]);
+            break;
+        default:
+            //*按照日期切割或者其他，文件编号为后缀*/
+            mv_file_name =
+                    file_name + "." + get_file_number(file_name);
+            break;
+
+    }
     /*生成切分的日志文件名称，当前的日期加上编号*/
-    string rotate_path = log_directory_path + "/" + mv_file_name + "." +
-                         get_file_number(mv_file_name);
+    string rotate_path = log_directory_path + "/" + mv_file_name;
 
     /*将日志文件重命名*/
     rename(log_file_path.c_str(), rotate_path.c_str());
@@ -501,6 +526,8 @@ void LogFile::rotate_log_file(const time_t &now_time) {
         }
         /*移除路径记录*/
         file_path_list.erase(file_path_list.begin());
+        /*文件记录数目减一*/
+        log_files -= 1;
     }
 }
 

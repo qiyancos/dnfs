@@ -24,32 +24,16 @@
 #include<sys/stat.h>
 #include<fcntl.h>
 #include <log/log_data.h>
+
 class LogFile {
 private:
-    /*日志文件的更新类型*/
-    typedef enum rotate_type {
-        NOT,
-        TIME,
-        SIZE
-    } rotate_type_t;
-
-    /*如果按照时间进行日志更新，具体的日志更新时间*/
-    typedef enum rotate_when {
-        NEVER,
-        SECOND,
-        MINUTE,
-        HOUR,
-        DAY,
-        MIDNIGHT,
-        WEEK
-    } rotate_when_t;
-
     /*具体的更新时间间隔或文件大小*/
     union {
         uint32_t when_interval;
         /*按照大小更新设置限制大小，单位：字节*/
         uint32_t size_limit;
     } log_limit{};
+
 private:
     /*截断日志判定类型*/
     rotate_type_t rotate_type = NOT;
@@ -70,7 +54,7 @@ private:
     time_t use_file_build_time = 0;
 
     /*文件句柄*/
-    int file_handler=-1;
+    int file_handler = -1;
 
     /*文件名*/
     std::string file_name;
@@ -86,6 +70,9 @@ private:
 
     /*设置对应输出等级*/
     log_level_t log_level = NOLOG;
+
+    /*时间模板*/
+    static std::map<rotate_when, std::string> time_format;
 
 public:
     /*默认构造函数*/

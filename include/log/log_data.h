@@ -99,4 +99,22 @@ static std::map<log_level_t, std::pair<std::vector<std::string>, int>> log_level
         {L_ALL,       {{"LOG_ALL"},                LOG_INFO}},
 };
 
+/*日志文件的更新类型*/
+typedef enum rotate_type {
+    NOT,
+    TIME,
+    SIZE
+} rotate_type_t;
+
+/*如果按照时间进行日志更新，具体的日志更新时间*/
+typedef enum rotate_when {
+    NEVER,
+    SECOND,
+    MINUTE,
+    HOUR,
+    DAY,
+    MIDNIGHT,
+    WEEK
+} rotate_when_t;
+
 #endif //DNFSD_LOG_DATA_H
