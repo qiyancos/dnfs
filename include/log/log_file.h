@@ -78,16 +78,23 @@ private:
     /*设置对应输出等级*/
     log_level_t log_level = NOLOG;
 
+    /*设置路径：logfile对象字典*/
+    static std::map<std::string,LogFile*> path_log_file;
+    /*设置路径：属性，用来对照相同的路径，切割属性是否一样*/
+    static std::map<std::string,std::string> path_rotate_attr;
+
 public:
     /*默认构造函数*/
     LogFile();
 
     /*解析建立数据
      * params config_str:日志文件配置信息
+     * params module_n:模块名
+     * params log_l:日志等级
      * params error_info:错误信息
      * return: 状态码 0 生成成功 其他 生成失败
      * */
-    int generate_data(const std::string &config_str, std::string *error_info);
+    int generate_data(const std::string &config_str,const std::string& module_n,const log_level_t &log_l,std::string *error_info);
 
     /*输出日志信息
      * params message:日志信息
@@ -95,10 +102,10 @@ public:
      * */
     void out_message(const std::string &message);
 
-    /*生成日志文件名
+    /*生成日志文件路径
      * return
      * */
-    void generate_file_name();
+    void generate_log_path();
 
     /*不切割日志
      * return
@@ -117,14 +124,6 @@ public:
 
     /*判断并生成日志文件*/
     void judge_and_create_log_file();
-
-    /*建立模块名和日志等级
-     * params use_module_name:模块名
-     * params out_log_level:日志输出等级
-     * return
-     * */
-    void set_module_name_log_level(const std::string &use_module_name,
-                                   const log_level_t &out_log_level);
 
     /*适应单独更新模块名
      * params use_module_name:模块名

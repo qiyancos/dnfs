@@ -77,11 +77,11 @@ void Logger::init_module(const string &module_name) {
         module_attr[module_name] = init_attr;
 
         /*遍历所有的output数据，更新模块名和日志等级*/
-        for (LogOutputAttr &log_out_put: module_attr[module_name]->log_level_output) {
-            for (const log_level_t &log_level: all_log_level) {
-                log_out_put.set_module_name_log_level(module_name, log_level);
-            }
+        for (const log_level_t &log_level: all_log_level) {
+            module_attr[module_name]->log_level_output[log_level].set_module_name_log_level(
+                    module_name, log_level);
         }
+
 
     }
 }
@@ -242,9 +242,6 @@ int Logger::set_log_output(const vector<log_level_t> &log_level_list,
                     error_info) != 0) {
                 return 1;
             }
-            /*设置模块名称和日志等级*/
-            attr.second->log_level_output[log_level].set_module_name_log_level(
-                    attr.first, log_level);
         }
     }
     return 0;
@@ -330,9 +327,6 @@ int Logger::set_module_log_output(const string &module_name,
                 log_file_config, error_info) != 0) {
             return 1;
         }
-        /*设置模块名和日志等级*/
-        module_attr[module_name]->log_level_output[log_level].set_module_name_log_level(
-                module_name, log_level);
     }
 
     return 0;

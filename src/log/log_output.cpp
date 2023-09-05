@@ -51,7 +51,7 @@ int LogOutputAttr::generate_config(const string &log_out_attr_str,
             /*先建立文件属性对象*/
             auto *log_file = new LogFile();
             /*建立属性,有错误就返回*/
-            if (log_file->generate_data(param, error_info) != 0) {
+            if (log_file->generate_data(param,module_name,log_level, error_info) != 0) {
                 return 1;
             }
 
@@ -66,28 +66,28 @@ int LogOutputAttr::generate_config(const string &log_out_attr_str,
 }
 
 /*建立模块名和日志等级
- * params module_name:模块名
+ * params module_n:模块名
  * params out_log_level:日志输出等级
  * return
  * */
-void LogOutputAttr::set_module_name_log_level(const string &module_name,
+void LogOutputAttr::set_module_name_log_level(const string &module_n,
                                               const log_level_t &out_log_level) {
     /*保存日志等级*/
     log_level = out_log_level;
-    /*遍历建立模块信息*/
-    for (auto &log_file: log_files) {
-        log_file->set_module_name_log_level(module_name, out_log_level);
-    }
+    /*设置模块名*/
+    module_name = module_n;
 }
 
 /*适应单独更新模块名
- * params module_name:模块名
+ * params module_n:模块名
  * return
  * */
-void LogOutputAttr::set_module_name(const string &module_name) {
+void LogOutputAttr::set_module_name(const string &module_n) {
+    /*设置模块名*/
+    module_name = module_n;
     /*遍历建立模块信息*/
     for (auto &log_file: log_files) {
-        log_file->set_module_name(module_name);
+        log_file->set_module_name(module_n);
     }
 }
 
@@ -141,9 +141,9 @@ int LogOutputAttr::out_message(const string &message,
 }
 
 /*析构函数*/
-//LogOutputAttr::~LogOutputAttr() {
-//    /*删除文件对象*/
-//    for (auto &log_file: log_files) {
-//        free(log_file);
-//    }
-//}
+LogOutputAttr::~LogOutputAttr() {
+    /*删除文件对象*/
+    for (auto &log_file: log_files) {
+        delete log_file;
+    }
+}
