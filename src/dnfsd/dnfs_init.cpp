@@ -30,12 +30,12 @@ extern "C" {
 #include <netinet/tcp.h>
 #include <sys/socket.h>
 
-#include "nfs/nfs23.h"
-#include "nfs/nfsv41.h"
+#include "nfs/nfs_base.h"
 #include "log/log.h"
 #include "utils/common_utils.h"
 #include "utils/thread_utils.h"
 #include "dnfsd/dnfsd.h"
+#include "dnfsd/dnfsd_exit.h"
 #include "dnfsd/dnfs_config.h"
 #include "dnfsd/dnfs_init.h"
 #include "dnfsd/dnfs_ntirpc.h"
@@ -80,7 +80,7 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
         /* 只检查log_path部分的合法性 */
         if (logger.set_log_output(L_INFO, log_path + ":stdout:syslog", &error_info)) {
             fprintf(stderr, "%s\n", error_info.c_str());
-            exit(-1);
+            exit_process(-1);
         }
         logger.set_log_output({EXIT_ERROR, L_ERROR, L_WARN},
                               log_path + ":stderr:syslog", nullptr);
@@ -92,7 +92,7 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
         /* 只检查log_path部分的合法性 */
         if (logger.set_log_output(log_path, &error_info)) {
             fprintf(stderr, "%s\n", error_info.c_str());
-            exit(-1);
+            exit_process(-1);
         }
         logger.set_log_output(L_INFO, log_path + ":syslog", nullptr);
         logger.set_log_output({EXIT_ERROR, L_ERROR, L_WARN},
@@ -100,7 +100,7 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
     }
     if (logger.set_formatter(log_config.formatter, &error_info)) {
         fprintf(stderr, "%s\n", error_info.c_str());
-        exit(-1);
+        exit_process(-1);
     }
     logger.set_default_attr_from(MODULE_NAME, nullptr);
 }
@@ -166,15 +166,6 @@ int init_thread_signal_mask() {
     return 0;
 }
 
-/**
- * TI-RPC event channels.  Each channel is a thread servicing an event
- * demultiplexer.
- */
-struct rpc_evchan {
-    uint32_t chan_id;	/*< Channel ID */
-};
-
-static struct rpc_evchan rpc_evchan[EVCHAN_SIZE];
 int udp_socket;
 int tcp_socket;
 
@@ -187,7 +178,7 @@ static int socket_setopts() {
     if (setsockopt(udp_socket, SOL_SOCKET, SO_REUSEADDR,
                    &one, sizeof(one))) {
         LOG(MODULE_NAME, L_ERROR,
-            "Bad udp socket options reuseaddr for NFS_V3 udp sock, error %d(%s)",
+            "Bad udp socket options reuseaddr for DNFS udp sock, error %d(%s)",
             errno, strerror(errno));
         return -1;
     }
@@ -195,7 +186,7 @@ static int socket_setopts() {
     if (setsockopt(tcp_socket, SOL_SOCKET, SO_REUSEADDR,
                    &one, sizeof(one))) {
         LOG(MODULE_NAME, L_ERROR,
-            "Bad tcp socket option reuseaddr for NFS_V3 tcp sock, error %d(%s)",
+            "Bad tcp socket option reuseaddr for DNFS tcp sock, error %d(%s)",
             errno, strerror(errno));
         return -1;
     }
@@ -269,7 +260,7 @@ static int allocate_sockets(void) {
         }
 
         LOG(MODULE_NAME, L_ERROR,
-            "Cannot allocate a udp socket for NFS_V3, error %d(%s)",
+            "Cannot allocate a udp socket for DNFS, error %d(%s)",
             errno, strerror(errno));
         return -1;
     }
@@ -279,67 +270,10 @@ static int allocate_sockets(void) {
 
     if (tcp_socket == -1) {
         LOG(MODULE_NAME, L_ERROR,
-            "Cannot allocate a tcp socket for NFS_V3, error %d(%s)",
+            "Cannot allocate a tcp socket for DNFS, error %d(%s)",
             errno, strerror(errno));
         return -1;
     }
-    return 0;
-}
-
-/* 初始化ntirpc相关的基本参数配置 */
-static int setup_ntirpc_params() {
-    svc_init_params svc_params;
-    int ix;
-    int code;
-
-    LOG(MODULE_NAME, L_INFO, "DNFS INIT: using TIRPC");
-
-    memset(&svc_params, 0, sizeof(svc_params));
-
-    /* 对rpc连接断开，创建连接分配请求资源和结束连接释放请求资源三个操作设置相应的callback函数 */
-    svc_params.disconnect_cb = NULL;
-    svc_params.alloc_cb = alloc_dnfs_request;
-    svc_params.free_cb = free_dnfs_request;
-
-    /* 设置RPC的运行模式标签 */
-    svc_params.flags = SVC_INIT_EPOLL;	/* use EPOLL event mgmt */
-    svc_params.flags |= SVC_INIT_NOREG_XPRTS; /* don't call xprt_register */
-
-    /* 能够同时存在的连接个数 */
-    svc_params.max_connections = nfs_param.core_param.rpc.max_connections;
-    svc_params.max_events = 1024;	/* length of epoll event queue */
-    svc_params.ioq_send_max =
-            nfs_param.core_param.rpc.max_send_buffer_size;
-    svc_params.channels = N_EVENT_CHAN;
-    svc_params.idle_timeout = nfs_param.core_param.rpc.idle_timeout_s;
-    svc_params.ioq_thrd_min = nfs_param.core_param.rpc.ioq_thrd_min;
-    svc_params.ioq_thrd_max = nfs_param.core_param.rpc.ioq_thrd_max;
-    /* GSS ctx cache tuning, expiration */
-    svc_params.gss_ctx_hash_partitions =
-            nfs_param.core_param.rpc.gss.ctx_hash_partitions;
-    svc_params.gss_max_ctx =
-            nfs_param.core_param.rpc.gss.max_ctx;
-    svc_params.gss_max_gc =
-            nfs_param.core_param.rpc.gss.max_gc;
-
-    /* Only after TI-RPC allocators, log channel are set up */
-    if (!svc_init(&svc_params)) {
-        LOG(MODULE_NAME, L_ERROR, "SVC initialization failed");
-        return -1;
-    }
-
-    for (ix = 0; ix < EVCHAN_SIZE; ++ix) {
-        rpc_evchan[ix].chan_id = 0;
-        code = svc_rqst_new_evchan(&rpc_evchan[ix].chan_id,
-                                   NULL /* u_data */,
-                                   SVC_RQST_FLAG_NONE);
-        if (code) {
-            LOG(MODULE_NAME, L_ERROR,
-                "Cannot create TI-RPC event channel (%d, %d)", ix, code);
-            return -1;
-        }
-    }
-
     return 0;
 }
 
@@ -448,15 +382,8 @@ struct netconfig *netconfig_tcpv4;
 static void unregister_rpc(void)
 {
     const rpcprog_t& prog = nfs_param.core_param.program;
-    const rpcvers_t vers1 = NFS_V3;
-    const rpcvers_t vers2 = NFS_V4;
-
-    rpcvers_t vers;
-
-    for (vers = vers1; vers <= vers2; vers++) {
-        rpcb_unset(prog, vers, netconfig_udpv4);
-        rpcb_unset(prog, vers, netconfig_tcpv4);
-    }
+    rpcb_unset(prog, NFS_V4, netconfig_udpv4);
+    rpcb_unset(prog, NFS_V4, netconfig_tcpv4);
 }
 
 /**
@@ -525,16 +452,16 @@ static void register_rpc_program() {
     LOG(MODULE_NAME, D_INFO, "Registering V3/UDP");
 
     /* XXXX fix svc_register! */
-    if (!svc_reg(udp_xprt, nfs_param.core_param.program, (u_long) NFS_V3,
+    if (!svc_reg(udp_xprt, nfs_param.core_param.program, (u_long) NFS_V4,
             nfs_rpc_dispatch_dummy, netconfig_udpv4)) {
-        LOG(MODULE_NAME, EXIT_ERROR, "Cannot register V%d on UDP", (int)NFS_V3);
+        LOG(MODULE_NAME, EXIT_ERROR, "Cannot register V%d on UDP", (int) NFS_V4);
     }
 
-    LOG(MODULE_NAME, D_INFO, "Registering V%d/TCP", (int)NFS_V3);
+    LOG(MODULE_NAME, D_INFO, "Registering V%d/TCP", (int)NFS_V4);
 
-    if (!svc_reg(tcp_xprt, nfs_param.core_param.program, (u_long) NFS_V3,
+    if (!svc_reg(tcp_xprt, nfs_param.core_param.program, (u_long) NFS_V4,
             nfs_rpc_dispatch_dummy, netconfig_tcpv4)) {
-        LOG(MODULE_NAME, EXIT_ERROR, "Cannot register %s V%d on TCP", (int)NFS_V3);
+        LOG(MODULE_NAME, EXIT_ERROR, "Cannot register %s V%d on TCP", (int) NFS_V4);
     }
 }
 
@@ -549,15 +476,10 @@ static void dnfs_init_svc() {
     }
     nfs_param.core_param.bind_addr.sin_port = htons(nfs_param.core_param.port);
 
-    /* 初始化NTIRPC的基本参数 */
-    if (setup_ntirpc_params()) {
-        LOG(MODULE_NAME, EXIT_ERROR, "Failed to setup ntirpc params");
-    }
-
     /* 为NFS_V3的协议分配UDP和TCP的套接字 */
     if (allocate_sockets()) {
         LOG(MODULE_NAME, EXIT_ERROR,
-            "Failed to allocate socket for NFS_V3, error %d(%s)",
+            "Failed to allocate socket for DNFS, error %d(%s)",
             errno, strerror(errno));
     }
 
@@ -567,7 +489,7 @@ static void dnfs_init_svc() {
     /* 对分配的socket的属性进行设置 */
     if (socket_setopts()) {
         LOG(MODULE_NAME, EXIT_ERROR,
-            "Error setting socket option for NFS_V3");
+            "Error setting socket option for DNFS");
     }
 
     /* 将生成的套接字socket绑定到指定的端口号 */
@@ -598,7 +520,7 @@ static void dnfs_init_threads() {
 void dnfs_start() {
     if (nfs_start_info.dump_default_config) {
         dump_config();
-        exit(0);
+        exit_process(0);
     }
 
     /* Make sure DNFS runs with a 0000 umask. */

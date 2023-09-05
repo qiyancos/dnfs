@@ -13,14 +13,18 @@
  *
  */
 
-#include <stdlib.h>
-
+#include "nfs/nfs_func.h"
 #include "log/log.h"
-#include "dnfsd/dnfsd_exit.h"
 
-/* 该函数用于处理程序退出的时候需要执行的操作 */
-void exit_process(const int exit_code) {
-    /* 退出前清空所有的日志信息 */
-    logger.flush();
-    exit(exit_code);
+#define MODULE_NAME "DNFS"
+
+int nfs_null([[maybe_unused]] nfs_arg_t *arg,
+             [[maybe_unused]] struct svc_req *req,
+             [[maybe_unused]] nfs_res_t *res) {
+    LOG(MODULE_NAME, D_INFO, "REQUEST PROCESSING: Calling NFS_NULL");
+    return 0;
+}
+
+void nfs_null_free([[maybe_unused]] nfs_res_t *res) {
+    /* Nothing to do here */
 }

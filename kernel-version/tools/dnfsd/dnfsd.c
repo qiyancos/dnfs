@@ -57,7 +57,7 @@ main(int argc, char **argv)
 	progname = strdup(basename(argv[0]));
 	if (!progname) {
 		fprintf(stderr, "%s: unable to allocate memory.\n", argv[0]);
-		exit(1);
+		exit_process(-1);
 	}
 
 	port = strdup("nfs");

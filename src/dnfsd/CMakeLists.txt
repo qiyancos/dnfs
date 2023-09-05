@@ -18,4 +18,6 @@ target_link_libraries(dnfsd
         utils
         ${YAML_CPP_LIBRARIES}
         stdc++fs
+        nfs
+        file
 )

@@ -13,14 +13,6 @@
  *
  */
 
-#include <stdlib.h>
+#include "nfs/nfs23_init.h"
 
-#include "log/log.h"
-#include "dnfsd/dnfsd_exit.h"
 
-/* 该函数用于处理程序退出的时候需要执行的操作 */
-void exit_process(const int exit_code) {
-    /* 退出前清空所有的日志信息 */
-    logger.flush();
-    exit(exit_code);
-}

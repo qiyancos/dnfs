@@ -48,6 +48,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
 add_subdirectory(${CMAKE_SOURCE_DIR}/src/libntirpc)
 add_subdirectory(src/utils)
 add_subdirectory(src/log)
+add_subdirectory(src/nfs)
+add_subdirectory(src/file)
 add_subdirectory(src/dnfsd)
 
 #[[测试日志]]

@@ -48,7 +48,7 @@ static const char usage[] =
 	"\t[-E <epoch>]        overrides ServerBootTime for ServerEpoch\n"
 	"\t[-I <nodeid>]       cluster nodeid\n"
 	"\t[-C]                dump trace when segfault\n"
-	"\t[-x]                fatal exit if there are config errors on startup\n"
+	"\t[-x]                fatal exit_process if there are config errors on startup\n"
 	"\t[-h]                display this help\n"
 	"----------------- Signals ----------------\n"
 	"SIGHUP     : Reload LOG and EXPORT config\n"
@@ -107,7 +107,7 @@ static void arg_parser(int argc, char** argv) {
     char localmachine[MAXHOSTNAMELEN + 1];
     if (gethostname(localmachine, sizeof(localmachine)) != 0) {
         cerr << "Could not get local host name, exiting..." << endl;
-        exit(1);
+        exit_process(1);
     } else {
         nfs_host_name = localmachine;
     }
@@ -125,7 +125,7 @@ static void arg_parser(int argc, char** argv) {
                 printf("Release comment = %s\n", VERSION_COMMENT);
                 printf("Git HEAD = %s\n", _GIT_HEAD_COMMIT);
                 printf("Git Describe = %s\n", _GIT_DESCRIBE);
-                exit(0);
+                exit_process(0);
 
             case 'L':
                 /* Default Log */
@@ -164,7 +164,7 @@ static void arg_parser(int argc, char** argv) {
                 fprintf(stderr, "\tKeytabPath = /etc/krb5.keytab ;\n");
                 fprintf(stderr, "\tActive_krb5 = true ;\n");
                 fprintf(stderr, "}\n\n\n");
-                exit(1);
+                exit_process(1);
 
             case 'T':
                 /* Dump the default configuration on stdout */
@@ -185,12 +185,12 @@ static void arg_parser(int argc, char** argv) {
 
             case 'h':
                 fprintf(stderr, usage, exec_name.c_str());
-                exit(0);
+                exit_process(0);
 
             default: /* '?' */
                 fprintf(stderr, "Try '%s -h' for usage\n",
                         exec_name.c_str());
-                exit(1);
+                exit_process(1);
         }
     }
 }

@@ -17,6 +17,8 @@ extern "C" {
 #include "rpc/rpc.h"
 #include "rpc/svc.h"
 #include "rpc/svc_auth.h"
+#include "rpc/svc_rqst.h"
+#include "rpc/rpcb_clnt.h"
 }
 
 #include <assert.h>
@@ -24,8 +26,7 @@ extern "C" {
 #include <sys/un.h>
 
 #include "log/log.h"
-#include "nfs/nfs23.h"
-#include "nfs/nfsv41.h"
+#include "nfs/nfs_func.h"
 #include "utils/common_utils.h"
 #include "utils/thread_utils.h"
 #include "dnfsd/dnfs_meta_data.h"
@@ -51,204 +52,62 @@ tirpc_pkg_params ntirpc_pp = {
     rpc_realloc, // 根据新的大小对之前已经分配的内存区域进行重新分配，新的区域会复制之前区域的数据
 };
 
-const nfs_function_desc_t invalid_funcdesc = {
-    .service_function = NULL,
-    .free_function = NULL,
-    .xdr_decode_func = (xdrproc_t) xdr_void,
-    .xdr_encode_func = (xdrproc_t) xdr_void,
-    .funcname = "invalid_function",
-    .dispatch_behaviour = NOTHING_SPECIAL
-};
+/* 初始化ntirpc相关的基本参数配置 */
+static int setup_ntirpc_params() {
+    svc_init_params svc_params;
+    int ix;
+    int code;
 
-int nfs_null([[maybe_unused]] nfs_arg_t *arg,
-             [[maybe_unused]] struct svc_req *req,
-                     [[maybe_unused]] nfs_res_t *res) {
-    LOG(MODULE_NAME, D_INFO, "REQUEST PROCESSING: Calling NFS_NULL");
-    return NFS3_OK;
-}
+    LOG(MODULE_NAME, L_INFO, "DNFS INIT: using TIRPC");
 
-void nfs_null_free([[maybe_unused]] nfs_res_t *res) {
-    /* Nothing to do here */
-}
+    memset(&svc_params, 0, sizeof(svc_params));
 
-const nfs_function_desc_t nfs3_func_desc[] = {
-        {
-                .service_function = nfs_null,
-                .free_function = nfs_null_free,
-                .xdr_decode_func = (xdrproc_t) xdr_void,
-                .xdr_encode_func = (xdrproc_t) xdr_void,
-                .funcname = "NFS3_NULL",
-                .dispatch_behaviour = NOTHING_SPECIAL
-        },
-        {
-                .service_function = nfs_null,
-                .free_function = nfs_null_free,
-                .xdr_decode_func = (xdrproc_t) xdr_void,
-                .xdr_encode_func = (xdrproc_t) xdr_void,
-                .funcname = "NFS3_GETATTR",
-                .dispatch_behaviour = NOTHING_SPECIAL
-        },
-        {
-                .service_function = nfs_null,
-                .free_function = nfs_null_free,
-                .xdr_decode_func = (xdrproc_t) xdr_void,
-                .xdr_encode_func = (xdrproc_t) xdr_void,
-                .funcname = "NFS3_SETATTR",
-                .dispatch_behaviour =NOTHING_SPECIAL
-        },
-        {
-                .service_function = nfs_null,
-                .free_function = nfs_null_free,
-                .xdr_decode_func = (xdrproc_t) xdr_void,
-                .xdr_encode_func = (xdrproc_t) xdr_void,
-                .funcname = "NFS3_LOOKUP",
-                .dispatch_behaviour = NOTHING_SPECIAL
-        },
-        {
-                .service_function = nfs_null,
-                .free_function = nfs_null_free,
-                .xdr_decode_func = (xdrproc_t) xdr_void,
-                .xdr_encode_func = (xdrproc_t) xdr_void,
-                .funcname = "NFS3_ACCESS",
-                .dispatch_behaviour = NOTHING_SPECIAL
-        },
-        {
-                .service_function = nfs_null,
-                .free_function = nfs_null_free,
-                .xdr_decode_func = (xdrproc_t) xdr_void,
-                .xdr_encode_func = (xdrproc_t) xdr_void,
-                .funcname = "NFS3_READLINK",
-                .dispatch_behaviour = NOTHING_SPECIAL
-        },
-        {
-                .service_function = nfs_null,
-                .free_function = nfs_null_free,
-                .xdr_decode_func = (xdrproc_t) xdr_void,
-                .xdr_encode_func = (xdrproc_t) xdr_void,
-                .funcname = "NFS3_READ",
-                .dispatch_behaviour = NOTHING_SPECIAL
-        },
-        {
-                .service_function = nfs_null,
-                .free_function = nfs_null_free,
-                .xdr_decode_func = (xdrproc_t) xdr_void,
-                .xdr_encode_func = (xdrproc_t) xdr_void,
-                .funcname = "NFS3_WRITE",
-                .dispatch_behaviour = NOTHING_SPECIAL
-        },
-        {
-                .service_function = nfs_null,
-                .free_function = nfs_null_free,
-                .xdr_decode_func = (xdrproc_t) xdr_void,
-                .xdr_encode_func = (xdrproc_t) xdr_void,
-                .funcname = "NFS3_CREATE",
-                .dispatch_behaviour = NOTHING_SPECIAL
-        },
-        {
-                .service_function = nfs_null,
-                .free_function = nfs_null_free,
-                .xdr_decode_func = (xdrproc_t) xdr_void,
-                .xdr_encode_func = (xdrproc_t) xdr_void,
-                .funcname = "NFS3_MKDIR",
-                .dispatch_behaviour = NOTHING_SPECIAL
-        },
-        {
-                .service_function = nfs_null,
-                .free_function = nfs_null_free,
-                .xdr_decode_func = (xdrproc_t) xdr_void,
-                .xdr_encode_func = (xdrproc_t) xdr_void,
-                .funcname = "NFS3_SYMLINK",
-                .dispatch_behaviour = NOTHING_SPECIAL
-        },
-        {
-                .service_function = nfs_null,
-                .free_function = nfs_null_free,
-                .xdr_decode_func = (xdrproc_t) xdr_void,
-                .xdr_encode_func = (xdrproc_t) xdr_void,
-                .funcname = "NFS3_MKNOD",
-                .dispatch_behaviour = NOTHING_SPECIAL
-        },
-        {
-                .service_function = nfs_null,
-                .free_function = nfs_null_free,
-                .xdr_decode_func = (xdrproc_t) xdr_void,
-                .xdr_encode_func = (xdrproc_t) xdr_void,
-                .funcname = "NFS3_REMOVE",
-                .dispatch_behaviour = NOTHING_SPECIAL
-        },
-        {
-                .service_function = nfs_null,
-                .free_function = nfs_null_free,
-                .xdr_decode_func = (xdrproc_t) xdr_void,
-                .xdr_encode_func = (xdrproc_t) xdr_void,
-                .funcname = "NFS3_RMDIR",
-                .dispatch_behaviour = NOTHING_SPECIAL
-        },
-        {
-                .service_function = nfs_null,
-                .free_function = nfs_null_free,
-                .xdr_decode_func = (xdrproc_t) xdr_void,
-                .xdr_encode_func = (xdrproc_t) xdr_void,
-                .funcname = "NFS3_RENAME",
-                .dispatch_behaviour = NOTHING_SPECIAL
-        },
-        {
-                .service_function = nfs_null,
-                .free_function = nfs_null_free,
-                .xdr_decode_func = (xdrproc_t) xdr_void,
-                .xdr_encode_func = (xdrproc_t) xdr_void,
-                .funcname = "NFS3_LINK",
-                .dispatch_behaviour = NOTHING_SPECIAL
-        },
-        {
-                .service_function = nfs_null,
-                .free_function = nfs_null_free,
-                .xdr_decode_func = (xdrproc_t) xdr_void,
-                .xdr_encode_func = (xdrproc_t) xdr_void,
-                .funcname = "NFS3_READDIR",
-                .dispatch_behaviour = NOTHING_SPECIAL
-        },
-        {
-                .service_function = nfs_null,
-                .free_function = nfs_null_free,
-                .xdr_decode_func = (xdrproc_t) xdr_void,
-                .xdr_encode_func = (xdrproc_t) xdr_void,
-                .funcname = "NFS3_READDIRPLUS",
-                .dispatch_behaviour = NOTHING_SPECIAL
-        },
-        {
-                .service_function = nfs_null,
-                .free_function = nfs_null_free,
-                .xdr_decode_func = (xdrproc_t) xdr_void,
-                .xdr_encode_func = (xdrproc_t) xdr_void,
-                .funcname = "NFS3_FSSTAT",
-                .dispatch_behaviour = NOTHING_SPECIAL
-        },
-        {
-                .service_function = nfs_null,
-                .free_function = nfs_null_free,
-                .xdr_decode_func = (xdrproc_t) xdr_void,
-                .xdr_encode_func = (xdrproc_t) xdr_void,
-                .funcname = "NFS3_FSINFO",
-                .dispatch_behaviour = NOTHING_SPECIAL
-        },
-        {
-                .service_function = nfs_null,
-                .free_function = nfs_null_free,
-                .xdr_decode_func = (xdrproc_t) xdr_void,
-                .xdr_encode_func = (xdrproc_t) xdr_void,
-                .funcname = "NFS3_PATHCONF",
-                .dispatch_behaviour = NOTHING_SPECIAL
-        },
-        {
-                .service_function = nfs_null,
-                .free_function = nfs_null_free,
-                .xdr_decode_func = (xdrproc_t) xdr_void,
-                .xdr_encode_func = (xdrproc_t) xdr_void,
-                .funcname = "NFS3_COMMIT",
-                .dispatch_behaviour = NOTHING_SPECIAL
+    /* 对rpc连接断开，创建连接分配请求资源和结束连接释放请求资源三个操作设置相应的callback函数 */
+    svc_params.disconnect_cb = NULL;
+    svc_params.alloc_cb = alloc_dnfs_request;
+    svc_params.free_cb = free_dnfs_request;
+
+    /* 设置RPC的运行模式标签 */
+    svc_params.flags = SVC_INIT_EPOLL;	/* use EPOLL event mgmt */
+    svc_params.flags |= SVC_INIT_NOREG_XPRTS; /* don't call xprt_register */
+
+    /* 能够同时存在的连接个数 */
+    svc_params.max_connections = nfs_param.core_param.rpc.max_connections;
+    svc_params.max_events = 1024;	/* length of epoll event queue */
+    svc_params.ioq_send_max =
+            nfs_param.core_param.rpc.max_send_buffer_size;
+    svc_params.channels = N_EVENT_CHAN;
+    svc_params.idle_timeout = nfs_param.core_param.rpc.idle_timeout_s;
+    svc_params.ioq_thrd_min = nfs_param.core_param.rpc.ioq_thrd_min;
+    svc_params.ioq_thrd_max = nfs_param.core_param.rpc.ioq_thrd_max;
+    /* GSS ctx cache tuning, expiration */
+    svc_params.gss_ctx_hash_partitions =
+            nfs_param.core_param.rpc.gss.ctx_hash_partitions;
+    svc_params.gss_max_ctx =
+            nfs_param.core_param.rpc.gss.max_ctx;
+    svc_params.gss_max_gc =
+            nfs_param.core_param.rpc.gss.max_gc;
+
+    /* Only after TI-RPC allocators, log channel are set up */
+    if (!svc_init(&svc_params)) {
+        LOG(MODULE_NAME, L_ERROR, "SVC initialization failed");
+        return -1;
+    }
+
+    for (ix = 0; ix < EVCHAN_SIZE; ++ix) {
+        rpc_evchan[ix].chan_id = 0;
+        code = svc_rqst_new_evchan(&rpc_evchan[ix].chan_id,
+                                   NULL /* u_data */,
+                                   SVC_RQST_FLAG_NONE);
+        if (code) {
+            LOG(MODULE_NAME, L_ERROR,
+                "Cannot create TI-RPC event channel (%d, %d)", ix, code);
+            return -1;
         }
-};
+    }
+
+    return 0;
+}
 
 /* 注册tirpc的处理操作参数 */
 void init_ntirpc_settings() {
@@ -256,6 +115,11 @@ void init_ntirpc_settings() {
     if (!tirpc_control(TIRPC_PUT_PARAMETERS, &ntirpc_pp)) {
         LOG(MODULE_NAME, EXIT_ERROR,
             "Setting nTI-RPC parameters failed");
+    }
+
+    /* 初始化NTIRPC的基本参数 */
+    if (setup_ntirpc_params()) {
+        LOG(MODULE_NAME, EXIT_ERROR, "Failed to setup ntirpc params");
     }
 }
 
@@ -470,7 +334,7 @@ static enum xprt_stat nfs_rpc_process_request(nfs_request_t *reqdata, bool retry
     nfs_arg_t *arg_nfs = &reqdata->arg_nfs;
     SVCXPRT *xprt = reqdata->svc.rq_xprt;
     XDR *xdrs = reqdata->svc.rq_xdrs;
-    enum auth_stat auth_rc = AUTH_OK;
+    enum auth_stat auth_rc;
     int rc = NFS_REQ_OK;
     bool no_dispatch = false;
 
@@ -566,7 +430,7 @@ retry_after_drc_suspend:
             return XPRT_SUSPEND;
         }
     }
-    rc = complete_request(reqdata, static_cast<nfs_req_result>(rc));
+    complete_request(reqdata, static_cast<nfs_req_result>(rc));
     return SVC_STAT(xprt);
 }
 

@@ -20,14 +20,6 @@
 
 #include "dnfsd/dnfs_meta_data.h"
 
-/* declarations to allow servers to specify new authentication flavors */
-struct authsvc {
-    int flavor;
-    enum auth_stat (*handler) (struct svc_req *);
-    struct authsvc *next;
-};
-static struct authsvc *Auths;
-
 enum auth_stat svc_auth_authenticate(struct svc_req *req, bool *no_dispatch);
 
 const char *auth_stat2str(enum auth_stat why);

@@ -13,14 +13,13 @@
  *
  */
 
-#include <stdlib.h>
+#ifndef NFS_NFS_ARGS_H
+#define NFS_NFS_ARGS_H
 
-#include "log/log.h"
-#include "dnfsd/dnfsd_exit.h"
+#include "file/file_handle.h"
+#include "nfs/nfs_base.h"
 
-/* 该函数用于处理程序退出的时候需要执行的操作 */
-void exit_process(const int exit_code) {
-    /* 退出前清空所有的日志信息 */
-    logger.flush();
-    exit(exit_code);
-}
+typedef union nfs_arg__ {
+} nfs_arg_t;
+
+#endif //NFS_NFS_ARGS_H

@@ -15,6 +15,7 @@
 
 #include <experimental/filesystem>
 
+#include "dnfsd/dnfsd_exit.h"
 #include "dnfsd/dnfs_config.h"
 
 using namespace std;
@@ -158,7 +159,7 @@ static void init_default_config(const string& config_file_path) {
         fprintf(stderr,
                 "Failed to create directory \"%s\" for config file: %s.\n",
                 config_dir.c_str(), e.what());
-        exit(-1);
+        exit_process(-1);
     }
 
     ofstream config_file_os;
@@ -168,7 +169,7 @@ static void init_default_config(const string& config_file_path) {
         fprintf(stderr,
                 "Failed to create default config file \"%s\"\n",
                 config_file_path.c_str());
-        exit(-1);
+        exit_process(-1);
     }
     config_file_os << default_config;
     config_file_os.close();
@@ -233,14 +234,14 @@ void init_config(const string& config_file_path) {
     } catch (exception& e) {
         fprintf(stderr, "Failed to load config file %s: %s\n",
                 config_file_path.c_str(), e.what());
-        exit(-1);
+        exit_process(-1);
     }
 
     /* 首先从配置文件中读取log相关的配置 */
     fprintf(stdout, "Loading config for logging from config file\n");
     if (init_logging_config(dnfs_config.log_config)) {
         fprintf(stderr, "Failed to load log config\n");
-        exit(-1);
+        exit_process(-1);
     }
 }
 

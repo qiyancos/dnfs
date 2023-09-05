@@ -54,15 +54,6 @@ enum auth_stat svc_auth_authenticate(struct svc_req *req, bool *no_dispatch) {
             break;
     }
 
-    /* flavor doesn't match any of the builtin types, so try new ones */
-    for (asp = Auths; asp; asp = asp->next) {
-        if (asp->flavor == cred_flavor) {
-            enum auth_stat as;
-            as = (*asp->handler) (req);
-            return (as);
-        }
-    }
-
     return (AUTH_REJECTEDCRED);
 }
 

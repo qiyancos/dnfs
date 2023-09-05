@@ -35,6 +35,15 @@ enum evchan {
 /* TIRPC的全局操作处理函数 */
 extern tirpc_pkg_params ntirpc_pp;
 
+/**
+ * TI-RPC event channels.  Each channel is a thread servicing an event
+ * demultiplexer.
+ */
+struct rpc_evchan {
+    uint32_t chan_id;	/*< Channel ID */
+};
+static struct rpc_evchan rpc_evchan[EVCHAN_SIZE];
+
 /* 注册tirpc的处理操作参数 */
 void init_ntirpc_settings();
 

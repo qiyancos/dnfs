@@ -24,8 +24,10 @@ extern "C" {
 
 #include <string>
 
-#include "nfs/nfsv41.h"
-#include "nfs/nfs23.h"
+#include "nfs/nfs_base.h"
+#include "nfs/nfs_args.h"
+#include "nfs/nfs_res.h"
+#include "nfs/nfs_func.h"
 
 struct dnfs_request_lookahead {
     uint32_t flags;
@@ -104,30 +106,6 @@ typedef enum protos {
     P_COUNT			/*< Number of protocols */
 } protos;
 
-typedef union nfs_arg__ {
-} nfs_arg_t;
-
-typedef union nfs_res__ {
-    struct COMPOUND4res_extended *res_compound4_extended;
-    /* mount */
-    fhstatus2 res_mnt1;
-} nfs_res_t;
-
-typedef int (*nfs_protocol_function_t) (nfs_arg_t *,
-                                        struct svc_req *,
-                                        nfs_res_t *);
-
-typedef void (*nfs_protocol_free_t) (nfs_res_t *);
-
-typedef struct nfs_function_desc__ {
-    nfs_protocol_function_t service_function;
-    nfs_protocol_free_t free_function;
-    xdrproc_t xdr_decode_func;
-    xdrproc_t xdr_encode_func;
-    const char *funcname;
-    unsigned int dispatch_behaviour;
-} nfs_function_desc_t;
-
 typedef struct nfs_request {
     struct svc_req svc;
     struct dnfs_request_lookahead lookahead;
@@ -147,18 +125,5 @@ typedef enum dupreq_status {
     DUPREQ_EXISTS,
     DUPREQ_DROP,
 } dupreq_status_t;
-
-enum nfs_req_result {
-    NFS_REQ_OK,
-    NFS_REQ_DROP,
-    NFS_REQ_ERROR,
-    NFS_REQ_REPLAY,
-    NFS_REQ_ASYNC_WAIT,
-    NFS_REQ_XPRT_DIED,
-    NFS_REQ_AUTH_ERR,
-};
-
-#define NOTHING_SPECIAL 0x0000	/* Nothing to be done for this kind of
-				   request */
 
 #endif //DNFSD_DNFS_META_DATA_H
