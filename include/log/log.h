@@ -60,6 +60,9 @@ private:
     /*默认日志属性，新建日志默认使用该属性*/
     LoggerAttr default_attr;
 
+    /*日志文件生成方式*/
+    log_generate_t log_generate=L_JUST_ONE;
+
     /*退出函数指针*/
     void (*exit_func)(int) =exit;
 
@@ -314,6 +317,17 @@ public:
      * return
      * */
     void unlock_out_put();
+
+    /*设置日志生成文件方式
+     * params l_generate:设置的日志生成方式
+     * return
+     * */
+    void set_log_generate(const log_generate_t &l_generate);
+
+    /*获取日志生成类型
+     * return 日志切割类型
+     * */
+    log_generate_t get_log_generate();
 
     ~Logger();
 

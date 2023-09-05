@@ -12,7 +12,6 @@
  * along with this project.
  *
  */
-#include <regex>
 #include "log/log_attr.h"
 #include "log/log.h"
 #include "utils/common_utils.h"
@@ -106,7 +105,7 @@ bool LoggerAttr::get_debug() const {
  * */
 int LoggerAttr::out_message(const log_level_t &message_log_level,
                             const string &message,
-                            std::string *error_info) {
+                            string *error_info) {
     /*调用对应的输出模块*/
     return log_level_output[message_log_level].out_message(message, error_info);
 }
@@ -114,7 +113,7 @@ int LoggerAttr::out_message(const log_level_t &message_log_level,
 /*更改内部log_file模块名
  * params change_module_name:更改的模块名
  * */
-void LoggerAttr::set_module_name(const std::string& change_module_name) {
+void LoggerAttr::set_module_name(const string& change_module_name) {
     /*遍历更改log_file模块名*/
     for (LogOutputAttr &log_output: log_level_output) {
         log_output.set_module_name(change_module_name);

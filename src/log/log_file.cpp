@@ -17,24 +17,16 @@
 #include<sys/stat.h>
 #include<unistd.h>
 #include "log/log_file.h"
+#include "log/log.h"
 #include "utils/common_utils.h"
 #include "log/log_exception.h"
+#include "utils/time_utils.h"
 
 #define FILE_MODEL_644 (S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)
 using namespace std;
 
 /*默认构造函数*/
 LogFile::LogFile() = default;
-
-/*时间模板*/
-std::map<rotate_when, std::string> LogFile::time_format = {
-        {SECOND,   "%Y-%m-%d-%H:%M:%S"},
-        {MINUTE,   "%Y-%m-%d-%H:%M"},
-        {HOUR,     "%Y-%m-%d-%H"},
-        {DAY,      "%Y-%m-%d"},
-        {MIDNIGHT, "%Y-%m-%d"},
-        {WEEK,     "%Y-%m-%d-%W"},
-};
 
 /*解析建立数据
  * params config_str:日志文件配置信息
@@ -240,6 +232,47 @@ void LogFile::out_message(const string &message) {
     }
 }
 
+/*生成日志文件名
+ * return
+ * */
+void LogFile::generate_file_name() {
+    /*首先加上程序名*/
+    file_name = logger.program_name;
+    /*然后判断模块名*/
+    switch (logger.get_log_generate()) {
+        case 0:
+            break;
+        case 1:
+            /*拼接模块名*/
+            file_name += ("_" + module_name);
+            break;
+        case 2:
+            /*拼接日志等级*/
+            file_name += ("_" + log_level_info_dict[log_level].first[0]);
+            break;
+        case 3:
+            /*拼接模块名和日志等级*/
+            file_name += ("_" + module_name);
+            file_name += ("_" + log_level_info_dict[log_level].first[0]);
+            break;
+    }
+    /*判断切割类型*/
+    switch (rotate_type) {
+        case 0:
+            break;
+        case 1:
+            /*设置时间*/
+            file_name += "_time";
+            break;
+        case 2:
+            /*设置大小*/
+            file_name += "_size";
+            break;
+    }
+    /*最后拼接log*/
+    file_name += ".log";
+}
+
 /*不切割日志
  * return
  * */
@@ -248,7 +281,7 @@ LogFile::not_rotate() {
     /*先判定日志文件名*/
     if (log_file_path.empty()) {
         /*构造文件名*/
-        file_name = module_name + ".log";
+        generate_file_name();
         /*不切割只使用模块名和日志等级*/
         log_file_path =
                 log_directory_path + "/" + file_name;
@@ -264,27 +297,24 @@ void LogFile::rotate_by_time() {
     /*先判定日志文件名，这里为空默认初始化*/
     if (log_file_path.empty()) {
         /*构造文件名*/
-        file_name = module_name + "_" + "time" + ".log";
+        generate_file_name();
         /*构造文件路径*/
         log_file_path = log_directory_path + "/" + file_name;
+    } else {
+        /*获取现在的时间*/
+        time_t now_time = time(nullptr);
 
-        /*判断并生成日志文件*/
-        judge_and_create_log_file();
-    }
-
-    /*获取现在的时间*/
-    time_t now_time = time(nullptr);
-
-    /*如果已经建立了写入日志，并且超过了时间限制,进行切割*/
-    if (use_file_build_time != 0 and
-        (now_time - use_file_build_time) > log_limit.when_interval) {
-        /*进行午夜判定*/
-        if (when != MIDNIGHT or get_mid_night(now_time) == now_time) {
-            /*切割文件*/
-            rotate_log_file(now_time);
+        /*如果已经建立了写入日志，并且超过了时间限制,进行切割*/
+        if (use_file_build_time != 0 and
+            (now_time - use_file_build_time) > log_limit.when_interval) {
+            /*进行午夜判定*/
+            if (when != MIDNIGHT or get_mid_night(now_time) == now_time) {
+                /*切割文件*/
+                rotate_log_file(now_time);
+            }
         }
-
     }
+
     /*判断并生成日志文件*/
     judge_and_create_log_file();
 }
@@ -296,25 +326,22 @@ void LogFile::rotate_by_size() {
     /*先判定日志文件名，这里为空默认初始化*/
     if (log_file_path.empty()) {
         /*构造文件名*/
-        file_name = module_name + "_" + "size" + ".log";
+        generate_file_name();
         /*构造文件路径*/
         log_file_path = log_directory_path + "/" + file_name;
+    } else {
+        /*文件信息保存*/
+        struct stat log_file_stat = {};
+        /*获取文件信息*/
+        fstat(file_handler, &log_file_stat);
+        /*获取现在的时间*/
+        time_t now_time = time(nullptr);
 
-        /*判断并生成日志文件*/
-        judge_and_create_log_file();
-    }
-
-    /*文件信息保存*/
-    struct stat log_file_stat = {};
-    /*获取文件信息*/
-    fstat(file_handler, &log_file_stat);
-    /*获取现在的时间*/
-    time_t now_time = time(nullptr);
-
-    /*对比文件的大小*/
-    if (log_file_stat.st_size > log_limit.size_limit) {
-        /*切割文件*/
-        rotate_log_file(now_time);
+        /*对比文件的大小*/
+        if (log_file_stat.st_size > log_limit.size_limit) {
+            /*切割文件*/
+            rotate_log_file(now_time);
+        }
     }
 
     /*判断并生成日志文件*/
@@ -338,17 +365,7 @@ void LogFile::judge_and_create_log_file() {
         }
         /*建立构造时间*/
         use_file_build_time = time(nullptr);
-    }
-    /*如果没有写权限*/
-    if (access(log_file_path.c_str(), W_OK) != 0) {
-        /*如果保存了文件流关闭*/
-        if (file_handler > -1) {
-            close(file_handler);
-        }
-        throw LogException(
-                "The log file '%s' with module '%s' which does not have write permission",
-                log_file_path.c_str(),
-                module_name.c_str());
+
     }
     /*文件存在，但没有获取输出文件流，获取*/
     if (file_handler == -1) {
@@ -361,10 +378,21 @@ void LogFile::judge_and_create_log_file() {
                     "Failed to open module '%s' log file '%s'",
                     module_name.c_str(), log_file_path.c_str());
         }
-        /*todo 获取文件最后改变的时间作为创建时间*/
+        /*获取文件最后改变的时间作为创建时间*/
         struct stat file_stat = {};
         fstat(file_handler, &file_stat);
         use_file_build_time = file_stat.st_ctim.tv_sec;
+    }
+    /*如果没有写权限*/
+    if (access(log_file_path.c_str(), W_OK) != 0) {
+        /*如果保存了文件流关闭*/
+        if (file_handler > -1) {
+            close(file_handler);
+        }
+        throw LogException(
+                "The log file '%s' with module '%s' which does not have write permission",
+                log_file_path.c_str(),
+                module_name.c_str());
     }
 }
 
@@ -377,6 +405,8 @@ void LogFile::set_module_name_log_level(const string &use_module_name,
                                         const log_level_t &out_log_level) {
     module_name = use_module_name;
     log_level = out_log_level;
+    /*重新生成日志名称*/
+    generate_file_name();
 }
 
 /*适应单独更新数据
@@ -385,12 +415,14 @@ void LogFile::set_module_name_log_level(const string &use_module_name,
  * */
 void LogFile::set_module_name(const string &use_module_name) {
     module_name = use_module_name;
+    /*重新生成日志名称*/
+    generate_file_name();
 }
 
 /*读取日志目录下的所有文件
  * return 获取的文件字符串
  * */
-std::string LogFile::get_dir_file() {
+string LogFile::get_dir_file() {
     /*文件名拼接字符串*/
     string file_str;
 
@@ -424,7 +456,7 @@ std::string LogFile::get_dir_file() {
  * params search_file_name:需排序的文件名
  * return 获取的文件名
  * */
-std::string
+string
 LogFile::get_file_number(const string &search_file_name) {
     /*获取目录下所有的文件名*/
     string file_str = get_dir_file();
@@ -496,10 +528,11 @@ void LogFile::rotate_log_file(const time_t &now_time) {
         case 1:
             /*按照时间切割，以时间为后缀*/
             mv_file_name =
-                    file_name + "." + format(now_time, 0, time_format[when]);
+                    file_name + "." +
+                    format(now_time, 0, time_format[when]);
             break;
         default:
-            //*按照日期切割或者其他，文件编号为后缀*/
+            /*按照日期切割或者其他，文件编号为后缀*/
             mv_file_name =
                     file_name + "." + get_file_number(file_name);
             break;
@@ -507,7 +540,6 @@ void LogFile::rotate_log_file(const time_t &now_time) {
     }
     /*生成切分的日志文件名称，当前的日期加上编号*/
     string rotate_path = log_directory_path + "/" + mv_file_name;
-
     /*将日志文件重命名*/
     rename(log_file_path.c_str(), rotate_path.c_str());
 
@@ -518,7 +550,7 @@ void LogFile::rotate_log_file(const time_t &now_time) {
     log_files += 1;
 
     /*判断日志文件数目,超过限制删除*/
-    if (log_files > backup_count) {
+    if (backup_count > 0 and log_files > backup_count) {
         /*删除文件路径记录的第一条数据*/
         if (remove(file_path_list[0].c_str()) != 0) {
             throw LogException("Failed to delete module '%s' log file '%s'",
@@ -528,6 +560,14 @@ void LogFile::rotate_log_file(const time_t &now_time) {
         file_path_list.erase(file_path_list.begin());
         /*文件记录数目减一*/
         log_files -= 1;
+    }
+}
+
+/*析构函数*/
+LogFile::~LogFile() {
+    /*关闭文件指针*/
+    if (file_handler > -1) {
+        close(file_handler);
     }
 }
 

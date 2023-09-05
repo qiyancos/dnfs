@@ -34,6 +34,13 @@ private:
         uint32_t size_limit;
     } log_limit{};
 
+    /*日志文件的更新类型*/
+    typedef enum rotate_type {
+        NOT,
+        TIME,
+        SIZE
+    } rotate_type_t;
+
 private:
     /*截断日志判定类型*/
     rotate_type_t rotate_type = NOT;
@@ -51,7 +58,7 @@ private:
     int log_files = 0;
 
     /*当前使用日志建立的时间*/
-    time_t use_file_build_time = 0;
+    time_t use_file_build_time=0;
 
     /*文件句柄*/
     int file_handler = -1;
@@ -71,9 +78,6 @@ private:
     /*设置对应输出等级*/
     log_level_t log_level = NOLOG;
 
-    /*时间模板*/
-    static std::map<rotate_when, std::string> time_format;
-
 public:
     /*默认构造函数*/
     LogFile();
@@ -90,6 +94,11 @@ public:
      * return
      * */
     void out_message(const std::string &message);
+
+    /*生成日志文件名
+     * return
+     * */
+    void generate_file_name();
 
     /*不切割日志
      * return
@@ -144,6 +153,9 @@ public:
      * return
      * */
     void rotate_log_file(const time_t &now_time);
+
+    /*析构函数*/
+    ~LogFile();
 };
 
 #endif //LOG_LOG_FILE_H

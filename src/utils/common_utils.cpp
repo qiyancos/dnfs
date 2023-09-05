@@ -207,12 +207,12 @@ int creat_directory(const string &judge_dir, string *error_info) {
    %Y 带世纪部分的十进制年份
    %z，%Z 时区名称，如果不能得到时区名称则返回空字符。
    %% 百分号
- * params timeStamp:转化的时间戳
+ * params time_stamp:转化的时间戳
  * params dis_millseconds:转化的毫秒
  * params format:转化的日期格式
  * return: 转化完成的日期字符串
  * */
-string format(const time_t &timeStamp,const uint64_t &dis_millseconds, const string &format) {
+string format(const time_t &time_stamp,const uint64_t &dis_millseconds, const string &format) {
 
     /*%Y-%m-%d %H:%M:%S*/
 
@@ -222,13 +222,13 @@ string format(const time_t &timeStamp,const uint64_t &dis_millseconds, const str
     const char *default_msec_format = "%s,%03d";
 
     /*保存转化时间*/
-    char time_buffer[30] = {0};
+    char time_buffer[30];
 
     /*构建时间存储结构*/
     struct tm *info;
 
     /*将时间戳转化为为时间存储结构*/
-    info = localtime(&timeStamp);
+    info = localtime(&time_stamp);
 
     /*如果设置了日期格式*/
     if (!format.empty()) {
@@ -242,7 +242,6 @@ string format(const time_t &timeStamp,const uint64_t &dis_millseconds, const str
         sprintf(time_buffer, default_msec_format, time_buffer,
                 (int) dis_millseconds);
     }
-
     return time_buffer;
 }
 

@@ -271,7 +271,7 @@ int creat_directory(const std::string &judge_dir, std::string *error_info);
  * params format:转化的日期格式
  * return: 转化完成的日期字符串
  * */
-std::string format(const time_t &timeStamp,const uint64_t &dis_millseconds, const std::string &format);
+std::string format(const time_t &time_stamp,const uint64_t &dis_millseconds, const std::string &format);
 
 /* 从一个结构体成员变量指针推断出结构体本身的地址 */
 #define get_parent_struct_addr(addr, type, member) ({			\

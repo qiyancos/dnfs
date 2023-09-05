@@ -97,7 +97,6 @@ void LogBuffer::flush() {
     /*谁有flush锁谁操作*/
     unique_lock<mutex> flush_uk(flush_mtx);
     out();
-
 }
 
 /*生成数据

@@ -49,11 +49,16 @@ int LogOutputAttr::generate_config(const string &log_out_attr_str,
             stdout_on = true;
         } else {
             /*先建立文件属性对象*/
-            LogFile log_file = LogFile();
+            auto *log_file = new LogFile();
             /*建立属性,有错误就返回*/
-            if (log_file.generate_data(param, error_info) != 0) {
+            if (log_file->generate_data(param, error_info) != 0) {
                 return 1;
             }
+
+            /*获取智能指针*/
+//            shared_ptr<LogFile> log_file_ptr;
+//            log_file_ptr.reset(&log_file);
+            /*添加指针*/
             log_files.push_back(log_file);
         }
     }
@@ -65,13 +70,13 @@ int LogOutputAttr::generate_config(const string &log_out_attr_str,
  * params out_log_level:日志输出等级
  * return
  * */
-void LogOutputAttr::set_module_name_log_level(const std::string &module_name,
+void LogOutputAttr::set_module_name_log_level(const string &module_name,
                                               const log_level_t &out_log_level) {
     /*保存日志等级*/
     log_level = out_log_level;
     /*遍历建立模块信息*/
-    for (LogFile &log_file: log_files) {
-        log_file.set_module_name_log_level(module_name, out_log_level);
+    for (auto &log_file: log_files) {
+        log_file->set_module_name_log_level(module_name, out_log_level);
     }
 }
 
@@ -81,8 +86,8 @@ void LogOutputAttr::set_module_name_log_level(const std::string &module_name,
  * */
 void LogOutputAttr::set_module_name(const string &module_name) {
     /*遍历建立模块信息*/
-    for (LogFile &log_file: log_files) {
-        log_file.set_module_name(module_name);
+    for (auto &log_file: log_files) {
+        log_file->set_module_name(module_name);
     }
 }
 
@@ -112,10 +117,10 @@ int LogOutputAttr::out_message(const string &message,
         va_end(null_list);
     }
     /*捕获写日志文件的异常,除了问题将信息写入系统日志*/
-    for (LogFile &log_file: log_files) {
+    for (auto &log_file: log_files) {
         try {
             /*写日志文件*/
-            log_file.out_message(message);
+            log_file->out_message(message);
         } catch (LogException &e) {
             /*将日志信息写入系统日志*/
             if (!syslog_on) {
@@ -134,3 +139,11 @@ int LogOutputAttr::out_message(const string &message,
     }
     return 0;
 }
+
+/*析构函数*/
+//LogOutputAttr::~LogOutputAttr() {
+//    /*删除文件对象*/
+//    for (auto &log_file: log_files) {
+//        free(log_file);
+//    }
+//}

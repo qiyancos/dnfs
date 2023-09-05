@@ -233,19 +233,15 @@ int Logger::set_log_output(const vector<log_level_t> &log_level_list,
     /*刷新缓存*/
     log_buffer.flush();
 
-    /*先构造一个日志输出对象，用来生成日志路径*/
-    LogOutputAttr generate_output_attr = LogOutputAttr();
-    /*解析配置,如果解析错误*/
-    if (generate_output_attr.generate_config(log_file_config,
-                                             error_info) != 0) {
-        return 1;
-    }
-
     /*遍历选中模式更改数据*/
     for (auto &attr: module_attr) {
         for (auto &log_level: log_level_list) {
             /*设置输出属性*/
-            attr.second->log_level_output[log_level] = generate_output_attr;
+            if (attr.second->log_level_output[log_level].generate_config(
+                    log_file_config,
+                    error_info) != 0) {
+                return 1;
+            }
             /*设置模块名称和日志等级*/
             attr.second->log_level_output[log_level].set_module_name_log_level(
                     attr.first, log_level);
@@ -622,5 +618,20 @@ void Logger::lock_out_put() {
  * */
 void Logger::unlock_out_put() {
     log_buffer.unlock_out_put();
+}
+
+/*设置日志生成文件方式
+ * params l_generate:设置的日志生成方式
+ * return
+ * */
+void Logger::set_log_generate(const log_generate_t &l_generate) {
+    log_generate = l_generate;
+}
+
+/*获取日志生成类型
+ * return 日志切割类型
+ * */
+log_generate_t Logger::get_log_generate() {
+    return log_generate;
 }
 
