@@ -33,8 +33,6 @@
 #include <regex>
 #include <sstream>
 #include <thread>
-/*todo 解决这个问题*/
-//#include <boost/stacktrace.hpp>
 
 #define SET_PTR_INFO(error_info, error_content) if(error_info != nullptr) *error_info = error_content;
 /*设置格式化缓存区默认大小*/

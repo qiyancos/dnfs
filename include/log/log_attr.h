@@ -83,10 +83,9 @@ public:
     LoggerAttr();
 
     /*根据格式字符串，建立日志格式,供设置日志格式调用
-     * params error_info:错误信息
-     * return: 状态码 0 生成成功 其他 生成失败
+     * return:
      * */
-     int init_log_formatter(std::string *error_info);
+     void init_log_formatter();
 
     /*判断debug模式
      * return
@@ -101,10 +100,9 @@ public:
     /*调用输出方法
      * params message_log_level:输出日志等级
      * params message:日志信息
-     * params error_info:错误信息
-     * return: 状态码 0 生成成功 其他 生成失败
+     * return:
      * */
-    int out_message(const log_level_t &message_log_level, const std::string &message, std::string *error_info);
+    void out_message(const log_level_t &message_log_level, const std::string &message);
 
     /*更改内部log_file模块名
      * params change_module_name:更改的模块名

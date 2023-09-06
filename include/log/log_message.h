@@ -84,17 +84,15 @@ public:
 
     /*判断添加调用栈
      * params format_message:生成的日志信息
-     * params error_info:错误信息
-     * return: 状态码 0 生成成功 其他 生成失败
+     * return:
      * */
-    int judge_traceback(std::string &format_message, std::string *error_info);
+    void judge_traceback(std::string &format_message);
 
     /*调用输出方法
      * params message:日志信息
-     * params error_info:错误信息
-     * return: 状态码 0 生成成功 其他 生成失败
+     * return:
      * */
-    int out_message(std::string &message, std::string *error_info);
+    void out_message(std::string &message);
 };
 
 #endif //LOG_LOG_MESSAGE_H

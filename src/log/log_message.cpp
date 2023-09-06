@@ -235,11 +235,10 @@ LogMessage::ganerate_log_message(string &format_message) {
 
 /*判断添加调用栈
  * params format_message:生成的日志信息
- * params error_info:错误信息
- * return: 状态码 0 生成成功 其他 生成失败
+ * return:
  * */
-int
-LogMessage::judge_traceback(string &format_message, string *error_info) {
+void
+LogMessage::judge_traceback(string &format_message) {
     /*判断是不是需要添加调用栈,是不是debug模式，是不是含有error*/
     if (logger.module_attr[module_name]->get_debug() and
         log_level_info_dict[log_level].first[0].find("ERROR") !=
@@ -247,15 +246,13 @@ LogMessage::judge_traceback(string &format_message, string *error_info) {
         /*todo 使用boost打印调用栈*/
         format_message += get_taceback();
     }
-    return 0;
 }
 
 /*调用输出方法
  * params message:日志信息
- * params error_info:错误信息
- * return: 状态码 0 生成成功 其他 生成失败
+ * return:
  * */
-int LogMessage::out_message(string &message, string *error_info) {
+void LogMessage::out_message(string &message) {
     /*调用对应的模块属性日志*/
-    return logger.module_attr[module_name]->out_message(log_level, message, error_info);
+    logger.module_attr[module_name]->out_message(log_level, message);
 }
