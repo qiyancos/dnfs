@@ -173,11 +173,8 @@ void LogFile::generate_data(const string &config_str, const string &module_n,
                 dir_path.c_str());
     }
     /*查看路径是否存在，不存在创建,创建错误直接返回*/
-    if (creat_directory(dir_path, nullptr) != 0) {
-        throw LogException(
-                "The storage log path '%s' set is not a directory",
-                dir_path.c_str());
-    }
+    creat_directory(dir_path);
+
     /*判断是否有写权限*/
     if (access(dir_path.c_str(), W_OK) != 0) {
         throw LogException(

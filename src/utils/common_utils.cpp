@@ -20,10 +20,11 @@
 #include <netinet/in.h>
 #include <cstdarg>
 #include <algorithm>
-#include <iostream>
 #include <experimental/filesystem>
 
 #include "utils/common_utils.h"
+#include "utils/unit_exception.h"
+
 using namespace std;
 
 bool _beauty = false;
@@ -139,33 +140,18 @@ void to_upper(string &str) {
 
 /*判断文件目录是否存在
  * params judge_dir:验证的路径
- * params error_info:错误信息
- * return: 状态码 0 生成成功 其他 生成失败
+ * return
  * */
-int creat_directory(const string &judge_dir, string *error_info) {
+void creat_directory(const string &judge_dir) {
     struct stat info{};
     if (stat(judge_dir.c_str(), &info) != 0) {
-        try {
-            /*递归创建文件夹*/
-            experimental::filesystem::create_directories(judge_dir);
-            /*创建成功*/
-            return 0;
-        } catch (experimental::filesystem::filesystem_error &e) {
-            /*添加错误信息*/
-            SET_PTR_INFO(error_info, e.what())
-            /*创建错误返回失败*/
-            return 1;
-        }
-    } else if (info.st_mode & S_IFDIR) {
-        /*目录存在*/
-        return 0;
-    } else {
-        /*设置错误信息*/
-        SET_PTR_INFO(error_info, format_message(
+        /*递归创建文件夹,有异常直接报*/
+        experimental::filesystem::create_directories(judge_dir);
+    } else if (!(info.st_mode & S_IFDIR)) {
+        /*如果存在但不是文件夹*/
+        throw UnitException(
                 "The storage log path '%s' set is not a directory",
-                judge_dir.c_str()))
-        /*不是文件目录返回错误*/
-        return 1;
+                judge_dir.c_str());
     }
 }
 
@@ -211,7 +197,8 @@ int creat_directory(const string &judge_dir, string *error_info) {
  * params format:转化的日期格式
  * return: 转化完成的日期字符串
  * */
-string format(const time_t &time_stamp,const uint64_t &dis_millseconds, const string &format) {
+string format(const time_t &time_stamp, const uint64_t &dis_millseconds,
+              const string &format) {
 
     /*%Y-%m-%d %H:%M:%S*/
 
