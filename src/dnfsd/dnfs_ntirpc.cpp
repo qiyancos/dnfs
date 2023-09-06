@@ -26,7 +26,7 @@ extern "C" {
 #include <sys/un.h>
 
 #include "log/log.h"
-#include "nfs/nfs_func.h"
+#include "nfs/nfs_base.h"
 #include "utils/common_utils.h"
 #include "utils/thread_utils.h"
 #include "dnfsd/dnfs_meta_data.h"
@@ -472,7 +472,7 @@ enum xprt_stat nfs_rpc_valid_NFS(struct svc_req *req) {
     if (req->rq_msg.cb_vers == NFS_V3) {
         if (req->rq_msg.cb_proc <= NFSPROC3_COMMIT) {
             reqdata->funcdesc =
-                    &nfs3_func_desc[req->rq_msg.cb_proc];
+                    &nfs4_func_desc[req->rq_msg.cb_proc];
             return nfs_rpc_process_request(reqdata, false);
         }
         return nfs_rpc_noproc(reqdata);

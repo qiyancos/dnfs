@@ -25,9 +25,6 @@ extern "C" {
 #include <string>
 
 #include "nfs/nfs_base.h"
-#include "nfs/nfs_args.h"
-#include "nfs/nfs_res.h"
-#include "nfs/nfs_func.h"
 
 struct dnfs_request_lookahead {
     uint32_t flags;
@@ -98,6 +95,8 @@ typedef struct nfs_core_param {
 typedef struct nfs_param {
     /* NFS的核心参数数据，主要是针对NFSV23协议的内容 */
     nfs_core_parameter_t core_param;
+    /** NFSv4 specific parameters, settable in the NFSv4 stanza. */
+    nfs_version4_parameter_t nfsv4_param;
 } nfs_parameter_t;
 
 typedef enum protos {

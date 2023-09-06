@@ -13,12 +13,5 @@
  *
  */
 
-#ifndef NFS_NFS_RES_H
-#define NFS_NFS_RES_H
+#include "nfs/nfs_compound_exchangeid.h"
 
-#include "nfs/nfs_base.h"
-
-typedef union nfs_res__ {
-} nfs_res_t;
-
-#endif //NFS_NFS_RES_H

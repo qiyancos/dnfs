@@ -13,7 +13,7 @@
  *
  */
 
-#include "nfs/nfs_func.h"
+#include "nfs/nfs_base.h"
 #include "log/log.h"
 
 #define MODULE_NAME "DNFS"

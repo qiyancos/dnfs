@@ -13,10 +13,17 @@
  *
  */
 
-#include "nfs/nfs_func.h"
+#include "dnfsd/dnfs_config.h"
+#include "dnfsd/dnfs_meta_data.h"
+#include "nfs/nfs_base.h"
+#include "nfs/nfs_utils.h"
+#include "nfs/nfs_compound_base.h"
+#include "utils/common_utils.h"
+#include "log/log.h"
 
-int nfs4_Compound(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
-{
+#define MODULE_NAME "DNFS"
+
+int nfs4_compound(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     nfsstat4 status = NFS4_OK;
     compound_data_t *data = NULL;
     const uint32_t compound4_minor = arg->arg_compound4.minorversion;
@@ -24,21 +31,20 @@ int nfs4_Compound(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
     /* Array of op arguments */
     nfs_argop4 * const argarray = arg->arg_compound4.argarray.argarray_val;
     bool drop = false;
-    nfs_request_t *reqdata = container_of(req, nfs_request_t, svc);
+    nfs_request_t *reqdata = get_parent_struct_addr(req, nfs_request_t, svc);
     struct COMPOUND4res *res_compound4;
     enum nfs_req_result result = NFS_REQ_OK;
 
     /* Allocate (and zero) the COMPOUND4res_extended */
-    res->res_compound4_extended =
-            gsh_calloc(1, sizeof(*res->res_compound4_extended));
+    res->res_compound4_extended = reinterpret_cast<COMPOUND4res_extended*>(
+            calloc(1, sizeof(*res->res_compound4_extended)));
     res_compound4 = &res->res_compound4_extended->res_compound4;
 
     /* Take initial reference to response. */
     res->res_compound4_extended->res_refcnt = 1;
 
     if (compound4_minor > 2) {
-        LogCrit(COMPONENT_NFS_V4, "Bad Minor Version %d",
-                compound4_minor);
+        LOG(MODULE_NAME, L_ERROR, "Bad Minor Version %d", compound4_minor);
 
         res_compound4->status = NFS4ERR_MINOR_VERS_MISMATCH;
         res_compound4->resarray.resarray_len = 0;
@@ -47,15 +53,16 @@ int nfs4_Compound(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
 
     if ((nfs_param.nfsv4_param.minor_versions &
          (1 << compound4_minor)) == 0) {
-        LogInfo(COMPONENT_NFS_V4, "Unsupported minor version %d",
-                compound4_minor);
+        LOG(MODULE_NAME, L_ERROR, "Unsupported minor version %d",
+            compound4_minor);
         res_compound4->status = NFS4ERR_MINOR_VERS_MISMATCH;
         res_compound4->resarray.resarray_len = 0;
         goto out;
     }
 
     /* Initialisation of the compound request internal's data */
-    data = gsh_calloc(1, sizeof(*data));
+    data = reinterpret_cast<compound_data*>(
+            calloc(1, sizeof(*data)));
 
     data->req = req;
     data->argarray_len = argarray_len;
@@ -64,7 +71,6 @@ int nfs4_Compound(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
     reqdata->proc_data = data;
 
     /* Minor version related stuff */
-    op_ctx->nfs_minorvers = compound4_minor;
     data->minorversion = compound4_minor;
 
     /* Keeping the same tag as in the arguments */
@@ -72,8 +78,8 @@ int nfs4_Compound(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
 
     if (res_compound4->tag.utf8string_len > 0) {
         /* Check if the tag is a valid utf8 string (., .., and / ok) */
-        if (nfs4_utf8string_scan(&res_compound4->tag, UTF8_SCAN_STRICT)
-            != 0) {
+        if (nfs4_utf8string_scan(&res_compound4->tag,
+                                 UTF8_SCAN_STRICT) != 0) {
             char str[LOG_BUFF_LEN];
             struct display_buffer dspbuf = {sizeof(str), str, str};
 
@@ -314,7 +320,7 @@ void release_nfs4_res_compound(struct COMPOUND4res_extended *res_compound4_ex)
  * @param[in] res The result
  *
  */
-void nfs4_Compound_Free(nfs_res_t *res)
+void nfs4_compound_free(nfs_res_t *res)
 {
     release_nfs4_res_compound(res->res_compound4_extended);
 }
