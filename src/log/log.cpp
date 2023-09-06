@@ -58,7 +58,8 @@ void Logger::init(const string &program_name_in, const string &hostname_in) {
     init_module("logger");
     /*开启buffer线程*/
     thread buffer_thread(&LogBuffer::output_thread, &log_buffer);
-    buffer_thread.detach();
+    /*同过交换线程保存线程对象*/
+    buffer_thread_mv.swap(buffer_thread);
 }
 
 /*使用默认日志属性初始化一个模块日志
@@ -76,11 +77,11 @@ void Logger::init_module(const string &module_name) {
         module_attr[module_name] = init_attr;
 
         /*遍历所有的output数据，更新模块名和日志等级*/
-        for (LogOutputAttr &log_out_put: module_attr[module_name]->log_level_output) {
-            for (const log_level_t &log_level: all_log_level) {
-                log_out_put.set_module_name_log_level(module_name, log_level);
-            }
+        for (const log_level_t &log_level: all_log_level) {
+            module_attr[module_name]->log_level_output[log_level].set_module_name_log_level(
+                    module_name, log_level);
         }
+
 
     }
 }
@@ -194,9 +195,7 @@ Logger &Logger::get_instance() {
 int Logger::set_log_output(const string &log_file_config, string *error_info) {
 
     /*设置所有模块多个日志等级日志文件路径*/
-    if (set_log_output(all_log_level, log_file_config, error_info) != 0) {
-        return 1;
-    }
+    set_log_output(all_log_level, log_file_config, error_info);
 
     return 0;
 }
@@ -214,9 +213,7 @@ int Logger::set_log_output(const log_level_t &log_level,
     vector<log_level_t> log_level_list = {log_level};
 
     /*设置所有模块多个日志等级日志文件路径*/
-    if (set_log_output(log_level_list, log_file_config, error_info) != 0) {
-        return 1;
-    }
+    set_log_output(log_level_list, log_file_config, error_info);
     return 0;
 }
 
@@ -232,22 +229,12 @@ int Logger::set_log_output(const vector<log_level_t> &log_level_list,
     /*刷新缓存*/
     log_buffer.flush();
 
-    /*先构造一个日志输出对象，用来生成日志路径*/
-    LogOutputAttr generate_output_attr = LogOutputAttr();
-    /*解析配置,如果解析错误*/
-    if (generate_output_attr.generate_config(log_file_config,
-                                             error_info) != 0) {
-        return 1;
-    }
-
     /*遍历选中模式更改数据*/
     for (auto &attr: module_attr) {
         for (auto &log_level: log_level_list) {
             /*设置输出属性*/
-            attr.second->log_level_output[log_level] = generate_output_attr;
-            /*设置模块名称和日志等级*/
-            attr.second->log_level_output[log_level].set_module_name_log_level(
-                    attr.first, log_level);
+            attr.second->log_level_output[log_level].generate_config(
+                    log_file_config);
         }
     }
     return 0;
@@ -329,13 +316,8 @@ int Logger::set_module_log_output(const string &module_name,
     /*设置选择模式的日志文件属性*/
     for (auto &log_level: log_level_list) {
         /*重新生成数据对象,错误直接返回*/
-        if (module_attr[module_name]->log_level_output[log_level].generate_config(
-                log_file_config, error_info) != 0) {
-            return 1;
-        }
-        /*设置模块名和日志等级*/
-        module_attr[module_name]->log_level_output[log_level].set_module_name_log_level(
-                module_name, log_level);
+        module_attr[module_name]->log_level_output[log_level].generate_config(
+                log_file_config);
     }
 
     return 0;
@@ -593,6 +575,12 @@ void Logger::set_buffer_limit(const int &buffer_limit) {
 
 /*析构函数*/
 Logger::~Logger() {
+    /*停止buffer线程*/
+    log_buffer.set_stop_buffer_flag();
+    /*阻塞主线程直到，buffer线程结束*/
+    buffer_thread_mv.join();
+
+    /*删除new 定义的模块属性*/
     for (const auto &attr: module_attr) {
         delete attr.second;
     }
@@ -602,3 +590,33 @@ Logger::~Logger() {
 void Logger::flush() {
     log_buffer.flush();
 }
+
+/*锁住整个buffer
+ * return
+ * */
+void Logger::lock_out_put() {
+    log_buffer.lock_out_put();
+}
+
+/*解锁buffer
+ * return
+ * */
+void Logger::unlock_out_put() {
+    log_buffer.unlock_out_put();
+}
+
+/*设置日志生成文件方式
+ * params l_generate:设置的日志生成方式
+ * return
+ * */
+void Logger::set_log_generate(const log_generate_t &l_generate) {
+    log_generate = l_generate;
+}
+
+/*获取日志生成类型
+ * return 日志切割类型
+ * */
+log_generate_t Logger::get_log_generate() {
+    return log_generate;
+}
+

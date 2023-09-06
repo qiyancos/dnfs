@@ -25,6 +25,8 @@
 
 #include "log_message.h"
 
+#define WAIT_TIME 1
+
 /*日志输出Buffer，单独线程处理，需要对多线程做多队列*/
 class LogBuffer {
 private:
@@ -48,6 +50,12 @@ private:
 
     /*flush通知锁*/
     std::mutex flush_mtx;
+
+    /*输入锁，锁住整个输入buffer*/
+    std::mutex buffer_mtx;
+
+    /*停止buffer线程标志*/
+    bool stop_buffer= false;
 
     /*日志信息存储列表*/
     std::vector<LogMessage> log_massage_list;
@@ -75,11 +83,30 @@ public:
     void add_log_buffer(const unsigned int &thread_id,
                         const LogMessage &log_message);
 
-    /*更新属性前强制flush*/
+    /*更新属性前强制flush
+     * return
+     * */
     void flush();
 
-    /*生成数据*/
+    /*生成数据
+     * return
+     * */
     void out();
+
+    /*锁住整个buffer
+     * return
+     * */
+    void lock_out_put();
+
+    /*解锁buffer
+     * return
+     * */
+    void unlock_out_put();
+
+    /*设置buffer结束标志
+     * return
+     * */
+    void set_stop_buffer_flag();
 };
 
 #endif //LOG_LOG_BUFFER_H

@@ -99,4 +99,35 @@ static std::map<log_level_t, std::pair<std::vector<std::string>, int>> log_level
         {L_ALL,       {{"LOG_ALL"},                LOG_INFO}},
 };
 
+
+/*如果按照时间进行日志更新，具体的日志更新时间*/
+typedef enum RotateWhen {
+    NEVER,
+    SECOND,
+    MINUTE,
+    HOUR,
+    DAY,
+    MIDNIGHT,
+    WEEK
+} rotate_when_t;
+
+/*时间模板*/
+const static std::string time_format[] = {
+        "",
+        "%Y-%m-%d_%H:%M:%S",
+        "%Y-%m-%d_%H:%M",
+        "%Y-%m-%d_%H",
+        "%Y-%m-%d",
+        "%Y-%m-%d",
+        "%Y-%m-%d",
+};
+
+/*日志生成类型*/
+typedef enum LogGenerate{
+    L_JUST_ONE,
+    L_MODULE,
+    L_LOG_LEVEL,
+    LMODULE_LOG_LEVEL
+}log_generate_t;
+
 #endif //DNFSD_LOG_DATA_H

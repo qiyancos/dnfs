@@ -25,11 +25,9 @@ LogOutputAttr::LogOutputAttr() = default;
  * 比如 "stderr:syslog:/tmp/yes@(time,midnight,30):/tmp/no"
  * 比如 "stderr:syslog:/tmp/yes@(size,10MB,30):/tmp/no"
  * params log_out_attr_str:日志文件设置
- * params error_info:错误信息
- * return: 状态码 0 生成成功 其他 生成失败
+ * return
  * */
-int LogOutputAttr::generate_config(const string &log_out_attr_str,
-                                   string *error_info) {
+void LogOutputAttr::generate_config(const string &log_out_attr_str) {
     /*设置切割保存结果*/
     vector<string> split_result;
 
@@ -48,41 +46,39 @@ int LogOutputAttr::generate_config(const string &log_out_attr_str,
         } else if (param == "stdout") {
             stdout_on = true;
         } else {
-            /*先建立文件属性对象*/
-            LogFile log_file = LogFile();
-            /*建立属性,有错误就返回*/
-            if (log_file.generate_data(param, error_info) != 0) {
-                return 1;
-            }
-            log_files.push_back(log_file);
+            /*获取智能指针*/
+//            shared_ptr<LogFile> log_file_ptr;
+//            log_file_ptr.reset(&log_file);
+            /*添加指针*/
+            log_files.push_back(
+                    LogFile::get_log_file(param, module_name, log_level));
         }
     }
-    return 0;
 }
 
 /*建立模块名和日志等级
- * params module_name:模块名
+ * params module_n:模块名
  * params out_log_level:日志输出等级
  * return
  * */
-void LogOutputAttr::set_module_name_log_level(const std::string &module_name,
+void LogOutputAttr::set_module_name_log_level(const string &module_n,
                                               const log_level_t &out_log_level) {
     /*保存日志等级*/
     log_level = out_log_level;
-    /*遍历建立模块信息*/
-    for (LogFile &log_file: log_files) {
-        log_file.set_module_name_log_level(module_name, out_log_level);
-    }
+    /*设置模块名*/
+    module_name = module_n;
 }
 
 /*适应单独更新模块名
- * params module_name:模块名
+ * params module_n:模块名
  * return
  * */
-void LogOutputAttr::set_module_name(const string &module_name) {
+void LogOutputAttr::set_module_name(const string &module_n) {
+    /*设置模块名*/
+    module_name = module_n;
     /*遍历建立模块信息*/
-    for (LogFile &log_file: log_files) {
-        log_file.set_module_name(module_name);
+    for (auto &log_file: log_files) {
+        log_file->set_module_name(module_n);
     }
 }
 
@@ -112,10 +108,10 @@ int LogOutputAttr::out_message(const string &message,
         va_end(null_list);
     }
     /*捕获写日志文件的异常,除了问题将信息写入系统日志*/
-    for (LogFile &log_file: log_files) {
+    for (auto &log_file: log_files) {
         try {
             /*写日志文件*/
-            log_file.out_message(message);
+            log_file->out_message(message);
         } catch (LogException &e) {
             /*将日志信息写入系统日志*/
             if (!syslog_on) {

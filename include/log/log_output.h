@@ -21,12 +21,13 @@
 #include <cstdarg>
 #include <log/log_file.h>
 #include <log/log_data.h>
-
 /*日志输出属性*/
 class LogOutputAttr {
 private:
     /*输出日志等级*/
     log_level_t log_level=NOLOG;
+    /*模块名*/
+    std::string module_name="default";
     /*是否输出到stderr*/
     bool stderr_on = false;
     /*是否输出到stdout*/
@@ -34,33 +35,31 @@ private:
     /*是否输出到syslog*/
     bool syslog_on = false;
     /*是否输出到日志文件，可以同时输出到多个日志文件*/
-    std::vector<LogFile> log_files;
+    std::vector<std::shared_ptr<LogFile>> log_files;
 public:
     /*从配置字符串生成配置
      * 比如 "stderr:syslog:/tmp/yes@(time,midnight,30):/tmp/no"
      * 比如 "stderr:syslog:/tmp/yes@(size,10MB,30):/tmp/no"
      * params log_out_attr_str:日志文件设置
-     * params error_info:错误信息
-     * return: 状态码 0 生成成功 其他 生成失败
+     * return
      * */
-    int generate_config(const std::string &log_out_attr_str,
-                        std::string *error_info);
+    void generate_config(const std::string &log_out_attr_str);
 
     /*默认的构造函数*/
     LogOutputAttr();
 
     /*建立模块名和日志等级
-     * params module_name:模块名
+     * params module_n:模块名
      * params out_log_level:日志输出等级
      * return
      * */
-    void set_module_name_log_level(const std::string& module_name,const log_level_t &out_log_level);
+    void set_module_name_log_level(const std::string& module_n, const log_level_t &out_log_level);
 
     /*适应单独更新模块名
-     * params module_name:模块名
+     * params module_n:模块名
      * return
      * */
-    void set_module_name(const std::string &module_name);
+    void set_module_name(const std::string &module_n);
 
     /*输出日志信息
      * params message:日志信息
