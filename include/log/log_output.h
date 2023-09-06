@@ -21,8 +21,6 @@
 #include <cstdarg>
 #include <log/log_file.h>
 #include <log/log_data.h>
-/*todo 打印到一个日志文件*/
-#define ONE_FILE true
 /*日志输出属性*/
 class LogOutputAttr {
 private:
@@ -37,17 +35,15 @@ private:
     /*是否输出到syslog*/
     bool syslog_on = false;
     /*是否输出到日志文件，可以同时输出到多个日志文件*/
-    std::vector<LogFile *> log_files;
+    std::vector<std::shared_ptr<LogFile>> log_files;
 public:
     /*从配置字符串生成配置
      * 比如 "stderr:syslog:/tmp/yes@(time,midnight,30):/tmp/no"
      * 比如 "stderr:syslog:/tmp/yes@(size,10MB,30):/tmp/no"
      * params log_out_attr_str:日志文件设置
-     * params error_info:错误信息
-     * return: 状态码 0 生成成功 其他 生成失败
+     * return
      * */
-    int generate_config(const std::string &log_out_attr_str,
-                        std::string *error_info);
+    void generate_config(const std::string &log_out_attr_str);
 
     /*默认的构造函数*/
     LogOutputAttr();
@@ -71,9 +67,6 @@ public:
      * return: 状态码 0 生成成功 其他 生成失败
      * */
     int out_message(const std::string& message,std::string *error_info,...);
-
-    /*析构函数*/
-    ~LogOutputAttr();
 
 };
 

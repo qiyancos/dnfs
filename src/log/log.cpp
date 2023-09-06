@@ -195,9 +195,7 @@ Logger &Logger::get_instance() {
 int Logger::set_log_output(const string &log_file_config, string *error_info) {
 
     /*设置所有模块多个日志等级日志文件路径*/
-    if (set_log_output(all_log_level, log_file_config, error_info) != 0) {
-        return 1;
-    }
+    set_log_output(all_log_level, log_file_config, error_info);
 
     return 0;
 }
@@ -215,9 +213,7 @@ int Logger::set_log_output(const log_level_t &log_level,
     vector<log_level_t> log_level_list = {log_level};
 
     /*设置所有模块多个日志等级日志文件路径*/
-    if (set_log_output(log_level_list, log_file_config, error_info) != 0) {
-        return 1;
-    }
+    set_log_output(log_level_list, log_file_config, error_info);
     return 0;
 }
 
@@ -237,11 +233,8 @@ int Logger::set_log_output(const vector<log_level_t> &log_level_list,
     for (auto &attr: module_attr) {
         for (auto &log_level: log_level_list) {
             /*设置输出属性*/
-            if (attr.second->log_level_output[log_level].generate_config(
-                    log_file_config,
-                    error_info) != 0) {
-                return 1;
-            }
+            attr.second->log_level_output[log_level].generate_config(
+                    log_file_config);
         }
     }
     return 0;
@@ -323,10 +316,8 @@ int Logger::set_module_log_output(const string &module_name,
     /*设置选择模式的日志文件属性*/
     for (auto &log_level: log_level_list) {
         /*重新生成数据对象,错误直接返回*/
-        if (module_attr[module_name]->log_level_output[log_level].generate_config(
-                log_file_config, error_info) != 0) {
-            return 1;
-        }
+        module_attr[module_name]->log_level_output[log_level].generate_config(
+                log_file_config);
     }
 
     return 0;

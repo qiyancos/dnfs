@@ -28,26 +28,25 @@ using namespace std;
 /*默认构造函数*/
 LogFile::LogFile() = default;
 
-/*设置路径：logfile对象字典*/
-std::map<std::string, LogFile *> LogFile::path_log_file = {};
+/*使用map统一相同的logfile设置路径：logfile对象字典*/
+std::map<std::string, std::shared_ptr<LogFile>> LogFile::path_log_file_dict = {};
 /*设置路径：属性，用来对照相同的路径，切割属性是否一样*/
-std::map<std::string, std::string> LogFile::path_rotate_attr = {};
+std::map<std::string, std::string> LogFile::path_rotate_attr_dict = {};
 
 /*解析建立数据
  * params config_str:日志文件配置信息
  * params module_n:模块名
  * params log_l:日志等级
- * params error_info:错误信息
- * return: 状态码 0 生成成功 其他 生成失败
+ * return
  * */
-int LogFile::generate_data(const string &config_str, const string &module_n,
-                           const log_level_t &log_l, string *error_info) {
+void LogFile::generate_data(const string &config_str, const string &module_n,
+                            const log_level_t &log_l) {
     /*先判断有没有文件设置参数
      * 获取参数切割下标*/
     size_t args_index = config_str.find('@');
 
-    /*设置保存文件目录路径*/
-    string dir_path = config_str;
+    /*截取文件夹路径*/
+    string dir_path = config_str.substr(0, args_index);
 
     /*数字判定正则表达式*/
     regex number_regex_str("\\d+");
@@ -66,20 +65,16 @@ int LogFile::generate_data(const string &config_str, const string &module_n,
         split_str(args_str, ",", args);
         /*判断参数数目，如果不为3直接报错*/
         if (args.size() != 3) {
-            SET_PTR_INFO(error_info, format_message(
+            throw LogException(
                     "The log path setting has and only three parameters such as (time,midnight,30),you set is %s",
-                    args_str.c_str())
-            )
-            return 1;
+                    args_str.c_str());
         }
         /*解析参数*/
         /*先设置保留的日志数目*/
         if (!judge_regex(args[2], number_regex_str)) {
-            SET_PTR_INFO(error_info, format_message(
+            throw LogException(
                     "The size of the number of saved logs must be a positive integer,you set is %s",
-                    args[2].c_str())
-            )
-            return 1;
+                    args[2].c_str());
         }
         /*需要保留的日志数量*/
         backup_count = stoi(args[2]);
@@ -97,11 +92,9 @@ int LogFile::generate_data(const string &config_str, const string &module_n,
             string size_str = args[1].substr(0, args[1].size() - 2);
             /*如果是数字，转为数字*/
             if (!judge_regex(size_str, number_regex_str)) {
-                SET_PTR_INFO(error_info, format_message(
+                throw LogException(
                         "Set the file size of the cut log setting must be a positive integer,you set is %s",
-                        size_str.c_str())
-                )
-                return 1;
+                        size_str.c_str());
             }
             /*转换数字*/
             log_limit.size_limit = stoll(size_str);
@@ -112,19 +105,15 @@ int LogFile::generate_data(const string &config_str, const string &module_n,
                 log_limit.size_limit <<= 20;
             } else if (unit_b == "gb") {
                 if (log_limit.size_limit > 3) {
-                    SET_PTR_INFO(error_info, format_message(
+                    throw LogException(
                             "Split logs by size must be less than 4gb,you set is %d GB",
-                            log_limit.size_limit)
-                    )
-                    return 1;
+                            log_limit.size_limit);
                 }
                 log_limit.size_limit <<= 30;
             } else {
-                SET_PTR_INFO(error_info, format_message(
+                throw LogException(
                         "Cutting logs by size must be selected among (kb,mb,gb), and case is ignored,you set is %s",
-                        unit_b.c_str())
-                )
-                return 1;
+                        unit_b.c_str());
             }
         } else if (args[0] == "time") {
             /*设置切割模式为按时间*/
@@ -160,7 +149,7 @@ int LogFile::generate_data(const string &config_str, const string &module_n,
                 when = WEEK;
                 log_limit.when_interval = 604800;
             } else {
-                SET_PTR_INFO(error_info, format_message(
+                throw LogException(
                         "Cutting logs by time must be selected in the list below:\n"
                         "        NEVER,\n"
                         "        SECOND,\n"
@@ -169,39 +158,31 @@ int LogFile::generate_data(const string &config_str, const string &module_n,
                         "        DAY,\n"
                         "        MIDNIGHT,\n"
                         "        WEEK\n"
-                        "and case is ignored,you set is %s", args[1].c_str())
-                )
-                return 1;
+                        "and case is ignored,you set is %s", args[1].c_str());
             }
         } else {
-            SET_PTR_INFO(error_info, format_message(
+            throw LogException(
                     "The log cutting limit parameter can only be selected between 'size' and 'time',you set is %s",
-                    args[0].c_str())
-            )
-            return 1;
+                    args[0].c_str());
         }
-        /*截取文件夹路径*/
-        dir_path = config_str.substr(0, args_index);
     }
     /*如果路径不合法*/
     if (!judge_regex(dir_path, path_regex_str)) {
-        SET_PTR_INFO(error_info, format_message(
+        throw LogException(
                 "The log directory must be an absolute path and can only be named with numbers, letters and '_',you set is %s",
-                dir_path.c_str())
-        )
-        return 1;
+                dir_path.c_str());
     }
     /*查看路径是否存在，不存在创建,创建错误直接返回*/
-    if (creat_directory(dir_path, error_info) != 0) {
-        return 1;
+    if (creat_directory(dir_path, nullptr) != 0) {
+        throw LogException(
+                "The storage log path '%s' set is not a directory",
+                dir_path.c_str());
     }
     /*判断是否有写权限*/
     if (access(dir_path.c_str(), W_OK) != 0) {
-        SET_PTR_INFO(error_info, format_message(
+        throw LogException(
                 "The directory '%s' where the log file is saved does not have write permissions",
-                dir_path.c_str())
-        )
-        return 1;
+                dir_path.c_str());
     }
     /*路径赋值*/
     log_directory_path = dir_path;
@@ -211,7 +192,6 @@ int LogFile::generate_data(const string &config_str, const string &module_n,
     log_level = log_l;
     /*生成初始日志文件路径*/
     generate_log_path();
-    return 0;
 }
 
 /*输出日志信息
@@ -550,6 +530,69 @@ void LogFile::rotate_log_file(const time_t &now_time) {
         /*文件记录数目减一*/
         log_files -= 1;
     }
+}
+
+/*判定生成日志文件对象
+ * params config_str:日志文件配置信息
+ * params module_n:模块名
+ * params log_l:日志等级
+ * return: 获取的日志对象
+ * */
+std::shared_ptr<LogFile>
+LogFile::get_log_file(const string &config_str, const string &module_n,
+                      const log_level_t &log_l) {
+    /*先只简单的截取路径和参数和保存的字典进行对比*/
+    /*先判断有没有文件设置参数
+     * 获取参数切割下标*/
+    size_t args_index = config_str.find('@');
+
+    /*建立设置参数*/
+    string args_str;
+
+    /*如果存在文件切割设置*/
+    if (args_index != string::npos) {
+        /*获取参数*/
+        args_str = config_str.substr(args_index + 2,
+                                     config_str.size() - args_index - 3);
+    }
+    /*截取文件夹路径*/
+    string dir_path = config_str.substr(0, args_index);
+
+    /*生成日志文件名*/
+    /*先建立文件属性对象*/
+    auto *log_file = new LogFile();
+    /*建立属性,有错误将抛出异常*/
+    log_file->generate_data(config_str, module_n, log_l);
+
+    /*获取文件名*/
+    string log_file_path = log_file->get_log_path();
+
+    /*获取是否建立的文件*/
+    if (path_log_file_dict.find(log_file_path) == path_log_file_dict.end()) {
+        /*建立智能指针*/
+        shared_ptr<LogFile> log_f;
+        log_f.reset(log_file);
+        /*保存数据*/
+        path_log_file_dict[log_file_path] = log_f;
+        path_rotate_attr_dict[log_file_path] = args_str;
+
+    } else {
+        /*已经存在判断属性设置是否一样，不一样直接抛出异常*/
+        if (path_rotate_attr_dict.find(log_file_path)->second != args_str) {
+            throw LogException(
+                    "Module '%s' log file '%s' cutting mode setting conflict",
+                    module_n.c_str(), log_file_path.c_str());
+        }
+    }
+    /*返回logfile对象指针*/
+    return path_log_file_dict[log_file_path];
+}
+
+/*获取日志路径
+ * return: 日志路径
+ * */
+std::string LogFile::get_log_path() {
+    return log_file_path;
 }
 
 /*析构函数*/

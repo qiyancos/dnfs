@@ -58,7 +58,7 @@ private:
     int log_files = 0;
 
     /*当前使用日志建立的时间*/
-    time_t use_file_build_time=0;
+    time_t use_file_build_time = 0;
 
     /*文件句柄*/
     int file_handler = -1;
@@ -66,7 +66,7 @@ private:
     /*文件名*/
     std::string file_name;
 
-    /*当前使用日志文件名*/
+    /*当前使用日志路径*/
     std::string log_file_path;
 
     /*最早切取得文件路径，用来超过限制删除*/
@@ -79,9 +79,9 @@ private:
     log_level_t log_level = NOLOG;
 
     /*设置路径：logfile对象字典*/
-    static std::map<std::string,LogFile*> path_log_file;
+    static std::map<std::string, std::shared_ptr<LogFile>> path_log_file_dict;
     /*设置路径：属性，用来对照相同的路径，切割属性是否一样*/
-    static std::map<std::string,std::string> path_rotate_attr;
+    static std::map<std::string, std::string> path_rotate_attr_dict;
 
 public:
     /*默认构造函数*/
@@ -91,10 +91,11 @@ public:
      * params config_str:日志文件配置信息
      * params module_n:模块名
      * params log_l:日志等级
-     * params error_info:错误信息
-     * return: 状态码 0 生成成功 其他 生成失败
+     * return:
      * */
-    int generate_data(const std::string &config_str,const std::string& module_n,const log_level_t &log_l,std::string *error_info);
+    void
+    generate_data(const std::string &config_str, const std::string &module_n,
+                  const log_level_t &log_l);
 
     /*输出日志信息
      * params message:日志信息
@@ -152,6 +153,21 @@ public:
      * return
      * */
     void rotate_log_file(const time_t &now_time);
+
+    /*判定生成日志文件对象
+     * params config_str:日志文件配置信息
+     * params module_n:模块名
+     * params log_l:日志等级
+     * return: 获取的日志对象
+     * */
+    static std::shared_ptr<LogFile>
+    get_log_file(const std::string &config_str, const std::string &module_n,
+                 const log_level_t &log_l);
+
+    /*获取日志路径
+     * return: 日志路径
+     * */
+    std::string get_log_path();
 
     /*析构函数*/
     ~LogFile();

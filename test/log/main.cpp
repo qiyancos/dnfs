@@ -32,7 +32,7 @@ int main() {
     /*设置全局配置*/
     logger.init("xx", "xx");
 
-    logger.set_log_generate(log_generate_t (3));
+    logger.set_log_generate(log_generate_t (2));
 
     /*解析日志级别*/
     cout << "解析日志级别:" << Logger::decode_log_level("DEBUG_INFO")
@@ -50,7 +50,7 @@ int main() {
     logger.lock_out_put();
     /*设置所有模块日志等级日志文件配置*/
     cout << "设置所有模块日志等级日志文件配置:" << logger.set_log_output(
-            "stderr:syslog:/home/jy/Public/log/@(time,second,5):/home/jy/Public/log/test/@(size,1kb,5)", &s) << ":" << s
+            "stderr:syslog:/home/jy/Public/log/@(time,second,5):/home/jy/Public/log/test/@(size,1kb,5):/home/jy/Public/log/single/", &s) << ":" << s
          << endl;
 //    cout << "设置所有模块日志等级日志文件配置:" << logger.set_log_output(
 //            "stderr:syslog:/home/jy/Public/log/@(size,1kb,2):/home/jy/Public/log/dasdad/", &s) << ":" << s
@@ -181,7 +181,6 @@ int main() {
     LOG("test", L_ERROR, "%s", "what fuck13");
     LOG("test", L_ERROR, "%s", "test what fuck2");
 //    while(true);
-
     this_thread::sleep_for(chrono::seconds(2));
 
     return 0;

@@ -25,11 +25,9 @@ LogOutputAttr::LogOutputAttr() = default;
  * 比如 "stderr:syslog:/tmp/yes@(time,midnight,30):/tmp/no"
  * 比如 "stderr:syslog:/tmp/yes@(size,10MB,30):/tmp/no"
  * params log_out_attr_str:日志文件设置
- * params error_info:错误信息
- * return: 状态码 0 生成成功 其他 生成失败
+ * return
  * */
-int LogOutputAttr::generate_config(const string &log_out_attr_str,
-                                   string *error_info) {
+void LogOutputAttr::generate_config(const string &log_out_attr_str) {
     /*设置切割保存结果*/
     vector<string> split_result;
 
@@ -48,21 +46,14 @@ int LogOutputAttr::generate_config(const string &log_out_attr_str,
         } else if (param == "stdout") {
             stdout_on = true;
         } else {
-            /*先建立文件属性对象*/
-            auto *log_file = new LogFile();
-            /*建立属性,有错误就返回*/
-            if (log_file->generate_data(param,module_name,log_level, error_info) != 0) {
-                return 1;
-            }
-
             /*获取智能指针*/
 //            shared_ptr<LogFile> log_file_ptr;
 //            log_file_ptr.reset(&log_file);
             /*添加指针*/
-            log_files.push_back(log_file);
+            log_files.push_back(
+                    LogFile::get_log_file(param, module_name, log_level));
         }
     }
-    return 0;
 }
 
 /*建立模块名和日志等级
@@ -138,12 +129,4 @@ int LogOutputAttr::out_message(const string &message,
         }
     }
     return 0;
-}
-
-/*析构函数*/
-LogOutputAttr::~LogOutputAttr() {
-    /*删除文件对象*/
-    for (auto &log_file: log_files) {
-        delete log_file;
-    }
 }
