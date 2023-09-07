@@ -23,7 +23,6 @@
 #include <netinet/in.h>
 #include <cstdarg>
 #include <algorithm>
-#include <iostream>
 #include <experimental/filesystem>
 
 #include "utils/common_utils.h"
