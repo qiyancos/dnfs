@@ -256,7 +256,7 @@ LogMessage::judge_traceback(string &format_message) {
             save_message+="       "+func_name+"\n";
         }
         /*拼接错误信息*/
-        save_message+="ErrorMessage: "+format_message;
+        save_message+="ErrorInfo: "+format_message;
         /*返回赋值*/
         format_message=save_message;
     }
