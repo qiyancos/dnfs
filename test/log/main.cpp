@@ -97,7 +97,7 @@ int main() {
 
     /*设置指定模块日志等级，高于该等级的才可以输出*/
     cout << "设置指定模块日志等级，高于该等级的才可以输出:" << endl;
-//    logger.set_module_log_level("yes", D_INFO);
+    logger.set_module_log_level("yes", D_INFO);
 
     /*设置所有模块日志格式*/
 //    cout << "设置所有模块日志格式:" << endl;

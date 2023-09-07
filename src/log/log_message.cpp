@@ -243,8 +243,22 @@ LogMessage::judge_traceback(string &format_message) {
     if (logger.module_attr[module_name]->get_debug() and
         log_level_info_dict[log_level].first[0].find("ERROR") !=
         string::npos) {
-        /*todo 使用boost打印调用栈*/
-        format_message += get_taceback();
+        /*保存调用栈信息*/
+        string save_message;
+        /*如果是debug模式，返回真正的调用栈*/
+        if (string(_RUN_MODE) == "Debug") {
+            save_message += get_taceback();
+        } else {
+            /*返回拼接的行号，方法，文件名*/
+            /*获取调用栈*/
+            save_message+="Traceback:\n";
+            save_message+="  FILE "+file_path+",  line "+to_string(line_no)+"\n";
+            save_message+="       "+func_name+"\n";
+        }
+        /*拼接错误信息*/
+        save_message+="ErrorMessage: "+format_message;
+        /*返回赋值*/
+        format_message=save_message;
     }
 }
 

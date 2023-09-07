@@ -16,10 +16,14 @@
 #include <sys/stat.h>
 #include <sys/un.h>
 #include <arpa/inet.h>
+
+#define BOOST_STACKTRACE_USE_ADDR2LINE
+
 #include <boost/stacktrace.hpp>
 #include <netinet/in.h>
 #include <cstdarg>
 #include <algorithm>
+#include <iostream>
 #include <experimental/filesystem>
 
 #include "utils/common_utils.h"
@@ -273,5 +277,15 @@ std::string format_message(const char *format, va_list args) {
 
 /*获取调用错误调用堆栈*/
 string get_taceback() {
-    return "";
+    /*设置栈调用函数*/
+    string trace_back="Traceback:\n";
+    /*判定模式*/
+    /*获取调用栈*/
+    boost::stacktrace::stacktrace stack = boost::stacktrace::stacktrace();
+    for(int i=4;i<stack.size()-3;i++) {
+        /*获取调用栈*/
+        trace_back+="  FILE "+stack[i].source_file()+",  line "+to_string(stack[i].source_line())+"\n";
+        trace_back+="       "+stack[i].name()+"\n";
+    }
+    return trace_back;
 }

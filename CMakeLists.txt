@@ -42,6 +42,10 @@ message("Get linux system arch: ${SYSTEM_ARCH}, include arch: ${INCLUDE_ARCH}")
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/src/libntirpc/ntirpc)
 
+set(CMAKE_CXX_FLAGS_DEBUG  "$ENV{CXXFLAGS} -fno-pie -ggdb3 -O0 -no-pie")
+ADD_DEFINITIONS(-D_RUN_MODE=\"${CMAKE_BUILD_TYPE}\")
+
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
         "${CMAKE_SOURCE_DIR}/src/libntirpc/cmake/modules/")
 
