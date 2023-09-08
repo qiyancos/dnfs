@@ -46,9 +46,6 @@ void LogOutputAttr::generate_config(const string &log_out_attr_str) {
         } else if (param == "stdout") {
             stdout_on = true;
         } else {
-            /*获取智能指针*/
-//            shared_ptr<LogFile> log_file_ptr;
-//            log_file_ptr.reset(&log_file);
             /*添加指针*/
             log_files.push_back(
                     LogFile::get_log_file(param, module_name, log_level));
