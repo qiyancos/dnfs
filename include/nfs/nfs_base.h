@@ -20,14 +20,51 @@ extern "C" {
 #include "rpc/xdr.h"
 }
 
-#include "nfs/nfs_compound_data.h"
 #include "nfs/nfs_xdr.h"
 
 #define	NFS_PROGRAM	100003
+#define	NFS_V3 3
 
-#define	NFS_V4	4
-
-#define NFS_V4_MAX_MINOR 2
+#define	NFSPROC_NULL	0
+#define	NFSPROC_GETATTR	1
+#define	NFSPROC_SETATTR	2
+#define	NFSPROC_ROOT	3
+#define	NFSPROC_LOOKUP	4
+#define	NFSPROC_READLINK	5
+#define	NFSPROC_READ	6
+#define	NFSPROC_WRITECACHE	7
+#define	NFSPROC_WRITE	8
+#define	NFSPROC_CREATE	9
+#define	NFSPROC_REMOVE	10
+#define	NFSPROC_RENAME	11
+#define	NFSPROC_LINK	12
+#define	NFSPROC_SYMLINK	13
+#define	NFSPROC_MKDIR	14
+#define	NFSPROC_RMDIR	15
+#define	NFSPROC_READDIR	16
+#define	NFSPROC_STATFS	17
+#define	NFSPROC3_NULL	0
+#define	NFSPROC3_GETATTR	1
+#define	NFSPROC3_SETATTR	2
+#define	NFSPROC3_LOOKUP	3
+#define	NFSPROC3_ACCESS	4
+#define	NFSPROC3_READLINK	5
+#define	NFSPROC3_READ	6
+#define	NFSPROC3_WRITE	7
+#define	NFSPROC3_CREATE	8
+#define	NFSPROC3_MKDIR	9
+#define	NFSPROC3_SYMLINK	10
+#define	NFSPROC3_MKNOD	11
+#define	NFSPROC3_REMOVE	12
+#define	NFSPROC3_RMDIR	13
+#define	NFSPROC3_RENAME	14
+#define	NFSPROC3_LINK	15
+#define	NFSPROC3_READDIR	16
+#define	NFSPROC3_READDIRPLUS	17
+#define	NFSPROC3_FSSTAT	18
+#define	NFSPROC3_FSINFO	19
+#define	NFSPROC3_PATHCONF	20
+#define	NFSPROC3_COMMIT	21
 
 #define NOTHING_SPECIAL 0x0000	/* Nothing to be done for this kind of
 				   request */
@@ -43,16 +80,9 @@ extern "C" {
 				   (not allowed on MD ONLY exports */
 
 typedef union nfs_arg__ {
-    COMPOUND4args arg_compound4;
 } nfs_arg_t;
 
-struct COMPOUND4res_extended {
-    COMPOUND4res res_compound4;
-    int32_t res_refcnt;
-};
-
 typedef union nfs_res__ {
-    struct COMPOUND4res_extended *res_compound4_extended;
 } nfs_res_t;
 
 /* 标准RPC处理函数类别 */
@@ -91,14 +121,8 @@ int nfs_null([[maybe_unused]] nfs_arg_t *arg,
 /* NFS FREE Process Function */
 void nfs_null_free([[maybe_unused]] nfs_res_t *res);
 
-/* NFS COUNPOUND Process Function */
-int nfs4_compound(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
-
-/* NFS COUNPOUND FREE Process Function */
-void nfs4_compound_free(nfs_res_t *res);
-
 /* NFS4，RPC相关函数的处理描述信息，包括函数、xdr函数、函数名等等 */
-const nfs_function_desc_t nfs4_func_desc[] = {
+const nfs_function_desc_t nfs3_func_desc[] = {
     {
         .service_function = nfs_null,
         .free_function = nfs_null_free,
@@ -106,88 +130,17 @@ const nfs_function_desc_t nfs4_func_desc[] = {
         .xdr_encode_func = (xdrproc_t) xdr_void,
         .funcname = "NFS_NULL",
         .dispatch_behaviour = NOTHING_SPECIAL
-    },{
-        .service_function = nfs4_compound,
-        .free_function = nfs4_compound_free,
-        .xdr_decode_func = (xdrproc_t) xdr_COMPOUND4args,
-        .xdr_encode_func = (xdrproc_t) xdr_COMPOUND4res_extended,
-        .funcname = "NFS4_COMP",
-        .dispatch_behaviour = CAN_BE_DUP
     }
 };
 
-/* NFS4的基本配置参数 */
-enum recovery_backend {
-    RECOVERY_BACKEND_FS,
-    RECOVERY_BACKEND_FS_NG,
-    RECOVERY_BACKEND_RADOS_KV,
-    RECOVERY_BACKEND_RADOS_NG,
-    RECOVERY_BACKEND_RADOS_CLUSTER,
+enum nfs_req_result {
+    NFS_REQ_OK,
+    NFS_REQ_DROP,
+    NFS_REQ_ERROR,
+    NFS_REQ_REPLAY,
+    NFS_REQ_ASYNC_WAIT,
+    NFS_REQ_XPRT_DIED,
+    NFS_REQ_AUTH_ERR,
 };
-
-typedef struct nfs_version4_parameter {
-    /** Whether to disable the NFSv4 grace period.  Defaults to
-        false and settable with Graceless. */
-    bool graceless;
-    /** The NFSv4 lease lifetime.  Defaults to
-        LEASE_LIFETIME_DEFAULT and is settable with
-        Lease_Lifetime. */
-    uint32_t lease_lifetime;
-    /** The NFS grace period.  Defaults to
-        GRACE_PERIOD_DEFAULT and is settable with Grace_Period. */
-    uint32_t grace_period;
-    /** The eir_server_scope for lock recovery. Defaults to NULL
-        and is settable with server_scope. */
-    char *server_scope;
-    /** The eir_server_owner. Defaults to NULL and is settable
-        with server_owner. */
-    char *server_owner;
-    /** Domain to use if we aren't using the nfsidmap.  Defaults
-        to DOMAINNAME_DEFAULT and is set with DomainName. */
-    char *domainname;
-    /** Path to the idmap configuration file.  Defaults to
-        IDMAPCONF_DEFAULT, settable with IdMapConf */
-    char *idmapconf;
-    /** Full path to recovery root directory */
-    char *recov_root;
-    /** Name of recovery directory */
-    char *recov_dir;
-    /** Name of recovery old dir (for legacy recovery_fs only */
-    char *recov_old_dir;
-    /** Whether to use local password (PAM, on Linux) rather than
-        nfsidmap.  Defaults to false if nfsidmap support is
-        compiled in and true if it isn't.  Settable with
-        UseGetpwnam. */
-    bool use_getpwnam;
-    /** Whether to allow bare numeric IDs in NFSv4 owner and
-        group identifiers.  Defaults to true and is settable with
-        Allow_Numeric_Owners. */
-    bool allow_numeric_owners;
-    /** Whether to ONLY use bare numeric IDs in NFSv4 owner and
-        group identifiers.  Defaults to false and is settable with
-        Only_Numeric_Owners. NB., this is permissible for a server
-        implementation (RFC 5661). */
-    bool only_numeric_owners;
-    /** Whether to allow delegations. Defaults to false and settable
-        with Delegations */
-    bool allow_delegations;
-    /** Delay after which server will retry a recall in case of failures */
-    uint32_t deleg_recall_retry_delay;
-    /** Whether this a pNFS MDS server. Defaults to false */
-    bool pnfs_mds;
-    /** Whether this a pNFS DS server. Defaults to false */
-    bool pnfs_ds;
-    /** Recovery backend */
-    enum recovery_backend recovery_backend;
-    /** List of supported NFSV4 minor versions(Bitmap) */
-    unsigned int minor_versions = 0x6;
-    /** Number of allowed slots in the 4.1 slot table */
-    uint32_t nb_slots;
-    /** whether to skip utf8 validation. defaults to false and settable
-         with enforce_utf8_validation. */
-    bool enforce_utf8_vld;
-    /** Max number of Client IDs allowed on the system */
-    uint32_t max_client_ids;
-} nfs_version4_parameter_t;
 
 #endif //NFS_NFS_FUNC_H

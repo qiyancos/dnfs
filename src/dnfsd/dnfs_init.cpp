@@ -32,6 +32,7 @@ extern "C" {
 
 #include "nfs/nfs_base.h"
 #include "log/log.h"
+#include "log/log_exception.h"
 #include "utils/common_utils.h"
 #include "utils/thread_utils.h"
 #include "dnfsd/dnfsd.h"
@@ -65,6 +66,7 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
     logger.init_module("config");
     logger.init_module("rpc");
     logger.init_module("thread_pool");
+    logger.init_module("DNFS");
     /*初始化日志等级*/
     logger.set_log_level(debug_level);
 
@@ -75,34 +77,37 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
                                   log_config.backup_count);
     }
 
-    string error_info;
     if (!detach_flag) {
         /* 只检查log_path部分的合法性 */
-        if (logger.set_log_output(L_INFO, log_path + ":stdout:syslog", &error_info)) {
-            fprintf(stderr, "%s\n", error_info.c_str());
+        try {
+            logger.set_log_output(L_INFO, log_path + ":stdout:syslog");
+        } catch (LogException& e) {
+            fprintf(stderr, "%s\n", e.what());
             exit_process(-1);
         }
         logger.set_log_output({EXIT_ERROR, L_ERROR, L_WARN},
-                              log_path + ":stderr:syslog", nullptr);
-        logger.set_log_output(D_INFO,
-                              log_path + ":stdout", nullptr);
-        logger.set_log_output({D_ERROR, D_WARN},
-                              log_path += ":stderr", nullptr);
+                              log_path + ":stderr:syslog");
+        logger.set_log_output(D_INFO, log_path + ":stdout");
+        logger.set_log_output({D_ERROR, D_WARN}, log_path += ":stderr");
     } else {
         /* 只检查log_path部分的合法性 */
-        if (logger.set_log_output(log_path, &error_info)) {
-            fprintf(stderr, "%s\n", error_info.c_str());
+        try {
+            logger.set_log_output(log_path);
+        } catch (LogException& e) {
+            fprintf(stderr, "%s\n", e.what());
             exit_process(-1);
         }
-        logger.set_log_output(L_INFO, log_path + ":syslog", nullptr);
+        logger.set_log_output(L_INFO, log_path + ":syslog");
         logger.set_log_output({EXIT_ERROR, L_ERROR, L_WARN},
-                              log_path + ":syslog", nullptr);
+                              log_path + ":syslog");
     }
-    if (logger.set_formatter(log_config.formatter, &error_info)) {
-        fprintf(stderr, "%s\n", error_info.c_str());
+    try {
+        logger.set_formatter(log_config.formatter);
+    } catch (LogException& e) {
+        fprintf(stderr, "%s\n", e.what());
         exit_process(-1);
     }
-    logger.set_default_attr_from(MODULE_NAME, nullptr);
+    logger.set_default_attr_from(MODULE_NAME);
 }
 
 /* 初始化错误信号的处理函数 */
@@ -160,7 +165,7 @@ int init_thread_signal_mask() {
     sigaddset(&signals_to_block, SIGPIPE);
     if (pthread_sigmask(SIG_BLOCK, &signals_to_block, NULL) != 0) {
         LOG(MODULE_NAME, EXIT_ERROR,
-                 "Could not start nfs daemon, pthread_sigmask failed");
+            "Could not start nfs daemon, pthread_sigmask failed");
         return -1;
     }
     return 0;
@@ -382,8 +387,8 @@ struct netconfig *netconfig_tcpv4;
 static void unregister_rpc(void)
 {
     const rpcprog_t& prog = nfs_param.core_param.program;
-    rpcb_unset(prog, NFS_V4, netconfig_udpv4);
-    rpcb_unset(prog, NFS_V4, netconfig_tcpv4);
+    rpcb_unset(prog, NFS_V3, netconfig_udpv4);
+    rpcb_unset(prog, NFS_V3, netconfig_tcpv4);
 }
 
 /**
@@ -452,16 +457,16 @@ static void register_rpc_program() {
     LOG(MODULE_NAME, D_INFO, "Registering V3/UDP");
 
     /* XXXX fix svc_register! */
-    if (!svc_reg(udp_xprt, nfs_param.core_param.program, (u_long) NFS_V4,
+    if (!svc_reg(udp_xprt, nfs_param.core_param.program, (u_long) NFS_V3,
             nfs_rpc_dispatch_dummy, netconfig_udpv4)) {
-        LOG(MODULE_NAME, EXIT_ERROR, "Cannot register V%d on UDP", (int) NFS_V4);
+        LOG(MODULE_NAME, EXIT_ERROR, "Cannot register V%d on UDP", (int) NFS_V3);
     }
 
-    LOG(MODULE_NAME, D_INFO, "Registering V%d/TCP", (int)NFS_V4);
+    LOG(MODULE_NAME, D_INFO, "Registering V%d/TCP", (int)NFS_V3);
 
-    if (!svc_reg(tcp_xprt, nfs_param.core_param.program, (u_long) NFS_V4,
+    if (!svc_reg(tcp_xprt, nfs_param.core_param.program, (u_long) NFS_V3,
             nfs_rpc_dispatch_dummy, netconfig_tcpv4)) {
-        LOG(MODULE_NAME, EXIT_ERROR, "Cannot register %s V%d on TCP", (int) NFS_V4);
+        LOG(MODULE_NAME, EXIT_ERROR, "Cannot register %s V%d on TCP", (int) NFS_V3);
     }
 }
 

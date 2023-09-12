@@ -16,13 +16,4 @@
 #ifndef DNFSD_NFS_XDR_H
 #define DNFSD_NFS_XDR_H
 
-extern "C" {
-#include "rpc/xdr.h"
-}
-
-/* 通用XDR处理函数 */
-static inline bool xdr_COMPOUND4args(XDR *xdrs, COMPOUND4args *objp);
-
-bool xdr_COMPOUND4res_extended(XDR *xdrs, struct COMPOUND4res_extended **objp);
-
 #endif //DNFSD_NFS_XDR_H
