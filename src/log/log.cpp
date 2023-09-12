@@ -19,7 +19,6 @@
 #include "log/log.h"
 #include "log/log_message.h"
 #include "log/log_exception.h"
-#include "utils/common_utils.h"
 #include "utils/thread_utils.h"
 
 
@@ -98,19 +97,16 @@ void Logger::set_exit_func(int e_code, void (*exit_f)(int)) {
 
 /*对默认日志属性的设置
  * params module_name:模块名
- * params error_info:错误信息
- * return: 状态码 0 生成成功 其他 生成失败
+ * return
  * */
-int
-Logger::set_default_attr_from(const string &module_name, string *error_info) {
+void
+Logger::set_default_attr_from(const string &module_name) {
     /*如果不存在*/
     if (!judge_module_attr_exist(module_name)) {
         /*设置错误信息*/
-        SET_PTR_INFO(error_info,
-                     format_message(
-                             "The module '%s' that sets the default logging attribute does not exist",
-                             module_name.c_str()))
-        return 1;
+        throw LogException(
+                "The module '%s' that sets the default logging attribute does not exist",
+                module_name.c_str());
     }
     /*查到了设置日志属性*/
     default_attr = *module_attr[module_name];
@@ -118,33 +114,29 @@ Logger::set_default_attr_from(const string &module_name, string *error_info) {
     default_attr.module_name = "default";
     /*更改内部log_file模块名*/
     default_attr.set_module_name("default");
-    return 0;
 }
 
 /*复制日志模板
  * params target_module_name:目标模块名
  * params src_module_name:源模块名
- * params error_info:错误信息
- * return: 状态码 0 生成成功 其他 生成失败
+ * return
  * */
-int Logger::copy_module_attr_from(const string &target_module_name,
-                                  const string &src_module_name,
-                                  string *error_info) {
+void Logger::copy_module_attr_from(const string &target_module_name,
+                                   const string &src_module_name) {
     /*如果源模块不存在*/
     if (!judge_module_attr_exist(src_module_name)) {
         /*设置错误信息*/
-        SET_PTR_INFO(error_info,
-                     format_message(
-                             "The module '%s' whose log attributes are being copied does not exist",
-                             src_module_name.c_str()))
-        return 1;
+        throw LogException(
+                "The module '%s' whose log attributes are being copied does not exist",
+                src_module_name.c_str());
     }
-    /*判断目标模块存不存在，不存在，创建在赋值,存在直接赋值*/
+    /*判断目标模块存不存在*/
     if (judge_module_attr_exist(target_module_name)) {
+        /*锁住写缓存操作，保证格式统一*/
+        unique_lock<mutex> bk(log_buffer.buffer_mtx);
         /*刷新缓存*/
         log_buffer.flush();
 
-        /*存在，直接赋值*/
         /*先复制模块的数据*/
         delete module_attr[target_module_name];
         /*复制数据*/
@@ -157,14 +149,11 @@ int Logger::copy_module_attr_from(const string &target_module_name,
         module_attr[target_module_name]->set_module_name(target_module_name);
     } else {
         /*设置错误信息*/
-        SET_PTR_INFO(error_info,
-                     format_message(
-                             "The module '%s' the log attribute is copied to does not exist",
-                             target_module_name.c_str()))
-        return 1;
+        throw LogException(
+                "The module '%s' the log attribute is copied to does not exist",
+                target_module_name.c_str());
     }
     LogOutputAttr s = LogOutputAttr();
-    return 0;
 }
 
 /*判断模块日志设置存不存在
@@ -189,43 +178,37 @@ Logger &Logger::get_instance() {
 
 /*设置所有模块日志等级日志文件配置
  * params log_file_config:日志文件配置信息
- * params error_info:错误信息
- * return: 状态码 0 生成成功 其他 生成失败
+ * return:
  * */
-int Logger::set_log_output(const string &log_file_config, string *error_info) {
+void Logger::set_log_output(const string &log_file_config) {
 
     /*设置所有模块多个日志等级日志文件路径*/
-    set_log_output(all_log_level, log_file_config, error_info);
-
-    return 0;
+    set_log_output(all_log_level, log_file_config);
 }
 
 /*设置所有模块单个日志等级文件配置
  * params log_level:日志级别
  * params log_file_config:日志文件配置信息
- * params error_info:错误信息
- * return: 状态码 0 生成成功 其他 生成失败
+ * return:
  * */
-int Logger::set_log_output(const log_level_t &log_level,
-                           const string &log_file_config,
-                           string *error_info) {
+void Logger::set_log_output(const log_level_t &log_level,
+                            const string &log_file_config) {
     /*设置指定模式更改*/
     vector<log_level_t> log_level_list = {log_level};
 
     /*设置所有模块多个日志等级日志文件路径*/
-    set_log_output(log_level_list, log_file_config, error_info);
-    return 0;
+    set_log_output(log_level_list, log_file_config);
 }
 
 /*设置所有模块多个日志等级日志文件配置
  * params log_level_list:需设置的日志等级列表
  * params log_file_config:日志文件配置信息
- * params error_info:错误信息
- * return: 状态码 0 生成成功 其他 生成失败
+ * return:
  * */
-int Logger::set_log_output(const vector<log_level_t> &log_level_list,
-                           const string &log_file_config,
-                           string *error_info) {
+void Logger::set_log_output(const vector<log_level_t> &log_level_list,
+                            const string &log_file_config) {
+    /*先锁住写缓存操作，保证格式统一*/
+    unique_lock<mutex> bk(log_buffer.buffer_mtx);
     /*刷新缓存*/
     log_buffer.flush();
 
@@ -237,19 +220,16 @@ int Logger::set_log_output(const vector<log_level_t> &log_level_list,
                     log_file_config);
         }
     }
-    return 0;
 }
 
 /*设置指定模块日志等级日志文件配置
  * params module_name:模块名
  * params log_file_config:日志文件配置信息
- * params error_info:错误信息
- * return: 状态码 0 生成成功 其他 生成失败
+ * return
  * */
-int
+void
 Logger::set_module_log_output(const string &module_name,
-                              const string &log_file_config,
-                              string *error_info) {
+                              const string &log_file_config) {
     /*设置全模式更改*/
     vector<log_level_t> log_level_list = {EXIT_ERROR,
                                           L_ERROR,
@@ -261,55 +241,43 @@ Logger::set_module_log_output(const string &module_name,
                                           D_BACKTRACE,
                                           D_INFO};
     /*设置多个日志等级日志文件路径*/
-    if (set_module_log_output(module_name, log_level_list, log_file_config,
-                              error_info) != 0) {
-        return 1;
-    }
-    return 0;
+    set_module_log_output(module_name, log_level_list, log_file_config);
 }
 
 /*设置指定模块日志等级日志文件配置
  * params module_name:模块名
  * params log_level:指定的日志等级
  * params log_file_config:日志文件配置信息
- * params error_info:错误信息
- * return: 状态码 0 生成成功 其他 生成失败
+ * return:
  * */
-int Logger::set_module_log_output(const string &module_name,
-                                  const log_level_t &log_level,
-                                  const string &log_file_config,
-                                  string *error_info) {
+void Logger::set_module_log_output(const string &module_name,
+                                   const log_level_t &log_level,
+                                   const string &log_file_config) {
     /*设置指定模式更改*/
     vector<log_level_t> log_level_list = {log_level};
     /*设置多个日志等级日志文件路径*/
-    if (set_module_log_output(module_name, log_level_list, log_file_config,
-                              error_info) != 0) {
-        return 1;
-    }
-    return 0;
+    set_module_log_output(module_name, log_level_list, log_file_config);
 }
 
 /*设置指定模块多个日志等级日志文件配置
  * params module_name:模块名
  * params log_level_list:指定的日志等级列表
  * params log_file_config:日志文件配置信息
- * params error_info:错误信息
- * return: 状态码 0 生成成功 其他 生成失败
+ * return
  * */
-int Logger::set_module_log_output(const string &module_name,
-                                  const vector<log_level_t> &log_level_list,
-                                  const string &log_file_config,
-                                  string *error_info) {
+void Logger::set_module_log_output(const string &module_name,
+                                   const vector<log_level_t> &log_level_list,
+                                   const string &log_file_config) {
     /*如果模块不存在，直接报错*/
     if (!judge_module_attr_exist(module_name)) {
         /*设置错误信息*/
-        SET_PTR_INFO(error_info,
-                     format_message(
-                             "The module '%s' that sets the output does not exist",
-                             module_name.c_str()))
-        return 1;
+        throw LogException(
+                "The module '%s' that sets the output does not exist",
+                module_name.c_str());
     }
 
+    /*锁住写缓存操作，保证格式统一*/
+    unique_lock<mutex> bk(log_buffer.buffer_mtx);
     /*刷新缓存*/
     log_buffer.flush();
 
@@ -319,8 +287,6 @@ int Logger::set_module_log_output(const string &module_name,
         module_attr[module_name]->log_level_output[log_level].generate_config(
                 log_file_config);
     }
-
-    return 0;
 }
 
 /*设置所有模块的日志等级，高于该等级的才可以输出
@@ -328,6 +294,8 @@ int Logger::set_module_log_output(const string &module_name,
  * return
  * */
 void Logger::set_log_level(const log_level_t &log_level) {
+    /*锁住写缓存操作，保证格式统一*/
+    unique_lock<mutex> bk(log_buffer.buffer_mtx);
     /*刷新缓存*/
     log_buffer.flush();
 
@@ -343,22 +311,20 @@ void Logger::set_log_level(const log_level_t &log_level) {
 /*设置指定模块日志等级，高于该等级的才可以输出
  * params module_name:模块名
  * params log_level:指定的日志等级
- * params error_info:错误信息
- * return: 状态码 0 生成成功 其他 生成失败
+ * return:
  * */
-int Logger::set_module_log_level(const string &module_name,
-                                 const log_level_t &log_level,
-                                 string *error_info) {
+void Logger::set_module_log_level(const string &module_name,
+                                  const log_level_t &log_level) {
     /*如果模块不存在，直接报错*/
     if (!judge_module_attr_exist(module_name)) {
         /*设置错误信息*/
-        SET_PTR_INFO(error_info,
-                     format_message(
-                             "the module '%s' that set log level does not exist",
-                             module_name.c_str()))
-        return 1;
+        throw LogException(
+                "the module '%s' that set log level does not exist",
+                module_name.c_str());
     }
 
+    /*锁住写缓存操作，保证格式统一*/
+    unique_lock<mutex> bk(log_buffer.buffer_mtx);
     /*刷新缓存*/
     log_buffer.flush();
 
@@ -366,17 +332,18 @@ int Logger::set_module_log_level(const string &module_name,
     module_attr[module_name]->log_level = log_level;
     /*判断debug模式*/
     module_attr[module_name]->judge_debug();
-    return 0;
+
 }
 
 
 /*设置所有模块日志格式
  * params format_str:格式化字符串
- * params error_info:错误信息
- * return: 状态码 0 生成成功 其他 生成失败
+ * return:
  * */
-int
-Logger::set_formatter(const string &format_str, string *error_info) {
+void
+Logger::set_formatter(const string &format_str) {
+    /*锁住写缓存操作，保证格式统一*/
+    unique_lock<mutex> bk(log_buffer.buffer_mtx);
     /*刷新缓存*/
     log_buffer.flush();
 
@@ -385,92 +352,82 @@ Logger::set_formatter(const string &format_str, string *error_info) {
         /*设置格式*/
         md_attr.second->formatter = format_str;
         /*设置格式开关*/
-        if (md_attr.second->init_log_formatter(error_info) != 0) {
-            /*设置默认*/
-            md_attr.second->formatter = "%(message)";
-            return 1;
-        }
+        md_attr.second->init_log_formatter();
     }
-    return 0;
+
 }
 
 /*设置指定模块日志格式
  * params module_name:模块名
  * params format_str:格式化字符串
- * params error_info:错误信息
- * return: 状态码 0 生成成功 其他 生成失败
+ * return:
  * */
-int Logger::set_module_formatter(const string &module_name,
-                                 const string &format_str,
-                                 string *error_info) {
+void Logger::set_module_formatter(const string &module_name,
+                                  const string &format_str) {
 
     /*如果模块不存在，直接报错*/
     if (!judge_module_attr_exist(module_name)) {
         /*设置错误信息*/
-        SET_PTR_INFO(error_info,
-                     format_message(
-                             "the module '%s' that set log format does not exist",
-                             module_name.c_str()))
-        return 1;
+        throw LogException(
+                "the module '%s' that set log format does not exist",
+                module_name.c_str());
     }
+
+    /*锁住写缓存操作，保证格式统一*/
+    unique_lock<mutex> bk(log_buffer.buffer_mtx);
     /*刷新缓存*/
     log_buffer.flush();
 
     /*设置格式*/
     module_attr[module_name]->formatter = format_str;
     /*设置格式开关*/
-    if (module_attr[module_name]->init_log_formatter(error_info) != 0) {
-        /*设置默认*/
-        module_attr[module_name]->formatter = "%(message)";
-        return 1;
-    }
+    module_attr[module_name]->init_log_formatter();
 
-
-    return 0;
 }
 
 
 /*设置所有模块的日期打印格式
  * params date_format:日期打印格式
- * params error_info:错误信息
- * return: 状态码 0 生成成功 其他 生成失败
+ * return:
  * */
 void
 Logger::set_date_format(const string &date_format) {
+    /*锁住写缓存操作，保证格式统一*/
+    unique_lock<mutex> bk(log_buffer.buffer_mtx);
     /*刷新缓存*/
     log_buffer.flush();
+
     /*遍历添加日志格式字符串*/
     for (const auto &md_attr: module_attr) {
         md_attr.second->date_format = date_format;
     }
+
 }
 
 /*设置指定模块的日期打印格式
  * params module_name:指定的模块名
  * params date_format:日期打印格式
- * params error_info:错误信息
- * return: 状态码 0 生成成功 其他 生成失败
+ * return:
  * */
-int
+void
 Logger::set_module_date_format(const string &module_name,
-                               const string &date_format,
-                               string *error_info) {
+                               const string &date_format) {
     /*如果模块不存在，直接报错*/
     if (!judge_module_attr_exist(module_name)) {
         /*设置错误信息*/
-        SET_PTR_INFO(error_info,
-                     format_message(
-                             "the module '%s' that set date format does not exist",
-                             module_name.c_str()))
-        return 1;
+        throw LogException(
+                "the module '%s' that set date format does not exist",
+                module_name.c_str());
     }
 
+    /*锁住写缓存操作，保证格式统一*/
+    unique_lock<mutex> bk(log_buffer.buffer_mtx);
     /*刷新缓存*/
     log_buffer.flush();
 
     /*设置日期格式*/
     module_attr[module_name]->date_format = date_format;
-    return 0;
+
 }
 
 
@@ -542,8 +499,11 @@ bool Logger::is_module_debug_on(const string &module_name) {
  * return
  * */
 void Logger::set_all_module_attr_default() {
+    /*锁住写缓存操作，保证格式统一*/
+    unique_lock<mutex> bk(log_buffer.buffer_mtx);
     /*刷新缓存*/
     log_buffer.flush();
+
     /*遍历建立所有默认属性*/
     for (auto &log_attr: module_attr) {
         /*先删除之前的属性*/
@@ -564,15 +524,6 @@ time_t Logger::get_log_init_time() const {
     return init_time;
 }
 
-/*设置缓存大小
- * params buffer_limit:设置的缓存大小
- * return
- * */
-void Logger::set_buffer_limit(const int &buffer_limit) {
-    log_buffer.set_limit(buffer_limit);
-}
-
-
 /*析构函数*/
 Logger::~Logger() {
     /*停止buffer线程*/
@@ -589,20 +540,6 @@ Logger::~Logger() {
 /*清空缓存*/
 void Logger::flush() {
     log_buffer.flush();
-}
-
-/*锁住整个buffer
- * return
- * */
-void Logger::lock_out_put() {
-    log_buffer.lock_out_put();
-}
-
-/*解锁buffer
- * return
- * */
-void Logger::unlock_out_put() {
-    log_buffer.unlock_out_put();
 }
 
 /*设置日志生成文件方式

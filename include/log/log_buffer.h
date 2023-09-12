@@ -26,18 +26,21 @@
 #include "log_message.h"
 
 #define WAIT_TIME 1
+#define MAX_MESSAGE_BUFFER_COUNT 100
+#define MAX_SINGLE_MESSAGE_COUNT 20
+
 
 /*日志输出Buffer，单独线程处理，需要对多线程做多队列*/
 class LogBuffer {
 private:
     /*原子数据，记录缓存数据数量*/
-    static std::atomic<int> log_num;
+    std::atomic<int> log_num=0;
+
+    /*最长信息队列数目量*/
+    std::atomic<size_t> single_vector_size=0;
 
     /*保存每个线程日志缓存列表 线程标识 日志信息列表*/
     std::map<unsigned int, std::vector<LogMessage>> buffer_map;
-
-    /*缓存最大限制，超出限制则将缓存落盘*/
-    int buffer_limit = 2;
 
     /*设置线程id哈希锁*/
     std::mutex mtx[10];
@@ -51,14 +54,15 @@ private:
     /*flush通知锁*/
     std::mutex flush_mtx;
 
-    /*输入锁，锁住整个输入buffer*/
-    std::mutex buffer_mtx;
-
     /*停止buffer线程标志*/
     bool stop_buffer= false;
 
     /*日志信息存储列表*/
     std::vector<LogMessage> log_massage_list;
+
+public:
+    /*输入锁，锁住整个输入buffer*/
+    std::mutex buffer_mtx;
 
 public:
     /*将缓存写入文件,监听log_num
@@ -68,12 +72,6 @@ public:
 
     /*无参构造函数，使用默认的缓存限制*/
     LogBuffer();
-
-    /*设置缓存限制
-     * params b_limit:设置的缓存限制
-     * return
-     * */
-    void set_limit(const int &b_limit);
 
     /*添加线程对应的日志，每次记录log_num递增
      * params thread_id:线程id
@@ -92,16 +90,6 @@ public:
      * return
      * */
     void out();
-
-    /*锁住整个buffer
-     * return
-     * */
-    void lock_out_put();
-
-    /*解锁buffer
-     * return
-     * */
-    void unlock_out_put();
 
     /*设置buffer结束标志
      * return

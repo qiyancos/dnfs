@@ -27,6 +27,8 @@ extern "C" {
 
 #define	NFS_V4	4
 
+#define NFS_V4_MAX_MINOR 2
+
 #define NOTHING_SPECIAL 0x0000	/* Nothing to be done for this kind of
 				   request */
 #define MAKES_WRITE	0x0001	/* The function modifyes the FSAL
@@ -177,8 +179,8 @@ typedef struct nfs_version4_parameter {
     bool pnfs_ds;
     /** Recovery backend */
     enum recovery_backend recovery_backend;
-    /** List of supported NFSV4 minor versions */
-    unsigned int minor_versions;
+    /** List of supported NFSV4 minor versions(Bitmap) */
+    unsigned int minor_versions = 0x6;
     /** Number of allowed slots in the 4.1 slot table */
     uint32_t nb_slots;
     /** whether to skip utf8 validation. defaults to false and settable

@@ -26,12 +26,31 @@ enum nfs_req_result {
     NFS_REQ_AUTH_ERR,
 };
 
+#define UTF8_SCAN_NONE    0x00	/* do no validation other than size */
+#define UTF8_SCAN_NOSLASH 0x01	/* disallow '/' */
+#define UTF8_SCAN_NODOT   0x02	/* disallow '.' and '..' */
+#define UTF8_SCAN_CKUTF8  0x04	/* validate utf8 */
+#define UTF8_SCAN_PATH    0x10	/* validate path length */
+
+/**
+ * @brief Maximum number of operation in a compound request
+ *
+ * We cap the number of operation to this value for all V4 versions
+ */
+#define NFS4_MAX_OPERATIONS 100
+
+typedef uint32_t count4;
+
 typedef struct {
     u_int utf8string_len;
     char *utf8string_val;
 } utf8string;
 
 typedef utf8string utf8str_cs;
+
+/* Do UTF-8 checking if Enforce_UTF8_Validation is true */
+#define UTF8_SCAN_STRICT \
+	(nfs_param.nfsv4_param.enforce_utf8_vld ? UTF8_SCAN_CKUTF8 : 0)
 
 enum nfsstat4 {
     NFS4_OK = 0,
@@ -155,5 +174,10 @@ enum nfsstat4 {
     NFS4ERR_REPLAY = 11001,
 };
 typedef enum nfsstat4 nfsstat4;
+
+typedef struct {
+    u_int nfs_fh4_len;
+    char *nfs_fh4_val;
+} nfs_fh4;
 
 #endif //DNFSD_NFS_COMMON_DATA_H

@@ -13,22 +13,21 @@
  *
  */
 
-#ifndef DNFSD_NFS_UTILS_H
-#define DNFSD_NFS_UTILS_H
+#include "log/log.h"
+#include "nfs/nfs_file_handle.h"
 
-#include <sys/types.h>
+#define MODULE_NAME "DNFS"
 
-#include "nfs/nfs_common_data.h"
-#include "nfs/nfs_compound_base.h"
+int nfs4_Is_Fh_Empty(nfs_fh4 *pfh) {
+    if (pfh == nullptr) {
+        LOG(MODULE_NAME, L_ERROR, "INVALID HANDLE: pfh=NULL");
+        return NFS4ERR_NOFILEHANDLE;
+    }
 
-void copy_tag(utf8str_cs *dest, utf8str_cs *src);
+    if (pfh->nfs_fh4_len == 0) {
+        LOG(MODULE_NAME, L_ERROR, "INVALID HANDLE: empty");
+        return NFS4ERR_NOFILEHANDLE;
+    }
 
-inline utf8string * utf8string_dup(utf8string *d, const char *s, size_t l);
-
-inline nfsstat4 nfs4_utf8string_scan(const utf8string *input, int scan);
-
-void now(struct timespec *ts);
-
-nfsstat4 check_resp_room(compound_data_t *data, uint32_t op_resp_size);
-
-#endif //DNFSD_NFS_UTILS_H
+    return NFS4_OK;
+}

@@ -16,6 +16,8 @@
 #ifndef DNFSD_NFS_COMPOUND_DATA_H
 #define DNFSD_NFS_COMPOUND_DATA_H
 
+#include <string>
+
 #include "nfs/nfs_common_data.h"
 #include "nfs/nfs_compound_exchangeid.h"
 
@@ -106,6 +108,87 @@ enum nfs_opnum4 {
 };
 typedef enum nfs_opnum4 nfs_opnum4;
 
+/* NFSv4 op_names *must* start with OP_ */
+static const std::string op_names_v4[] = {
+        "OP_ILLEGAL",
+        "OP_ILLEGAL",
+        "OP_ILLEGAL",
+        "OP_ACCESS",
+        "OP_CLOSE",
+        "OP_COMMIT",
+        "OP_CREATE",
+        "OP_DELEGPURGE",
+        "OP_DELEGRETURN",
+        "OP_GETATTR",
+        "OP_GETFH",
+        "OP_LINK",
+        "OP_LOCK",
+        "OP_LOCKT",
+        "OP_LOCKU",
+        "OP_LOOKUP",
+        "OP_LOOKUPP",
+        "OP_NVERIFY",
+        "OP_OPEN",
+        "OP_OPENATTR",
+        "OP_OPEN_CONFIRM",
+        "OP_OPEN_DOWNGRADE",
+        "OP_PUTFH",
+        "OP_PUTPUBFH",
+        "OP_PUTROOTFH",
+        "OP_READ",
+        "OP_READDIR",
+        "OP_READLINK",
+        "OP_REMOVE",
+        "OP_RENAME",
+        "OP_RENEW",
+        "OP_RESTOREFH",
+        "OP_SAVEFH",
+        "OP_SECINFO",
+        "OP_SETATTR",
+        "OP_SETCLIENTID",
+        "OP_SETCLIENTID_CONFIRM",
+        "OP_VERIFY",
+        "OP_WRITE",
+        "OP_RELEASE_LOCKOWNER",
+        "OP_BACKCHANNEL_CTL",
+        "OP_BIND_CONN_TO_SESSION",
+        "OP_EXCHANGE_ID",
+        "OP_CREATE_SESSION",
+        "OP_DESTROY_SESSION",
+        "OP_FREE_STATEID",
+        "OP_GET_DIR_DELEGATION",
+        "OP_GETDEVICEINFO",
+        "OP_GETDEVICELIST",
+        "OP_LAYOUTCOMMIT",
+        "OP_LAYOUTGET",
+        "OP_LAYOUTRETURN",
+        "OP_SECINFO_NO_NAME",
+        "OP_SEQUENCE",
+        "OP_SET_SSV",
+        "OP_TEST_STATEID",
+        "OP_WANT_DELEGATION",
+        "OP_DESTROY_CLIENTID",
+        "OP_RECLAIM_COMPLETE",
+        /* NFSv4.2 */
+        "OP_ALLOCATE",
+        "OP_COPY",
+        "OP_COPY_NOTIFY",
+        "OP_DEALLOCATE",
+        "OP_IO_ADVISE",
+        "OP_LAYOUTERROR",
+        "OP_OFFLOAD_CANCEL",
+        "OP_OFFLOAD_STATUS",
+        "OP_READ_PLUS",
+        "OP_SEEK",
+        "OP_WRITE_SAME",
+        "OP_CLONE",
+        /* NFSv4.3 */
+        "OP_GETXATTR",
+        "OP_SETXATTR",
+        "OP_LISTXATTR",
+        "OP_REMOVEXATTR",
+};
+
 struct nfs_argop4 {
     nfs_opnum4 argop;
     union {
@@ -185,10 +268,14 @@ struct nfs_argop4 {
 typedef struct nfs_argop4 nfs_argop4;
 
 struct COMPOUND4args {
+    /* 这个tag用于传递一些额外的信息，但是要求返回参数中的tag和输入的tag必须保持一致 */
     utf8str_cs tag;
+    /* 当前nfs的小版本编号，比如4.2的NFS协议小编号是2 */
     uint32_t minorversion;
     struct {
+        /* 具体调用功能函数参数列表长度，每一个参数都代表需要执行的一个操作*/
         u_int argarray_len;
+        /* 具体的参数数据内容 */
         nfs_argop4 *argarray_val;
     } argarray;
 };
@@ -295,55 +382,5 @@ typedef struct compound_data compound_data_t;
 typedef enum nfs_req_result (*nfs4_function_t)(struct nfs_argop4 *,
                                                compound_data_t *,
                                                struct nfs_resop4 *);
-
-/**
- * #brief Structure to map out how each compound op is managed.
- *
- */
-struct nfs4_op_desc {
-    /** Operation name */
-    char *name;
-    /** Function to process the operation */
-    nfs4_function_t funct;
-    /** Function to resume a suspended operation */
-    nfs4_function_t resume;
-
-    /** Function to free the results of the operation.
-     *
-     * Note this function is called whether the operation succeeds or
-     * fails. It may be called as a result of higher level operation
-     * completion (depending on DRC handling) or it may be called as part
-     * of NFS v4.1 slot cache management.
-     *
-     * Note that entries placed into the NFS v4.1 slot cache are marked so
-     * the higher level operation completion will not release them. A deep
-     * copy is made when the slot cache is replayed. If sa_cachethis
-     * indicates a response will not be cached, the higher level operation
-     * completion will call the free_res, HOWEVER, a shallow copy of the
-     * SEQUENCE op and first operation responses are made. If the first
-     * operation resulted in an error (other than NFS4_DENIED for LOCK and
-     * LOCKT) the shallow copy preserves that error rather than replacing
-     * it with NFS4ERR_RETRY_UNCACHED_REP. For this reason for any response
-     * that includes dynamically allocated data on NFS4_OK MUST check the
-     * response status before freeing any memory since the shallow copy will
-     * mean the cached NFS4ERR_RETRY_UNCACHED_REP response will have copied
-     * those pointers. It should only free data if the status is NFS4_OK
-     * (or NFS4ERR_DENIED in the case of LOCK and LOCKT). Note that
-     * SETCLIENTID also has dunamic data on a non-NFS4_OK status, and the
-     * free_res function for that checks, however, we will never see
-     * SETCLIENTID in NFS v4.1+, or if we do, it will get an error.
-     *
-     * At this time, LOCK and LOCKT are the only NFS v4.1 or v4.2 operations
-     * that have dynamic data on a non-NFS4_OK response. Should any others
-     * be added, checks for that MUST be added to the shallow copy code
-     * below.
-     *
-     */
-    void (*free_res)(nfs_resop4 *);
-    /** Default response size */
-    uint32_t resp_size;
-    /** Export permissions required flags */
-    int exp_perm_flags;
-};
 
 #endif //DNFSD_NFS_COMPOUND_DATA_H

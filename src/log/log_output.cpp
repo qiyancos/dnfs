@@ -46,9 +46,6 @@ void LogOutputAttr::generate_config(const string &log_out_attr_str) {
         } else if (param == "stdout") {
             stdout_on = true;
         } else {
-            /*获取智能指针*/
-//            shared_ptr<LogFile> log_file_ptr;
-//            log_file_ptr.reset(&log_file);
             /*添加指针*/
             log_files.push_back(
                     LogFile::get_log_file(param, module_name, log_level));
@@ -86,11 +83,9 @@ void LogOutputAttr::set_module_name(const string &module_n) {
  * params module_name:模块名称
  * params message:日志信息
  * params log_level:日志等级
- * params error_info:错误信息
- * return: 状态码 0 生成成功 其他 生成失败
+ * return:
  * */
-int LogOutputAttr::out_message(const string &message,
-                               string *error_info, ...) {
+void LogOutputAttr::out_message(const string &message) {
     /*判断输出日志开关*/
     if (stderr_on) {
         fprintf(stderr, "%s", message.c_str());
@@ -101,32 +96,13 @@ int LogOutputAttr::out_message(const string &message,
     if (syslog_on) {
         /*设置空参数*/
         va_list null_list;
-        va_start(null_list, error_info);
         /*打印系统日志*/
         vsyslog(log_level_info_dict[log_level].second, message.c_str(),
                 null_list);
-        va_end(null_list);
     }
-    /*捕获写日志文件的异常,除了问题将信息写入系统日志*/
+    /*文件写信息*/
     for (auto &log_file: log_files) {
-        try {
-            /*写日志文件*/
-            log_file->out_message(message);
-        } catch (LogException &e) {
-            /*将日志信息写入系统日志*/
-            if (!syslog_on) {
-                /*设置空参数*/
-                va_list null_list;
-                va_start(null_list, error_info);
-                /*打印系统日志*/
-                vsyslog(log_level_info_dict[log_level].second, message.c_str(),
-                        null_list);
-                va_end(null_list);
-            }
-            /*写文件出错*/
-            SET_PTR_INFO(error_info, e.what())
-            return 1;
-        }
+        /*写日志文件*/
+        log_file->out_message(message);
     }
-    return 0;
 }

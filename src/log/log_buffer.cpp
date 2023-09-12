@@ -18,8 +18,6 @@
 
 using namespace std;
 
-atomic<int> LogBuffer::log_num = 0;
-
 LogBuffer::LogBuffer() {
     /*初始化buffer map数据*/
     for (int i = 0; i < 10; i++) {
@@ -36,26 +34,17 @@ void LogBuffer::output_thread() {
         unique_lock<mutex> write_uk(write_mtx);
         /*todo加上时间限制*/
         /*等待锁,并且设置延时*/
-        cond.wait_for(write_uk,chrono::seconds(WAIT_TIME));
+        cond.wait_for(write_uk, chrono::seconds(WAIT_TIME));
 
         /*谁有flush锁谁操作*/
         unique_lock<mutex> flush_uk(flush_mtx);
         out();
 
         /*判断是否结束线程*/
-        if(stop_buffer){
+        if (stop_buffer) {
             break;
         }
     }
-}
-
-
-/*设置缓存限制
- * params b_limit:设置的缓存限制
- * return
- * */
-void LogBuffer::set_limit(const int &b_limit) {
-    buffer_limit = b_limit;
 }
 
 /*添加线程对应的日志，每次记录log_num递增
@@ -78,6 +67,10 @@ void LogBuffer::add_log_buffer(const unsigned int &thread_id,
 
         /*已经存在进行添加*/
         buffer_map[hash_id].push_back(log_message);
+        /*获取最长队列数据量*/
+        if (single_vector_size < buffer_map[hash_id].size()) {
+            single_vector_size.store(buffer_map[hash_id].size());
+        }
     }
 
     /*加入*/
@@ -85,7 +78,8 @@ void LogBuffer::add_log_buffer(const unsigned int &thread_id,
     log_num += 1;
     unique_lock<mutex> write_uk(write_mtx);
     /*如果数目大于设置的缓存限制*/
-    if (log_num > buffer_limit) {
+    if (log_num > MAX_MESSAGE_BUFFER_COUNT or
+        single_vector_size > MAX_SINGLE_MESSAGE_COUNT) {
         cond.notify_one();
     }
 }
@@ -105,6 +99,8 @@ void LogBuffer::flush() {
 void LogBuffer::out() {
     /*清空计数器*/
     log_num.store(0);
+    /*清空最长信息队列数目量*/
+    single_vector_size.store(0);
 
     /*遍历添加日志信息*/
     for (unsigned int i = 0; i < 10; i++) {
@@ -130,31 +126,17 @@ void LogBuffer::out() {
         /*生成日志信息*/
         log_message.ganerate_log_message(result);
         /*判断需不需要添加调用栈*/
-        log_message.judge_traceback(result, nullptr);
+        log_message.judge_traceback(result);
         /*进行输出*/
-        log_message.out_message(result, nullptr);
+        log_message.out_message(result);
     }
     /*清空信息*/
     log_massage_list.clear();
-}
-
-/*锁住整个buffer
- * return
- * */
-void LogBuffer::lock_out_put() {
-    buffer_mtx.lock();
-}
-
-/*解锁buffer
- * return
- * */
-void LogBuffer::unlock_out_put() {
-    buffer_mtx.unlock();
 }
 
 /*设置buffer结束标志
  * return
  * */
 void LogBuffer::set_stop_buffer_flag() {
-    stop_buffer= true;
+    stop_buffer = true;
 }

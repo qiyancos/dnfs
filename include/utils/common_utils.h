@@ -33,8 +33,6 @@
 #include <regex>
 #include <sstream>
 #include <thread>
-/*todo 解决这个问题*/
-//#include <boost/stacktrace.hpp>
 
 #define SET_PTR_INFO(error_info, error_content) \
     if(error_info != nullptr) *error_info = error_content;
@@ -226,10 +224,9 @@ void to_upper(std::string &str);
 
 /*判断文件目录是否存在
  * params judge_dir:验证的路径
- * params error_info:错误信息
- * return: 状态码 0 生成成功 其他 生成失败
+ * return:
  * */
-int creat_directory(const std::string &judge_dir, std::string *error_info);
+void creat_directory(const std::string &judge_dir);
 
 /*将时间戳转化为日志
  * %a 星期几的简写

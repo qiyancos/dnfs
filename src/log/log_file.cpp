@@ -29,9 +29,9 @@ using namespace std;
 LogFile::LogFile() = default;
 
 /*使用map统一相同的logfile设置路径：logfile对象字典*/
-std::map<std::string, std::shared_ptr<LogFile>> LogFile::path_log_file_dict = {};
+map<string, shared_ptr<LogFile>> LogFile::path_log_file_dict = {};
 /*设置路径：属性，用来对照相同的路径，切割属性是否一样*/
-std::map<std::string, std::string> LogFile::path_rotate_attr_dict = {};
+map<string, string> LogFile::path_rotate_attr_dict = {};
 
 /*解析建立数据
  * params config_str:日志文件配置信息
@@ -173,11 +173,8 @@ void LogFile::generate_data(const string &config_str, const string &module_n,
                 dir_path.c_str());
     }
     /*查看路径是否存在，不存在创建,创建错误直接返回*/
-    if (creat_directory(dir_path, nullptr) != 0) {
-        throw LogException(
-                "The storage log path '%s' set is not a directory",
-                dir_path.c_str());
-    }
+    creat_directory(dir_path);
+
     /*判断是否有写权限*/
     if (access(dir_path.c_str(), W_OK) != 0) {
         throw LogException(
@@ -233,17 +230,17 @@ void LogFile::generate_log_path() {
     file_name = logger.program_name;
     /*然后判断模块名*/
     switch (logger.get_log_generate()) {
-        case 0:
+        case L_JUST_ONE:
             break;
-        case 1:
+        case L_MODULE:
             /*拼接模块名*/
             file_name += ("_" + module_name);
             break;
-        case 2:
+        case L_LOG_LEVEL:
             /*拼接日志等级*/
             file_name += ("_" + log_level_info_dict[log_level].first[0]);
             break;
-        case 3:
+        case LMODULE_LOG_LEVEL:
             /*拼接模块名和日志等级*/
             file_name += ("_" + module_name);
             file_name += ("_" + log_level_info_dict[log_level].first[0]);
@@ -538,7 +535,7 @@ void LogFile::rotate_log_file(const time_t &now_time) {
  * params log_l:日志等级
  * return: 获取的日志对象
  * */
-std::shared_ptr<LogFile>
+shared_ptr<LogFile>
 LogFile::get_log_file(const string &config_str, const string &module_n,
                       const log_level_t &log_l) {
     /*先只简单的截取路径和参数和保存的字典进行对比*/
@@ -591,7 +588,7 @@ LogFile::get_log_file(const string &config_str, const string &module_n,
 /*获取日志路径
  * return: 日志路径
  * */
-std::string LogFile::get_log_path() {
+string LogFile::get_log_path() {
     return log_file_path;
 }
 

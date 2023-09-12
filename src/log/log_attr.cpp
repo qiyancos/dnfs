@@ -14,8 +14,7 @@
  */
 #include "log/log_attr.h"
 #include "log/log.h"
-#include "utils/common_utils.h"
-#include "utils/thread_utils.h"
+#include "log/log_exception.h"
 
 
 using namespace std;
@@ -27,11 +26,10 @@ LoggerAttr::LoggerAttr() {
 }
 
 /*根据格式字符串，建立日志格式,供设置日志格式调用
- * params error_info:错误信息
- * return: 状态码 0 生成成功 其他 生成失败
+ * return:
  * */
-int
-LoggerAttr::init_log_formatter(string *error_info) {
+void
+LoggerAttr::init_log_formatter() {
     /*用来判定是否设置了格式，没有设置至少一个格式报错*/
     bool set_formatter = false;
     int i = 0;
@@ -50,7 +48,9 @@ LoggerAttr::init_log_formatter(string *error_info) {
     }
     /*如果没有设置格式*/
     if (!set_formatter) {
-        SET_PTR_INFO(error_info, format_message(
+        /*设置默认的*/
+        formatter = "%(message)";
+        throw LogException(
                 "The log format setting must be selected from the list below:\n"
                 "        * %(program_name) the program name\n"
                 "        * %(hostname) the host name\n"
@@ -67,11 +67,8 @@ LoggerAttr::init_log_formatter(string *error_info) {
                 "        * %(threadName) the thread name\n"
                 "        * %(process) the progress id\n"
                 "        * %(message) the log message\n"
-                "you set is %s", formatter.c_str())
-        )
-        return 1;
+                "you set is %s", formatter.c_str());
     }
-    return 0;
 }
 
 /*判断debug模式
@@ -100,14 +97,12 @@ bool LoggerAttr::get_debug() const {
 /*调用输出方法
  * params log_level:输出日志等级
  * params message:日志信息
- * params error_info:错误信息
- * return: 状态码 0 生成成功 其他 生成失败
+ * return:
  * */
-int LoggerAttr::out_message(const log_level_t &message_log_level,
-                            const string &message,
-                            string *error_info) {
+void LoggerAttr::out_message(const log_level_t &message_log_level,
+                            const string &message) {
     /*调用对应的输出模块*/
-    return log_level_output[message_log_level].out_message(message, error_info);
+    log_level_output[message_log_level].out_message(message);
 }
 
 /*更改内部log_file模块名

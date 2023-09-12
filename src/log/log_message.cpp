@@ -235,27 +235,38 @@ LogMessage::ganerate_log_message(string &format_message) {
 
 /*判断添加调用栈
  * params format_message:生成的日志信息
- * params error_info:错误信息
- * return: 状态码 0 生成成功 其他 生成失败
+ * return:
  * */
-int
-LogMessage::judge_traceback(string &format_message, string *error_info) {
+void
+LogMessage::judge_traceback(string &format_message) {
     /*判断是不是需要添加调用栈,是不是debug模式，是不是含有error*/
     if (logger.module_attr[module_name]->get_debug() and
         log_level_info_dict[log_level].first[0].find("ERROR") !=
         string::npos) {
-        /*todo 使用boost打印调用栈*/
-        format_message += get_taceback();
+        /*保存调用栈信息*/
+        string save_message;
+        /*如果是debug模式，返回真正的调用栈*/
+        if (string(_RUN_MODE) == "Debug") {
+            save_message += get_taceback();
+        } else {
+            /*返回拼接的行号，方法，文件名*/
+            /*获取调用栈*/
+            save_message+="Traceback:\n";
+            save_message+="  FILE "+file_path+",  line "+to_string(line_no)+"\n";
+            save_message+="       "+func_name+"\n";
+        }
+        /*拼接错误信息*/
+        save_message+="ErrorInfo: "+format_message;
+        /*返回赋值*/
+        format_message=save_message;
     }
-    return 0;
 }
 
 /*调用输出方法
  * params message:日志信息
- * params error_info:错误信息
- * return: 状态码 0 生成成功 其他 生成失败
+ * return:
  * */
-int LogMessage::out_message(string &message, string *error_info) {
+void LogMessage::out_message(string &message) {
     /*调用对应的模块属性日志*/
-    return logger.module_attr[module_name]->out_message(log_level, message, error_info);
+    logger.module_attr[module_name]->out_message(log_level, message);
 }
