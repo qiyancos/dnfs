@@ -46,7 +46,7 @@ static const char default_config[] =
         "    limit_info: MIDNIGHT\n"
         "    backup_count: 30\n"
         "    formatter: \"%(levelname) <%(asctime)><PID-%(process)>: %(message)\"\n"
-        "    path: /var/log/dnfsd/runtime.log\n";
+        "    path: /var/log/dnfsd\n";
 
 /* 该函数用于快速从配置文件中获取指定层级的数据，并将结果按照指定格式写入到变量中，返回成功标志 */
 /* 该函数用于快速从配置文件中获取指定层级的数据，
