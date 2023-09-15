@@ -29,8 +29,8 @@ int nfs3_fsinfo(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
         &arg->arg_fsinfo3.fsroot.data.data_len);
 //
 //    /* To avoid setting it on each error case */
-//    res->res_fsinfo3.FSINFO3res_u.resfail.obj_attributes.attributes_follow =
-//            FALSE;
+    res->res_fsinfo3.FSINFO3res_u.resfail.obj_attributes.attributes_follow =
+            FALSE;
 //
 //    obj = nfs3_FhandleToCache(&arg->arg_fsinfo3.fsroot,
 //                              &res->res_fsinfo3.status,
