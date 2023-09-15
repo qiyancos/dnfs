@@ -67,7 +67,7 @@ LoggerAttr::init_log_formatter() {
                 "        * %(threadName) the thread name\n"
                 "        * %(process) the progress id\n"
                 "        * %(message) the log message\n"
-                "you set is %s", formatter.c_str());
+                "your set is %s", formatter.c_str());
     }
 }
 

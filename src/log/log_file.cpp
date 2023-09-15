@@ -66,14 +66,14 @@ void LogFile::generate_data(const string &config_str, const string &module_n,
         /*判断参数数目，如果不为3直接报错*/
         if (args.size() != 3) {
             throw LogException(
-                    "The log path setting has and only three parameters such as (time,midnight,30),you set is %s",
+                    "The log path setting has and only three parameters such as (time,midnight,30), your set is %s",
                     args_str.c_str());
         }
         /*解析参数*/
         /*先设置保留的日志数目*/
         if (!judge_regex(args[2], number_regex_str)) {
             throw LogException(
-                    "The size of the number of saved logs must be a positive integer,you set is %s",
+                    "The size of the number of saved logs must be a positive integer, your setting is %s",
                     args[2].c_str());
         }
         /*需要保留的日志数量*/
@@ -93,7 +93,7 @@ void LogFile::generate_data(const string &config_str, const string &module_n,
             /*如果是数字，转为数字*/
             if (!judge_regex(size_str, number_regex_str)) {
                 throw LogException(
-                        "Set the file size of the cut log setting must be a positive integer,you set is %s",
+                        "Set the file size of the cut log setting must be a positive integer, your settings is %s",
                         size_str.c_str());
             }
             /*转换数字*/
@@ -106,13 +106,13 @@ void LogFile::generate_data(const string &config_str, const string &module_n,
             } else if (unit_b == "gb") {
                 if (log_limit.size_limit > 3) {
                     throw LogException(
-                            "Split logs by size must be less than 4gb,you set is %d GB",
+                            "Split logs by size must be less than 4gb, your settings is %d GB",
                             log_limit.size_limit);
                 }
                 log_limit.size_limit <<= 30;
             } else {
                 throw LogException(
-                        "Cutting logs by size must be selected among (kb,mb,gb), and case is ignored,you set is %s",
+                        "Cutting logs by size must be selected among (kb,mb,gb), and case is ignored, your settings is %s",
                         unit_b.c_str());
             }
         } else if (args[0] == "time") {
@@ -158,18 +158,18 @@ void LogFile::generate_data(const string &config_str, const string &module_n,
                         "        DAY,\n"
                         "        MIDNIGHT,\n"
                         "        WEEK\n"
-                        "and case is ignored,you set is %s", args[1].c_str());
+                        "and case is ignored, your settings is %s", args[1].c_str());
             }
         } else {
             throw LogException(
-                    "The log cutting limit parameter can only be selected between 'size' and 'time',you set is %s",
+                    "The log cutting limit parameter can only be selected between 'size' and 'time', your settings is %s",
                     args[0].c_str());
         }
     }
     /*如果路径不合法*/
     if (!judge_regex(dir_path, path_regex_str)) {
         throw LogException(
-                "The log directory must be an absolute path and can only be named with numbers, letters and '_',you set is %s",
+                "The log directory must be an absolute path and can only be named with numbers, letters and '_', your settings is %s",
                 dir_path.c_str());
     }
     /*查看路径是否存在，不存在创建,创建错误直接返回*/
