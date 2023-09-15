@@ -472,6 +472,17 @@ static void register_rpc_program() {
 
 /* 初始化nfs服务相关的接口注册操作 */
 static void dnfs_init_svc() {
+        /* Get the netconfig entries from /etc/netconfig */
+    netconfig_udpv4 = (struct netconfig *) getnetconfigent("udp");
+    if (netconfig_udpv4 == nullptr)
+        LOG(MODULE_NAME, L_ERROR,
+            "Cannot get udp netconfig, cannot get an entry for udp in netconfig file. Check file /etc/netconfig...");
+
+    /* Get the netconfig entries from /etc/netconfig */
+    netconfig_tcpv4 = (struct netconfig *) getnetconfigent("tcp");
+    if (netconfig_tcpv4 == nullptr)
+        LOG(MODULE_NAME, L_ERROR,
+            "Cannot get tcp netconfig, cannot get an entry for tcp in netconfig file. Check file /etc/netconfig...");
     /* 初始化默认运行配置中的绑定地址数据 */
     if (!inet_pton(nfs_param.core_param.bind_addr.sin_family,
               nfs_param.core_param.bind_addr_str.c_str(),
