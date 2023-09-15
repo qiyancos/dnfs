@@ -1,4 +1,4 @@
-# 编辑模板文件test.x
+# 编辑模板文件program.x
 ```
 program NFS {
     version NFS_VERS {
@@ -8,16 +8,17 @@ program NFS {
 ```
 
 # 生成代码
-`rpcgen -C -a null.x`
+`rpcgen -C -a program.x`
 
 # 修改代码
-## 修改Makefile.null
+## 修改Makefile.program
 `LDLIBS += -lnsl`   ->  `LDLIBS += -ltirpc`
 ## 修改null_client.c
 udp -> tcp
 
 # 编译
-`make -f Makefile.null`
+`make -f Makefile.program`
 
 # 运行
-`./null_client 127.0.0.1`
+`./program_client host func_name`
+`./program_client 127.0.0.1 null`

@@ -3,18 +3,18 @@
 
 # Parameters
 
-CLIENT = null_client
-SERVER = null_server
+CLIENT = program_client
+SERVER = program_server
 
 SOURCES_CLNT.c = 
 SOURCES_CLNT.h = 
 SOURCES_SVC.c = 
 SOURCES_SVC.h = 
-SOURCES.x = null.x
+SOURCES.x = program.x
 
-TARGETS_SVC.c = null_svc.c null_server.c   
-TARGETS_CLNT.c = null_clnt.c null_client.c   
-TARGETS = null.h   null_clnt.c null_svc.c null_client.c null_server.c
+TARGETS_SVC.c = program_svc.c program_server.c program_xdr.c 
+TARGETS_CLNT.c = program_clnt.c program_client.c program_xdr.c 
+TARGETS = program.h program_xdr.c program_clnt.c program_svc.c program_client.c program_server.c
 
 OBJECTS_CLNT = $(SOURCES_CLNT.c:%.c=%.o) $(TARGETS_CLNT.c:%.c=%.o)
 OBJECTS_SVC = $(SOURCES_SVC.c:%.c=%.o) $(TARGETS_SVC.c:%.c=%.o)
