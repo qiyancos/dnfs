@@ -1,5 +1,7 @@
 cmake-build-debug
 .clion*
+.vscode
+.devcontainer
 
 # Prerequisites
 *.d
