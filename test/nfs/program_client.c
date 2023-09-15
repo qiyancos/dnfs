@@ -212,7 +212,11 @@ void nfs_program_3(char *host, char *func_name)
 	else if (strcmp(func_name, "fsinfo") == 0)
 	{
 		FSINFO3res *result_20;
-		FSINFO3args nfsproc3_fsinfo_3_arg;
+		u_int data_len = 0;
+		char data = '0';
+		char *data_val = &data;
+		// FSINFO3args nfsproc3_fsinfo_3_arg = {{{data_len, data_val}}};
+		FSINFO3args nfsproc3_fsinfo_3_arg = {};
 		result_20 = nfsproc3_fsinfo_3(&nfsproc3_fsinfo_3_arg, clnt);
 		if (result_20 == (FSINFO3res *)NULL)
 		{
@@ -241,7 +245,7 @@ void nfs_program_3(char *host, char *func_name)
 	}
 	else
 	{
-		printf("unknown func_name: %s", func_name);
+		printf("unknown func_name: %s\n", func_name);
 	}
 
 #ifndef DEBUG
