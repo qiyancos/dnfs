@@ -6,7 +6,7 @@
 
 #include "program.h"
 
-void nfs_program_3(char *host, char *func_name)
+void nfs_program_3(char *host)
 {
 	CLIENT *clnt;
 
@@ -18,11 +18,19 @@ void nfs_program_3(char *host, char *func_name)
 		exit(1);
 	}
 #endif /* DEBUG */
-
+	// char *func_name = (char*)malloc(sizeof(char) * 10);
+	// printf("input func name: ");
+	// scanf("%s", func_name);
+	char func_name[10];
+	char *func_name_ptr = func_name;
+	printf("--------------------\n");
+	printf("input func name: ");
+	scanf("%s", func_name_ptr);
 	if (strcmp(func_name, "null") == 0)
 	{
 		void *result_1;
 		char *nfsproc3_null_3_arg;
+		printf("%s\n", "arg is null");
 		result_1 = nfsproc3_null_3((void *)&nfsproc3_null_3_arg, clnt);
 		if (result_1 == (void *)NULL)
 		{
@@ -212,12 +220,17 @@ void nfs_program_3(char *host, char *func_name)
 	else if (strcmp(func_name, "fsinfo") == 0)
 	{
 		FSINFO3res *result_20;
-		u_int data_len = 0;
-		char data = '0';
-		char *data_val = &data;
-		// FSINFO3args nfsproc3_fsinfo_3_arg = {{{data_len, data_val}}};
-		FSINFO3args nfsproc3_fsinfo_3_arg = {};
+		// FSINFO3args nfsproc3_fsinfo_3_arg;
+		u_int data_len;
+		printf("input data_len:");
+		scanf("%u", &data_len);
+		char data[data_len];
+		char *data_val = data;
+		printf("input data: ");
+		scanf("%s", data_val);
+		FSINFO3args nfsproc3_fsinfo_3_arg = {{{data_len, data_val}}};
 		result_20 = nfsproc3_fsinfo_3(&nfsproc3_fsinfo_3_arg, clnt);
+		printf("res.status: %d\n", result_20->status);
 		if (result_20 == (FSINFO3res *)NULL)
 		{
 			clnt_perror(clnt, "call failed");
@@ -256,15 +269,18 @@ void nfs_program_3(char *host, char *func_name)
 int main(int argc, char *argv[])
 {
 	char *host;
-	char *func_name;
 
-	if (argc < 3)
+	if (argc < 2)
 	{
-		printf("usage: %s server_host func_name\n", argv[0]);
-		exit(1);
+		// printf("usage: %s server_host func_name\n", argv[0]);
+		// exit(1);
+		host = "127.0.0.1";
+		printf("using default host: %s\n", host);
 	}
-	host = argv[1];
-	func_name = argv[2];
-	nfs_program_3(host, func_name);
+	else
+	{
+		host = argv[1];
+	}
+	nfs_program_3(host);
 	exit(0);
 }

@@ -9,19 +9,20 @@
 void *
 nfsproc3_null_3_svc(void *argp, struct svc_req *rqstp)
 {
-	static char * result;
+	static char *result;
 
 	/*
 	 * insert server code here
 	 */
+	printf("-----null-----\n");
 
-	return (void *) &result;
+	return (void *)&result;
 }
 
 GETATTR3res *
 nfsproc3_getattr_3_svc(GETATTR3args *argp, struct svc_req *rqstp)
 {
-	static GETATTR3res  result;
+	static GETATTR3res result;
 
 	/*
 	 * insert server code here
@@ -33,7 +34,7 @@ nfsproc3_getattr_3_svc(GETATTR3args *argp, struct svc_req *rqstp)
 SETATTR3res *
 nfsproc3_setattr_3_svc(SETATTR3args *argp, struct svc_req *rqstp)
 {
-	static SETATTR3res  result;
+	static SETATTR3res result;
 
 	/*
 	 * insert server code here
@@ -45,7 +46,7 @@ nfsproc3_setattr_3_svc(SETATTR3args *argp, struct svc_req *rqstp)
 LOOKUP3res *
 nfsproc3_lookup_3_svc(LOOKUP3args *argp, struct svc_req *rqstp)
 {
-	static LOOKUP3res  result;
+	static LOOKUP3res result;
 
 	/*
 	 * insert server code here
@@ -57,7 +58,7 @@ nfsproc3_lookup_3_svc(LOOKUP3args *argp, struct svc_req *rqstp)
 ACCESS3res *
 nfsproc3_access_3_svc(ACCESS3args *argp, struct svc_req *rqstp)
 {
-	static ACCESS3res  result;
+	static ACCESS3res result;
 
 	/*
 	 * insert server code here
@@ -69,7 +70,7 @@ nfsproc3_access_3_svc(ACCESS3args *argp, struct svc_req *rqstp)
 READLINK3res *
 nfsproc3_readlink_3_svc(READLINK3args *argp, struct svc_req *rqstp)
 {
-	static READLINK3res  result;
+	static READLINK3res result;
 
 	/*
 	 * insert server code here
@@ -81,7 +82,7 @@ nfsproc3_readlink_3_svc(READLINK3args *argp, struct svc_req *rqstp)
 READ3res *
 nfsproc3_read_3_svc(READ3args *argp, struct svc_req *rqstp)
 {
-	static READ3res  result;
+	static READ3res result;
 
 	/*
 	 * insert server code here
@@ -93,7 +94,7 @@ nfsproc3_read_3_svc(READ3args *argp, struct svc_req *rqstp)
 WRITE3res *
 nfsproc3_write_3_svc(WRITE3args *argp, struct svc_req *rqstp)
 {
-	static WRITE3res  result;
+	static WRITE3res result;
 
 	/*
 	 * insert server code here
@@ -105,7 +106,7 @@ nfsproc3_write_3_svc(WRITE3args *argp, struct svc_req *rqstp)
 CREATE3res *
 nfsproc3_create_3_svc(CREATE3args *argp, struct svc_req *rqstp)
 {
-	static CREATE3res  result;
+	static CREATE3res result;
 
 	/*
 	 * insert server code here
@@ -117,7 +118,7 @@ nfsproc3_create_3_svc(CREATE3args *argp, struct svc_req *rqstp)
 MKDIR3res *
 nfsproc3_mkdir_3_svc(MKDIR3args *argp, struct svc_req *rqstp)
 {
-	static MKDIR3res  result;
+	static MKDIR3res result;
 
 	/*
 	 * insert server code here
@@ -129,7 +130,7 @@ nfsproc3_mkdir_3_svc(MKDIR3args *argp, struct svc_req *rqstp)
 SYMLINK3res *
 nfsproc3_symlink_3_svc(SYMLINK3args *argp, struct svc_req *rqstp)
 {
-	static SYMLINK3res  result;
+	static SYMLINK3res result;
 
 	/*
 	 * insert server code here
@@ -141,7 +142,7 @@ nfsproc3_symlink_3_svc(SYMLINK3args *argp, struct svc_req *rqstp)
 MKNOD3res *
 nfsproc3_mknod_3_svc(MKNOD3args *argp, struct svc_req *rqstp)
 {
-	static MKNOD3res  result;
+	static MKNOD3res result;
 
 	/*
 	 * insert server code here
@@ -153,7 +154,7 @@ nfsproc3_mknod_3_svc(MKNOD3args *argp, struct svc_req *rqstp)
 REMOVE3res *
 nfsproc3_remove_3_svc(REMOVE3args *argp, struct svc_req *rqstp)
 {
-	static REMOVE3res  result;
+	static REMOVE3res result;
 
 	/*
 	 * insert server code here
@@ -165,7 +166,7 @@ nfsproc3_remove_3_svc(REMOVE3args *argp, struct svc_req *rqstp)
 RMDIR3res *
 nfsproc3_rmdir_3_svc(RMDIR3args *argp, struct svc_req *rqstp)
 {
-	static RMDIR3res  result;
+	static RMDIR3res result;
 
 	/*
 	 * insert server code here
@@ -177,7 +178,7 @@ nfsproc3_rmdir_3_svc(RMDIR3args *argp, struct svc_req *rqstp)
 RENAME3res *
 nfsproc3_rename_3_svc(RENAME3args *argp, struct svc_req *rqstp)
 {
-	static RENAME3res  result;
+	static RENAME3res result;
 
 	/*
 	 * insert server code here
@@ -189,7 +190,7 @@ nfsproc3_rename_3_svc(RENAME3args *argp, struct svc_req *rqstp)
 LINK3res *
 nfsproc3_link_3_svc(LINK3args *argp, struct svc_req *rqstp)
 {
-	static LINK3res  result;
+	static LINK3res result;
 
 	/*
 	 * insert server code here
@@ -201,7 +202,7 @@ nfsproc3_link_3_svc(LINK3args *argp, struct svc_req *rqstp)
 READDIR3res *
 nfsproc3_readdir_3_svc(READDIR3args *argp, struct svc_req *rqstp)
 {
-	static READDIR3res  result;
+	static READDIR3res result;
 
 	/*
 	 * insert server code here
@@ -213,7 +214,7 @@ nfsproc3_readdir_3_svc(READDIR3args *argp, struct svc_req *rqstp)
 READDIRPLUS3res *
 nfsproc3_readdirplus_3_svc(READDIRPLUS3args *argp, struct svc_req *rqstp)
 {
-	static READDIRPLUS3res  result;
+	static READDIRPLUS3res result;
 
 	/*
 	 * insert server code here
@@ -225,7 +226,7 @@ nfsproc3_readdirplus_3_svc(READDIRPLUS3args *argp, struct svc_req *rqstp)
 FSSTAT3res *
 nfsproc3_fsstat_3_svc(FSSTAT3args *argp, struct svc_req *rqstp)
 {
-	static FSSTAT3res  result;
+	static FSSTAT3res result;
 
 	/*
 	 * insert server code here
@@ -237,11 +238,18 @@ nfsproc3_fsstat_3_svc(FSSTAT3args *argp, struct svc_req *rqstp)
 FSINFO3res *
 nfsproc3_fsinfo_3_svc(FSINFO3args *argp, struct svc_req *rqstp)
 {
-	static FSINFO3res  result;
+	static FSINFO3res result;
 
 	/*
 	 * insert server code here
 	 */
+	printf("-----fsinfo-----\n");
+	printf("fsroot.data.data_len: %u\n", argp->fsroot.data.data_len);
+	printf("fsroot.data.data_val: %s\n", argp->fsroot.data.data_val);
+	post_op_attr obj_attributes = {FALSE};
+	FSINFO3resfail resfail = {obj_attributes};
+	result.status = NFS3ERR_BADTYPE;
+	result.FSINFO3res_u.resfail = resfail;
 
 	return &result;
 }
@@ -249,7 +257,7 @@ nfsproc3_fsinfo_3_svc(FSINFO3args *argp, struct svc_req *rqstp)
 PATHCONF3res *
 nfsproc3_pathconf_3_svc(PATHCONF3args *argp, struct svc_req *rqstp)
 {
-	static PATHCONF3res  result;
+	static PATHCONF3res result;
 
 	/*
 	 * insert server code here
@@ -261,7 +269,7 @@ nfsproc3_pathconf_3_svc(PATHCONF3args *argp, struct svc_req *rqstp)
 COMMIT3res *
 nfsproc3_commit_3_svc(COMMIT3args *argp, struct svc_req *rqstp)
 {
-	static COMMIT3res  result;
+	static COMMIT3res result;
 
 	/*
 	 * insert server code here
