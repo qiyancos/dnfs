@@ -8,31 +8,44 @@
 
 void print_nfs_func()
 {
-	printf("--------------------\n");
-	printf("no.\tfunc_name\n");
-	printf("0\tnull\n");
-	printf("1\tgetattr\n");
-	printf("2\tsetattr\n");
-	printf("3\tlookup\n");
-	printf("4\taccess\n");
-	printf("5\treadlink\n");
-	printf("6\tread\n");
-	printf("7\twrite\n");
-	printf("8\tcreate\n");
-	printf("9\tmkdir\n");
-	printf("10\tsymlink\n");
-	printf("11\tmknod\n");
-	printf("12\tremove\n");
-	printf("13\trmdir\n");
-	printf("14\trename\n");
-	printf("15\tlink\n");
-	printf("16\treaddir\n");
-	printf("17\treaddirplus\n");
-	printf("18\tfsstat\n");
-	printf("19\tfsinfo\n");
-	printf("20\tpathconf\n");
-	printf("21\tcommit\n");
-	printf("--------------------\n");
+	printf("----------------------------------------------------------------------------------------------------\n");
+	printf("%-16s%-16s%-16s%-16s%-16s%-16s\n", "0.null", "1.getattr", "2.setattr", "3.lookup", "4.access", "5.readlink");
+	printf("%-16s%-16s%-16s%-16s%-16s%-16s\n", "6.read", "7.write", "8.create", "9.mkdir", "10.symlink", "11.mknod");
+	printf("%-16s%-16s%-16s%-16s%-16s%-16s\n", "12.remove", "13.rmdir", "14.rename", "15.link", "16.readdir", "17.readdirplus");
+	printf("%-16s%-16s%-16s%-16s\n", "18.fsstat", "19.fsinfo", "20.pathconf", "21.commit");
+	printf("%-16s\n", "-1.exit");
+	printf("----------------------------------------------------------------------------------------------------\n");
+	printf("\n");
+}
+
+void print_fattr3(fattr3 *info)
+{
+	printf("type: %d\n", info->type);
+	printf("mode: %u\n", info->mode);
+	printf("nlink: %u\n", info->nlink);
+	printf("uid: %u\n", info->uid);
+	printf("gid: %u\n", info->gid);
+	printf("size: %lu\n", info->size);
+	printf("used: %lu\n", info->used);
+	printf("rdev.specdata1: %u\n", info->rdev.specdata1);
+	printf("rdev.specdata2: %u\n", info->rdev.specdata2);
+	printf("fsid: %lu\n", info->fsid);
+	printf("fileid: %lu\n", info->fileid);
+	printf("atime.seconds: %u\n", info->atime.seconds);
+	printf("atime.nseconds: %u\n", info->atime.nseconds);
+	printf("mtime.seconds: %u\n", info->mtime.seconds);
+	printf("mtime.nseconds: %u\n", info->mtime.nseconds);
+	printf("ctime.seconds: %u\n", info->ctime.seconds);
+	printf("ctime.nseconds: %u\n", info->ctime.nseconds);
+}
+
+void print_post_op_attr(post_op_attr *info)
+{
+	printf("attributes_follow: %d\n", info->attributes_follow);
+	if (info->attributes_follow)
+	{
+		print_fattr3(&info->post_op_attr_u.attributes);
+	}
 }
 
 void nfs_program_3(char *host)
@@ -282,10 +295,35 @@ void nfs_program_3(char *host)
 		scanf("%s", data_val);
 		FSINFO3args nfsproc3_fsinfo_3_arg = {{{data_len, data_val}}};
 		result_20 = nfsproc3_fsinfo_3(&nfsproc3_fsinfo_3_arg, clnt);
-		printf("res.status: %d\n", result_20->status);
 		if (result_20 == (FSINFO3res *)NULL)
 		{
 			clnt_perror(clnt, "call failed");
+		}
+		else
+		{
+			printf("-----response-----\n");
+			printf("status: %d\n", result_20->status);
+			if (result_20->status == 0)
+			{
+				printf("resok\n");
+				print_post_op_attr(&result_20->FSINFO3res_u.resok.obj_attributes);
+				printf("rtmax: %u\n", result_20->FSINFO3res_u.resok.rtmax);
+				printf("rtpref: %u\n", result_20->FSINFO3res_u.resok.rtpref);
+				printf("rtmult: %u\n", result_20->FSINFO3res_u.resok.rtmult);
+				printf("wtmax: %u\n", result_20->FSINFO3res_u.resok.wtmax);
+				printf("wtpref: %u\n", result_20->FSINFO3res_u.resok.wtpref);
+				printf("wtmult: %u\n", result_20->FSINFO3res_u.resok.wtmult);
+				printf("dtpref: %u\n", result_20->FSINFO3res_u.resok.dtpref);
+				printf("maxfilesize: %lu\n", result_20->FSINFO3res_u.resok.maxfilesize);
+				printf("time_delta.seconds: %u\n", result_20->FSINFO3res_u.resok.time_delta.seconds);
+				printf("time_delta.nseconds: %u\n", result_20->FSINFO3res_u.resok.time_delta.nseconds);
+				printf("properties: %u\n", result_20->FSINFO3res_u.resok.properties);
+			}
+			else
+			{
+				printf("resfail\n");
+				print_post_op_attr(&result_20->FSINFO3res_u.resfail.obj_attributes);
+			}
 		}
 	}
 	// else if (strcmp(func_name, "pathconf") == 0)
@@ -313,8 +351,9 @@ void nfs_program_3(char *host)
 	else
 	{
 		// printf("unknown func_name: %s\n", func_name);
-		printf("unknown func_no: %d\n", func_no);
+		printf("unknown func_no\n");
 	}
+	printf("\n");
 
 #ifndef DEBUG
 	clnt_destroy(clnt);
