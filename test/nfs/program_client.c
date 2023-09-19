@@ -6,6 +6,35 @@
 
 #include "program.h"
 
+void print_nfs_func()
+{
+	printf("--------------------\n");
+	printf("no.\tfunc_name\n");
+	printf("0\tnull\n");
+	printf("1\tgetattr\n");
+	printf("2\tsetattr\n");
+	printf("3\tlookup\n");
+	printf("4\taccess\n");
+	printf("5\treadlink\n");
+	printf("6\tread\n");
+	printf("7\twrite\n");
+	printf("8\tcreate\n");
+	printf("9\tmkdir\n");
+	printf("10\tsymlink\n");
+	printf("11\tmknod\n");
+	printf("12\tremove\n");
+	printf("13\trmdir\n");
+	printf("14\trename\n");
+	printf("15\tlink\n");
+	printf("16\treaddir\n");
+	printf("17\treaddirplus\n");
+	printf("18\tfsstat\n");
+	printf("19\tfsinfo\n");
+	printf("20\tpathconf\n");
+	printf("21\tcommit\n");
+	printf("--------------------\n");
+}
+
 void nfs_program_3(char *host)
 {
 	CLIENT *clnt;
@@ -18,15 +47,19 @@ void nfs_program_3(char *host)
 		exit(1);
 	}
 #endif /* DEBUG */
+	print_nfs_func();
 	// char *func_name = (char*)malloc(sizeof(char) * 10);
 	// printf("input func name: ");
 	// scanf("%s", func_name);
-	char func_name[10];
-	char *func_name_ptr = func_name;
-	printf("--------------------\n");
-	printf("input func name: ");
-	scanf("%s", func_name_ptr);
-	if (strcmp(func_name, "null") == 0)
+	// char func_name[10];
+	// char *func_name_ptr = func_name;
+	// printf("input func name: ");
+	// scanf("%s", func_name_ptr);
+	int func_no;
+	printf("input func no: ");
+	scanf("%d", &func_no);
+	// if (strcmp(func_name, "null") == 0)
+	if (func_no == 0) // null
 	{
 		void *result_1;
 		char *nfsproc3_null_3_arg;
@@ -37,7 +70,8 @@ void nfs_program_3(char *host)
 			clnt_perror(clnt, "call failed");
 		}
 	}
-	else if (strcmp(func_name, "getattr") == 0)
+	// else if (strcmp(func_name, "getattr") == 0)
+	else if (func_no == 1) // getattr
 	{
 		GETATTR3res *result_2;
 		GETATTR3args nfsproc3_getattr_3_arg;
@@ -47,7 +81,8 @@ void nfs_program_3(char *host)
 			clnt_perror(clnt, "call failed");
 		}
 	}
-	else if (strcmp(func_name, "setattr") == 0)
+	// else if (strcmp(func_name, "setattr") == 0)
+	else if (func_no == 2) // setattr
 	{
 		SETATTR3res *result_3;
 		SETATTR3args nfsproc3_setattr_3_arg;
@@ -57,7 +92,8 @@ void nfs_program_3(char *host)
 			clnt_perror(clnt, "call failed");
 		}
 	}
-	else if (strcmp(func_name, "lookup") == 0)
+	// else if (strcmp(func_name, "lookup") == 0)
+	else if (func_no == 3) // lookup
 	{
 		LOOKUP3res *result_4;
 		LOOKUP3args nfsproc3_lookup_3_arg;
@@ -67,7 +103,8 @@ void nfs_program_3(char *host)
 			clnt_perror(clnt, "call failed");
 		}
 	}
-	else if (strcmp(func_name, "access") == 0)
+	// else if (strcmp(func_name, "access") == 0)
+	else if (func_no == 4) // access
 	{
 		ACCESS3res *result_5;
 		ACCESS3args nfsproc3_access_3_arg;
@@ -77,7 +114,8 @@ void nfs_program_3(char *host)
 			clnt_perror(clnt, "call failed");
 		}
 	}
-	else if (strcmp(func_name, "readlink") == 0)
+	// else if (strcmp(func_name, "readlink") == 0)
+	else if (func_no == 5) // readlink
 	{
 		READLINK3res *result_6;
 		READLINK3args nfsproc3_readlink_3_arg;
@@ -87,7 +125,8 @@ void nfs_program_3(char *host)
 			clnt_perror(clnt, "call failed");
 		}
 	}
-	else if (strcmp(func_name, "read") == 0)
+	// else if (strcmp(func_name, "read") == 0)
+	else if (func_no == 6) // read
 	{
 		READ3res *result_7;
 		READ3args nfsproc3_read_3_arg;
@@ -97,7 +136,8 @@ void nfs_program_3(char *host)
 			clnt_perror(clnt, "call failed");
 		}
 	}
-	else if (strcmp(func_name, "write") == 0)
+	// else if (strcmp(func_name, "write") == 0)
+	else if (func_no == 7) // write
 	{
 		WRITE3res *result_8;
 		WRITE3args nfsproc3_write_3_arg;
@@ -107,7 +147,8 @@ void nfs_program_3(char *host)
 			clnt_perror(clnt, "call failed");
 		}
 	}
-	else if (strcmp(func_name, "create") == 0)
+	// else if (strcmp(func_name, "create") == 0)
+	else if (func_no == 8) // create
 	{
 		CREATE3res *result_9;
 		CREATE3args nfsproc3_create_3_arg;
@@ -117,7 +158,8 @@ void nfs_program_3(char *host)
 			clnt_perror(clnt, "call failed");
 		}
 	}
-	else if (strcmp(func_name, "mkdir") == 0)
+	// else if (strcmp(func_name, "mkdir") == 0)
+	else if (func_no == 9) // mkdir
 	{
 		MKDIR3res *result_10;
 		MKDIR3args nfsproc3_mkdir_3_arg;
@@ -127,7 +169,8 @@ void nfs_program_3(char *host)
 			clnt_perror(clnt, "call failed");
 		}
 	}
-	else if (strcmp(func_name, "symlink") == 0)
+	// else if (strcmp(func_name, "symlink") == 0)
+	else if (func_no == 10) // symlink
 	{
 		SYMLINK3res *result_11;
 		SYMLINK3args nfsproc3_symlink_3_arg;
@@ -137,7 +180,8 @@ void nfs_program_3(char *host)
 			clnt_perror(clnt, "call failed");
 		}
 	}
-	else if (strcmp(func_name, "mknod") == 0)
+	// else if (strcmp(func_name, "mknod") == 0)
+	else if (func_no == 11) // mknod
 	{
 		MKNOD3res *result_12;
 		MKNOD3args nfsproc3_mknod_3_arg;
@@ -147,7 +191,8 @@ void nfs_program_3(char *host)
 			clnt_perror(clnt, "call failed");
 		}
 	}
-	else if (strcmp(func_name, "remove") == 0)
+	// else if (strcmp(func_name, "remove") == 0)
+	else if (func_no == 12) // remove
 	{
 		REMOVE3res *result_13;
 		REMOVE3args nfsproc3_remove_3_arg;
@@ -157,7 +202,8 @@ void nfs_program_3(char *host)
 			clnt_perror(clnt, "call failed");
 		}
 	}
-	else if (strcmp(func_name, "rmdir") == 0)
+	// else if (strcmp(func_name, "rmdir") == 0)
+	else if (func_no == 13) // rmdir
 	{
 		RMDIR3res *result_14;
 		RMDIR3args nfsproc3_rmdir_3_arg;
@@ -167,7 +213,8 @@ void nfs_program_3(char *host)
 			clnt_perror(clnt, "call failed");
 		}
 	}
-	else if (strcmp(func_name, "rename") == 0)
+	// else if (strcmp(func_name, "rename") == 0)
+	else if (func_no == 14) // rename
 	{
 		RENAME3res *result_15;
 		RENAME3args nfsproc3_rename_3_arg;
@@ -177,7 +224,8 @@ void nfs_program_3(char *host)
 			clnt_perror(clnt, "call failed");
 		}
 	}
-	else if (strcmp(func_name, "link") == 0)
+	// else if (strcmp(func_name, "link") == 0)
+	else if (func_no == 15) // link
 	{
 		LINK3res *result_16;
 		LINK3args nfsproc3_link_3_arg;
@@ -187,7 +235,8 @@ void nfs_program_3(char *host)
 			clnt_perror(clnt, "call failed");
 		}
 	}
-	else if (strcmp(func_name, "readdir") == 0)
+	// else if (strcmp(func_name, "readdir") == 0)
+	else if (func_no == 16) // readdir
 	{
 		READDIR3res *result_17;
 		READDIR3args nfsproc3_readdir_3_arg;
@@ -197,7 +246,8 @@ void nfs_program_3(char *host)
 			clnt_perror(clnt, "call failed");
 		}
 	}
-	else if (strcmp(func_name, "readdirplus") == 0)
+	// else if (strcmp(func_name, "readdirplus") == 0)
+	else if (func_no == 17) // readdirplus
 	{
 		READDIRPLUS3res *result_18;
 		READDIRPLUS3args nfsproc3_readdirplus_3_arg;
@@ -207,7 +257,8 @@ void nfs_program_3(char *host)
 			clnt_perror(clnt, "call failed");
 		}
 	}
-	else if (strcmp(func_name, "fsstat") == 0)
+	// else if (strcmp(func_name, "fsstat") == 0)
+	else if (func_no == 18) // fsstat
 	{
 		FSSTAT3res *result_19;
 		FSSTAT3args nfsproc3_fsstat_3_arg;
@@ -217,7 +268,8 @@ void nfs_program_3(char *host)
 			clnt_perror(clnt, "call failed");
 		}
 	}
-	else if (strcmp(func_name, "fsinfo") == 0)
+	// else if (strcmp(func_name, "fsinfo") == 0)
+	else if (func_no == 19) // fsinfo
 	{
 		FSINFO3res *result_20;
 		// FSINFO3args nfsproc3_fsinfo_3_arg;
@@ -236,7 +288,8 @@ void nfs_program_3(char *host)
 			clnt_perror(clnt, "call failed");
 		}
 	}
-	else if (strcmp(func_name, "pathconf") == 0)
+	// else if (strcmp(func_name, "pathconf") == 0)
+	else if (func_no == 20) // pathconf
 	{
 		PATHCONF3res *result_21;
 		PATHCONF3args nfsproc3_pathconf_3_arg;
@@ -246,7 +299,8 @@ void nfs_program_3(char *host)
 			clnt_perror(clnt, "call failed");
 		}
 	}
-	else if (strcmp(func_name, "commit") == 0)
+	// else if (strcmp(func_name, "commit") == 0)
+	else if (func_no == 21) // commit
 	{
 		COMMIT3res *result_22;
 		COMMIT3args nfsproc3_commit_3_arg;
@@ -258,7 +312,8 @@ void nfs_program_3(char *host)
 	}
 	else
 	{
-		printf("unknown func_name: %s\n", func_name);
+		// printf("unknown func_name: %s\n", func_name);
+		printf("unknown func_no: %d\n", func_no);
 	}
 
 #ifndef DEBUG
