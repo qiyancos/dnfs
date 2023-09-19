@@ -127,6 +127,150 @@ const nfs_function_desc_t nfs3_func_desc[] = {
                 .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
                 .funcname = "NFS3_FSINFO",
                 .dispatch_behaviour = (NEEDS_CRED)
+        },
+        {
+                .service_function = nfs3_fsinfo,
+                .free_function = nfs3_fsinfo_free,
+                .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
+                .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
+                .funcname = "NFS3_FSINFO",
+                .dispatch_behaviour = (NEEDS_CRED)
+        },
+        {
+                .service_function = nfs3_fsinfo,
+                .free_function = nfs3_fsinfo_free,
+                .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
+                .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
+                .funcname = "NFS3_FSINFO",
+                .dispatch_behaviour = (NEEDS_CRED)
+        },
+        {
+                .service_function = nfs3_fsinfo,
+                .free_function = nfs3_fsinfo_free,
+                .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
+                .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
+                .funcname = "NFS3_FSINFO",
+                .dispatch_behaviour = (NEEDS_CRED)
+        },
+        {
+                .service_function = nfs3_fsinfo,
+                .free_function = nfs3_fsinfo_free,
+                .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
+                .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
+                .funcname = "NFS3_FSINFO",
+                .dispatch_behaviour = (NEEDS_CRED)
+        },
+        {
+                .service_function = nfs3_fsinfo,
+                .free_function = nfs3_fsinfo_free,
+                .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
+                .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
+                .funcname = "NFS3_FSINFO",
+                .dispatch_behaviour = (NEEDS_CRED)
+        },
+        {
+                .service_function = nfs3_fsinfo,
+                .free_function = nfs3_fsinfo_free,
+                .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
+                .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
+                .funcname = "NFS3_FSINFO",
+                .dispatch_behaviour = (NEEDS_CRED)
+        },
+        {
+                .service_function = nfs3_fsinfo,
+                .free_function = nfs3_fsinfo_free,
+                .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
+                .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
+                .funcname = "NFS3_FSINFO",
+                .dispatch_behaviour = (NEEDS_CRED)
+        },
+        {
+                .service_function = nfs3_fsinfo,
+                .free_function = nfs3_fsinfo_free,
+                .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
+                .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
+                .funcname = "NFS3_FSINFO",
+                .dispatch_behaviour = (NEEDS_CRED)
+        },
+        {
+                .service_function = nfs3_fsinfo,
+                .free_function = nfs3_fsinfo_free,
+                .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
+                .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
+                .funcname = "NFS3_FSINFO",
+                .dispatch_behaviour = (NEEDS_CRED)
+        },
+        {
+                .service_function = nfs3_fsinfo,
+                .free_function = nfs3_fsinfo_free,
+                .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
+                .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
+                .funcname = "NFS3_FSINFO",
+                .dispatch_behaviour = (NEEDS_CRED)
+        },
+        {
+                .service_function = nfs3_fsinfo,
+                .free_function = nfs3_fsinfo_free,
+                .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
+                .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
+                .funcname = "NFS3_FSINFO",
+                .dispatch_behaviour = (NEEDS_CRED)
+        },
+        {
+                .service_function = nfs3_fsinfo,
+                .free_function = nfs3_fsinfo_free,
+                .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
+                .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
+                .funcname = "NFS3_FSINFO",
+                .dispatch_behaviour = (NEEDS_CRED)
+        },
+        {
+                .service_function = nfs3_fsinfo,
+                .free_function = nfs3_fsinfo_free,
+                .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
+                .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
+                .funcname = "NFS3_FSINFO",
+                .dispatch_behaviour = (NEEDS_CRED)
+        },
+        {
+                .service_function = nfs3_fsinfo,
+                .free_function = nfs3_fsinfo_free,
+                .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
+                .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
+                .funcname = "NFS3_FSINFO",
+                .dispatch_behaviour = (NEEDS_CRED)
+        },
+        {
+                .service_function = nfs3_fsinfo,
+                .free_function = nfs3_fsinfo_free,
+                .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
+                .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
+                .funcname = "NFS3_FSINFO",
+                .dispatch_behaviour = (NEEDS_CRED)
+        },
+        {
+                .service_function = nfs3_fsinfo,
+                .free_function = nfs3_fsinfo_free,
+                .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
+                .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
+                .funcname = "NFS3_FSINFO",
+                .dispatch_behaviour = (NEEDS_CRED)
+        },
+        {
+                .service_function = nfs3_fsinfo,
+                .free_function = nfs3_fsinfo_free,
+                .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
+                .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
+                .funcname = "NFS3_FSINFO",
+                .dispatch_behaviour = (NEEDS_CRED)
+        },
+        {
+                .service_function = nfs3_fsinfo,
+                .free_function = nfs3_fsinfo_free,
+                .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
+                .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
+                .funcname = "NFS3_FSINFO",
+                .dispatch_behaviour = (NEEDS_CRED)
         }
 };
 

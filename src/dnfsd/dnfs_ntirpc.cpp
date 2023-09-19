@@ -27,6 +27,7 @@ extern "C" {
 
 #include "log/log.h"
 #include "nfs/nfs_base.h"
+#include "nfs/nfs_utils.h"
 #include "utils/common_utils.h"
 #include "utils/thread_utils.h"
 #include "dnfsd/dnfs_meta_data.h"
@@ -328,6 +329,28 @@ static enum nfs_req_result complete_request(
     return rc;
 }
 
+void free_args(nfs_request_t *reqdata)
+{
+    const nfs_function_desc_t *reqdesc = reqdata->funcdesc;
+
+    /* Free the allocated resources once the work is done */
+    /* Free the arguments */
+    if ((reqdata->svc.rq_msg.cb_vers == 2)
+        || (reqdata->svc.rq_msg.cb_vers == 3)
+        || (reqdata->svc.rq_msg.cb_vers == 4)) {
+        if (!xdr_free(reqdesc->xdr_decode_func,
+                      &reqdata->arg_nfs)) {
+            LOG(MODULE_NAME,L_ERROR,
+                    "%s FAILURE: Bad xdr_free for %s",
+                    __func__,
+                    reqdesc->funcname);
+        }
+    }
+
+    /* Finalize the request. */
+    nfs_dupreq_rele(reqdata);
+}
+
 /* RPC处理主程序入口 */
 static enum xprt_stat nfs_rpc_process_request(nfs_request_t *reqdata, bool retry) {
     const nfs_function_desc_t *reqdesc = reqdata->funcdesc;
@@ -336,10 +359,16 @@ static enum xprt_stat nfs_rpc_process_request(nfs_request_t *reqdata, bool retry
     XDR *xdrs = reqdata->svc.rq_xdrs;
     enum auth_stat auth_rc;
     int rc = NFS_REQ_OK;
+    dupreq_status_t dpq_status;
     bool no_dispatch = false;
 
     if (retry)
         goto retry_after_drc_suspend;
+
+    /* If req is uncacheable, or if req is v41+, nfs_dupreq_start will do
+     * nothing but allocate a result object and mark the request (ie, the
+     * path is short, lockless, and does no hash/search). */
+    dpq_status = nfs_dupreq_start(reqdata);
 
     LOG(MODULE_NAME, D_INFO,
         "About to authenticate Prog=%" PRIu32
@@ -414,8 +443,8 @@ retry_after_drc_suspend:
      * and invalid protos all point to invalid_funcdesc
      * NFS v2 is set to invalid_funcdesc in nfs_rpc_get_funcdesc()
      */
-    if (reqdesc == &invalid_funcdesc
-        || reqdata->svc.rq_msg.cb_proc == NFSPROC_NULL) {
+    if (reqdesc != &invalid_funcdesc
+        and reqdata->svc.rq_msg.cb_proc != NFSPROC_NULL) {
 
         rc = reqdesc->service_function(arg_nfs, &reqdata->svc,
                                        reqdata->res_nfs);
@@ -431,6 +460,10 @@ retry_after_drc_suspend:
         }
     }
     complete_request(reqdata, static_cast<nfs_req_result>(rc));
+
+    /*释放申请的内存*/
+    free_args(reqdata);
+
     return SVC_STAT(xprt);
 }
 

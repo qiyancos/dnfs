@@ -116,11 +116,5 @@ typedef struct nfs_request {
     TAILQ_ENTRY(nfs_request) dupes;
 } nfs_request_t;
 
-typedef enum dupreq_status {
-    DUPREQ_SUCCESS = 0,
-    DUPREQ_BEING_PROCESSED,
-    DUPREQ_EXISTS,
-    DUPREQ_DROP,
-} dupreq_status_t;
 
 #endif //DNFSD_DNFS_META_DATA_H

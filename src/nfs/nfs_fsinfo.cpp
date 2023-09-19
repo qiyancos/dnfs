@@ -14,17 +14,23 @@
  */
 #include "nfs/nfs_base.h"
 #include "log/log.h"
+#define FSF3_LINK 0x0001
+#define FSF3_SYMLINK 0x0002
+#define FSF3_HOMOGENEOUS 0x0008
+#define FSF3_CANSETTIME 0x0010
+
+
 #define MODULE_NAME "DNFS"
 int nfs3_fsinfo(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
 {
-    struct fsal_obj_handle *obj = nullptr;
-    int rc = NFS_REQ_OK;
-//    FSINFO3resok * const FSINFO_FIELD =
-//            &res->res_fsinfo3.FSINFO3res_u.resok;
+//    struct fsal_obj_handle *obj = nullptr;
+    int rc = NFS_REQ_ERROR;
+    FSINFO3resok * const FSINFO_FIELD =
+            &res->res_fsinfo3.FSINFO3res_u.resok;
 //    fsal_dynamicfsinfo_t dynamicinfo;
 //    fsal_status_t fsal_status;
 
-    LOG(MODULE_NAME, L_INFO, "Implements fsinfo args val is '%s' len is '%d'",
+    LOG(MODULE_NAME, L_INFO, "The value of the obtained file handle is '%s', and the length is data_val is '%d'",
         &arg->arg_fsinfo3.fsroot.data.data_val,
         &arg->arg_fsinfo3.fsroot.data.data_len);
 //
@@ -65,26 +71,20 @@ int nfs3_fsinfo(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
 //    /* New fields were added to nfs_config_t to handle this
 //       value. We use them */
 //
-//    FSINFO_FIELD->rtmax =
-//            atomic_fetch_uint64_t(&op_ctx->ctx_export->MaxRead);
-//    FSINFO_FIELD->rtpref =
-//            atomic_fetch_uint64_t(&op_ctx->ctx_export->PrefRead);
-//    /* This field is generally unused, it will be removed in V4 */
-//    FSINFO_FIELD->rtmult = DEV_BSIZE;
-//
-//    FSINFO_FIELD->wtmax =
-//            atomic_fetch_uint64_t(&op_ctx->ctx_export->MaxWrite);
-//    FSINFO_FIELD->wtpref =
-//            atomic_fetch_uint64_t(&op_ctx->ctx_export->PrefWrite);
-//    /* This field is generally unused, it will be removed in V4 */
-//    FSINFO_FIELD->wtmult = DEV_BSIZE;
-//
-//    FSINFO_FIELD->dtpref =
-//            atomic_fetch_uint64_t(&op_ctx->ctx_export->PrefReaddir);
-//    FSINFO_FIELD->maxfilesize =
-//            op_ctx->fsal_export->exp_ops.fs_maxfilesize(op_ctx->fsal_export);
-//    FSINFO_FIELD->time_delta.tv_sec = dynamicinfo.time_delta.tv_sec;
-//    FSINFO_FIELD->time_delta.tv_nsec = dynamicinfo.time_delta.tv_nsec;
+    FSINFO_FIELD->rtmax =125;
+    FSINFO_FIELD->rtpref =152;
+    /* This field is generally unused, it will be removed in V4 */
+    FSINFO_FIELD->rtmult = DEV_BSIZE;
+
+    FSINFO_FIELD->wtmax =55;
+    FSINFO_FIELD->wtpref =22;
+    /* This field is generally unused, it will be removed in V4 */
+    FSINFO_FIELD->wtmult = DEV_BSIZE;
+
+    FSINFO_FIELD->dtpref =33;
+    FSINFO_FIELD->maxfilesize =44;
+    FSINFO_FIELD->time_delta.tv_sec =12;
+    FSINFO_FIELD->time_delta.tv_nsec = 23;
 //
 //    LogFullDebug(COMPONENT_NFSPROTO,
 //                 "rtmax = %d | rtpref = %d | trmult = %d",
@@ -99,13 +99,13 @@ int nfs3_fsinfo(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
 //
 //    /* Allow all kinds of operations to be performed on the server
 //       through NFS v3 */
-//    FSINFO_FIELD->properties =
-//            FSF3_LINK | FSF3_SYMLINK | FSF3_HOMOGENEOUS | FSF3_CANSETTIME;
+    FSINFO_FIELD->properties =
+            FSF3_LINK | FSF3_SYMLINK | FSF3_HOMOGENEOUS | FSF3_CANSETTIME;
 //
 //    nfs_SetPostOpAttr(obj,
 //                      &res->res_fsinfo3.FSINFO3res_u.resok.obj_attributes,
 //                      NULL);
-//    res->res_fsinfo3.status = NFS3_OK;
+    res->res_fsinfo3.status = NFS3ERR_PERM;
 //
 //    out:
 //
