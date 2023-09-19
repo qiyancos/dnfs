@@ -26,7 +26,7 @@
 /* 崩溃信号默认处理函数 */
 void crash_handler(int signo, [[maybe_unused]] siginfo_t *info,
                    [[maybe_unused]] void *ctx) {
-    LOG("Crash Handler", L_BACKTRACE, "");
+    LOG(MODULE_NAME, L_BACKTRACE, "");
     /* re-raise the signal for the default signal handler to dump core */
     raise(signo);
 }

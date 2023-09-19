@@ -15,10 +15,4 @@
 #ifndef DNFSD_INIT_UTILS_H
 #define DNFSD_INIT_UTILS_H
 
-
-class init_utils {
-
-};
-
-
 #endif //DNFSD_INIT_UTILS_H
