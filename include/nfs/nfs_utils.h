@@ -23,12 +23,15 @@ typedef enum dupreq_status {
     DUPREQ_DROP,
 } dupreq_status_t;
 
+/*释放请求内存*/
 static inline void free_nfs_res(nfs_res_t *res)
 {
     free(res);
 }
 
+/*释放结果存储空间*/
 void nfs_dupreq_rele(nfs_request_t *reqnfs);
 
+/*为结果分配空间*/
 dupreq_status_t nfs_dupreq_start(nfs_request_t *);
 #endif //DNFSD_NFS_UTILS_H

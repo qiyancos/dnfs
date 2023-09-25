@@ -33,20 +33,12 @@ struct dnfs_request_lookahead {
 };
 
 typedef struct nfs_core_param {
-    /** An array of port numbers, one for each protocol.  Set by
-        the NFS_Port, MNT_Port, NLM_Port, and Rquota_Port options. */
-    uint16_t port = 2049;
     /* 原始的绑定地址字符串 */
     std::string bind_addr_str = "0.0.0.0";
     /** The IPv4 address to which to bind for our
         listening port.  Set by the Bind_Addr option. */
     sockaddr_in bind_addr = {AF_INET, 0, {0}};
-    /** An array of RPC program numbers.  The correct values, by
-        default, they may be set to incorrect values with the
-        NFS_Program, MNT_Program, NLM_Program, and
-        Rquota_Program.  It is debatable whether this is a
-        worthwhile option to have. */
-    uint32_t program = NFS_PROGRAM;
+
     /** Parameters affecting the relation with TIRPC.   */
     struct {
         /** Maximum number of connections for TIRPC.

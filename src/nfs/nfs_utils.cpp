@@ -29,6 +29,7 @@
 
 #define MODULE_NAME "DNFS"
 
+/*释放结果存储空间*/
 void nfs_dupreq_rele(nfs_request_t *reqnfs)
 {
 
@@ -43,7 +44,7 @@ void nfs_dupreq_rele(nfs_request_t *reqnfs)
         SVCAUTH_RELEASE(&reqnfs->svc);
 }
 
-
+/*为结果分配空间*/
 dupreq_status_t nfs_dupreq_start(nfs_request_t *reqnfs) {
     auto *p_ =(nfs_res_t *) malloc(sizeof(nfs_res_t));
         if (nullptr == p_) {

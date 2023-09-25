@@ -21,7 +21,7 @@ extern "C" {
 #include "rpc/rpcb_clnt.h"
 }
 
-#include <assert.h>
+#include <cassert>
 #include <sys/socket.h>
 #include <sys/un.h>
 
@@ -30,11 +30,11 @@ extern "C" {
 #include "nfs/nfs_utils.h"
 #include "utils/common_utils.h"
 #include "utils/thread_utils.h"
-#include "dnfsd/dnfs_meta_data.h"
 #include "dnfsd/dnfs_ntirpc.h"
 #include "dnfsd/dnfs_config.h"
 #include "dnfsd/dnfs_auth.h"
 #include "dnfsd/dnfs_exports.h"
+#include "utils/net_utils.h"
 
 using namespace std;
 
@@ -42,15 +42,15 @@ using namespace std;
 
 // tirpc的控制参数集合
 tirpc_pkg_params ntirpc_pp = {
-    TIRPC_DEBUG_FLAG_DEFAULT,
-    0,
-    ThreadPool::set_thread_name,
-    rpc_warnx,
-    rpc_free,
-    rpc_malloc,
-    rpc_malloc_aligned,
-    rpc_calloc,
-    rpc_realloc, // 根据新的大小对之前已经分配的内存区域进行重新分配，新的区域会复制之前区域的数据
+        TIRPC_DEBUG_FLAG_DEFAULT,
+        0,
+        ThreadPool::set_thread_name,
+        rpc_warnx,
+        rpc_free,
+        rpc_malloc,
+        rpc_malloc_aligned,
+        rpc_calloc,
+        rpc_realloc, // 根据新的大小对之前已经分配的内存区域进行重新分配，新的区域会复制之前区域的数据
 };
 
 /* 初始化ntirpc相关的基本参数配置 */
@@ -64,17 +64,17 @@ static int setup_ntirpc_params() {
     memset(&svc_params, 0, sizeof(svc_params));
 
     /* 对rpc连接断开，创建连接分配请求资源和结束连接释放请求资源三个操作设置相应的callback函数 */
-    svc_params.disconnect_cb = NULL;
+    svc_params.disconnect_cb = nullptr;
     svc_params.alloc_cb = alloc_dnfs_request;
     svc_params.free_cb = free_dnfs_request;
 
     /* 设置RPC的运行模式标签 */
-    svc_params.flags = SVC_INIT_EPOLL;	/* use EPOLL event mgmt */
+    svc_params.flags = SVC_INIT_EPOLL;    /* use EPOLL event mgmt */
     svc_params.flags |= SVC_INIT_NOREG_XPRTS; /* don't call xprt_register */
 
     /* 能够同时存在的连接个数 */
     svc_params.max_connections = nfs_param.core_param.rpc.max_connections;
-    svc_params.max_events = 1024;	/* length of epoll event queue */
+    svc_params.max_events = 1024;    /* length of epoll event queue */
     svc_params.ioq_send_max =
             nfs_param.core_param.rpc.max_send_buffer_size;
     svc_params.channels = N_EVENT_CHAN;
@@ -98,7 +98,7 @@ static int setup_ntirpc_params() {
     for (ix = 0; ix < EVCHAN_SIZE; ++ix) {
         rpc_evchan[ix].chan_id = 0;
         code = svc_rqst_new_evchan(&rpc_evchan[ix].chan_id,
-                                   NULL /* u_data */,
+                                   nullptr /* u_data */,
                                    SVC_RQST_FLAG_NONE);
         if (code) {
             LOG(MODULE_NAME, L_ERROR,
@@ -125,7 +125,7 @@ void init_ntirpc_settings() {
 }
 
 // 用于ntirpc的警告信息输出和处理
-void rpc_warnx(const char* format, ...) {
+void rpc_warnx(const char *format, ...) {
     va_list args;
     LOG(MODULE_NAME, L_WARN, format, args);
 }
@@ -141,10 +141,9 @@ void rpc_free(void *p, size_t n __attribute__ ((unused))) {
 }
 
 // 该函数负责分配新的内存区域，并在分配失败的时候打印错误信息
-void* rpc_malloc(size_t n, const char *file, int line, const char *function)
-{
+void *rpc_malloc(size_t n, const char *file, int line, const char *function) {
     void *p = malloc(n);
-    if (p == NULL) {
+    if (p == nullptr) {
         LOG(MODULE_NAME, L_ERROR,
             "Error occurred in %s in file %s:%d from %s",
             function, file, line, "gsh_malloc");
@@ -154,13 +153,12 @@ void* rpc_malloc(size_t n, const char *file, int line, const char *function)
 }
 
 // 包含对齐的内存空间分配函数
-void* rpc_malloc_aligned(size_t a, size_t n,
-                         const char *file, int line, const char *function)
-{
+void *rpc_malloc_aligned(size_t a, size_t n,
+                         const char *file, int line, const char *function) {
     void *p;
     if (posix_memalign(&p, a, n) != 0)
-        p = NULL;
-    if (p == NULL) {
+        p = nullptr;
+    if (p == nullptr) {
         LOG(MODULE_NAME, L_ERROR,
             "Error occurred in %s in file %s:%d from %s",
             function, file, line, "gsh_malloc_aligned");
@@ -170,10 +168,9 @@ void* rpc_malloc_aligned(size_t a, size_t n,
 }
 
 // 根据给定的结构体个数和结构体大小分配空间
-void* rpc_calloc(size_t n, size_t s, const char *file, int line, const char *function)
-{
+void *rpc_calloc(size_t n, size_t s, const char *file, int line, const char *function) {
     void *p = calloc(n, s);
-    if (p == NULL) {
+    if (p == nullptr) {
         LOG(MODULE_NAME, L_ERROR,
             "Error occurred in %s in file %s:%d from %s",
             function, file, line, "gsh_calloc");
@@ -183,10 +180,9 @@ void* rpc_calloc(size_t n, size_t s, const char *file, int line, const char *fun
 }
 
 // 根据新的大小对之前已经分配的内存区域进行重新分配，新的区域会复制之前区域的数据
-void* rpc_realloc(void *p, size_t n, const char *file, int line, const char *function)
-{
+void *rpc_realloc(void *p, size_t n, const char *file, int line, const char *function) {
     void *p2 = realloc(p, n);
-    if (n != 0 && p2 == NULL) {
+    if (n != 0 && p2 == nullptr) {
         LOG(MODULE_NAME, L_ERROR,
             "Error occurred in %s in file %s:%d from %s",
             function, file, line, "gsh_realloc");
@@ -200,10 +196,10 @@ void* rpc_realloc(void *p, size_t n, const char *file, int line, const char *fun
  * 相关的操作函数指针，并存放了xdr数据的指针和数据相关信息 */
 struct svc_req *alloc_dnfs_request(SVCXPRT *xprt, XDR *xdrs) {
     /* 首先会为存放请求的结构化数据申请内存空间 */
-    nfs_request_t *reqdata = reinterpret_cast<nfs_request_t *>(
+    auto *reqdata = reinterpret_cast<nfs_request_t *>(
             calloc(1, sizeof(nfs_request_t)));
 
-    LOG_IF(reqdata == NULL, MODULE_NAME, EXIT_ERROR,
+    LOG_IF(reqdata == nullptr, MODULE_NAME, EXIT_ERROR,
            "Failed to allocate memory for %s", __func__)
     LOG_IF(!xprt, MODULE_NAME, EXIT_ERROR, "Missing xprt for %s", __func__)
     LOG_IF(!xdrs, MODULE_NAME, EXIT_ERROR, "Missing xdrs for %s", __func__)
@@ -228,9 +224,9 @@ struct svc_req *alloc_dnfs_request(SVCXPRT *xprt, XDR *xdrs) {
 
 /* 从原始的地址数据中获取地址和端口号信息并转化为字符串表示 */
 static string format_xprt_addr(SVCXPRT *xprt) {
-    sockaddr_storage addr;
+    sockaddr_storage addr{};
     struct netbuf *phostaddr = svc_getcaller_netbuf(xprt);
-    assert(phostaddr->len <= sizeof(sockaddr_storage) && phostaddr->buf != NULL);
+    assert(phostaddr->len <= sizeof(sockaddr_storage) && phostaddr->buf != nullptr);
     memcpy(&addr, phostaddr->buf, phostaddr->len);
     return format(&addr);
 }
@@ -258,7 +254,7 @@ void free_dnfs_request(struct svc_req *req, enum xprt_stat stat) {
     } else {
         LOG(MODULE_NAME, D_INFO, "SVC_DECODE on %p fd %d (%s) xid=%" PRIu32
                 " returned %s", xprt, xprt->xp_fd, format_xprt_addr(xprt).c_str(),
-                reqdata->svc.rq_msg.rm_xid, xprt_stat_s[stat]);
+            reqdata->svc.rq_msg.rm_xid, xprt_stat_s[stat]);
     }
 
     LOG(MODULE_NAME, L_INFO, "%s: %p fd %d xp_refcnt %" PRIu32,
@@ -270,7 +266,7 @@ void free_dnfs_request(struct svc_req *req, enum xprt_stat stat) {
 }
 
 /* 如果收到的RPC请求Program代码错误，调用该函数处理 */
-static enum xprt_stat nfs_rpc_noprog(nfs_request_t *reqdata) {
+enum xprt_stat nfs_rpc_noprog(nfs_request_t *reqdata) {
     LOG(MODULE_NAME, D_ERROR,
         "Invalid Program number %" PRIu32,
         reqdata->svc.rq_msg.cb_prog);
@@ -287,9 +283,9 @@ static enum nfs_req_result complete_request(
         /* The request was dropped */
         LOG(MODULE_NAME, D_INFO,
             "Drop request rpc_xid=%" PRIu32
-            ", program %" PRIu32
-            ", version %" PRIu32
-            ", function %" PRIu32,
+                    ", program %" PRIu32
+                    ", version %" PRIu32
+                    ", function %" PRIu32,
             reqdata->svc.rq_msg.rm_xid,
             reqdata->svc.rq_msg.cb_prog,
             reqdata->svc.rq_msg.cb_vers,
@@ -308,10 +304,10 @@ static enum nfs_req_result complete_request(
         LOG(MODULE_NAME, D_INFO,
             "NFS DISPATCHER: FAILURE: Error while calling svc_sendreply on"
             " a new request. rpcxid=%" PRIu32
-            " socket=%d function:%s program:%" PRIu32
-            " nfs version:%" PRIu32
-            " proc:%" PRIu32
-            " errno: %d",
+                    " socket=%d function:%s program:%" PRIu32
+                    " nfs version:%" PRIu32
+                    " proc:%" PRIu32
+                    " errno: %d",
             reqdata->svc.rq_msg.rm_xid,
             xprt->xp_fd,
             reqdesc->funcname,
@@ -329,8 +325,7 @@ static enum nfs_req_result complete_request(
     return rc;
 }
 
-void free_args(nfs_request_t *reqdata)
-{
+void free_args(nfs_request_t *reqdata) {
     const nfs_function_desc_t *reqdesc = reqdata->funcdesc;
 
     /* Free the allocated resources once the work is done */
@@ -340,10 +335,10 @@ void free_args(nfs_request_t *reqdata)
         || (reqdata->svc.rq_msg.cb_vers == 4)) {
         if (!xdr_free(reqdesc->xdr_decode_func,
                       &reqdata->arg_nfs)) {
-            LOG(MODULE_NAME,L_ERROR,
-                    "%s FAILURE: Bad xdr_free for %s",
-                    __func__,
-                    reqdesc->funcname);
+            LOG(MODULE_NAME, L_ERROR,
+                "%s FAILURE: Bad xdr_free for %s",
+                __func__,
+                reqdesc->funcname);
         }
     }
 
@@ -352,7 +347,7 @@ void free_args(nfs_request_t *reqdata)
 }
 
 /* RPC处理主程序入口 */
-static enum xprt_stat nfs_rpc_process_request(nfs_request_t *reqdata, bool retry) {
+enum xprt_stat nfs_rpc_process_request(nfs_request_t *reqdata, bool retry) {
     const nfs_function_desc_t *reqdesc = reqdata->funcdesc;
     nfs_arg_t *arg_nfs = &reqdata->arg_nfs;
     SVCXPRT *xprt = reqdata->svc.rq_xprt;
@@ -369,11 +364,19 @@ static enum xprt_stat nfs_rpc_process_request(nfs_request_t *reqdata, bool retry
      * nothing but allocate a result object and mark the request (ie, the
      * path is short, lockless, and does no hash/search). */
     dpq_status = nfs_dupreq_start(reqdata);
+    /*判断是否成功申请内存*/
+    if (dpq_status == DUPREQ_SUCCESS) {
+        /* A new request, continue processing it. */
+        LOG(MODULE_NAME, L_INFO,
+            "Requested memory successfully");
+    } else {
+        goto freeargs;
+    }
 
     LOG(MODULE_NAME, D_INFO,
         "About to authenticate Prog=%" PRIu32
-        ", vers=%" PRIu32 ", proc=%" PRIu32
-        ", xid=%" PRIu32 ", SVCXPRT=%p, fd=%d",
+                ", vers=%" PRIu32 ", proc=%" PRIu32
+                ", xid=%" PRIu32 ", SVCXPRT=%p, fd=%d",
         reqdata->svc.rq_msg.cb_prog,
         reqdata->svc.rq_msg.cb_vers,
         reqdata->svc.rq_msg.cb_proc,
@@ -412,10 +415,10 @@ static enum xprt_stat nfs_rpc_process_request(nfs_request_t *reqdata, bool retry
     if (!SVCAUTH_CHECKSUM(&reqdata->svc)) {
         LOG(MODULE_NAME, D_INFO,
             "SVCAUTH_CHECKSUM failed for Program %" PRIu32
-            ", Version %" PRIu32
-            ", Function %" PRIu32
-            ", xid=%" PRIu32
-            ", SVCXPRT=%p, fd=%d",
+                    ", Version %" PRIu32
+                    ", Function %" PRIu32
+                    ", xid=%" PRIu32
+                    ", SVCXPRT=%p, fd=%d",
             reqdata->svc.rq_msg.cb_prog,
             reqdata->svc.rq_msg.cb_vers,
             reqdata->svc.rq_msg.cb_proc,
@@ -433,7 +436,7 @@ static enum xprt_stat nfs_rpc_process_request(nfs_request_t *reqdata, bool retry
     /* Set up initial export permissions that don't allow anything. */
     export_check_access();
 
-retry_after_drc_suspend:
+    retry_after_drc_suspend:
     /* If we come here on a retry after drc suspend, then we already did
      * the stuff above.
      */
@@ -461,19 +464,17 @@ retry_after_drc_suspend:
     }
     complete_request(reqdata, static_cast<nfs_req_result>(rc));
 
-    /*释放申请的内存*/
+    freeargs:
     free_args(reqdata);
-
     return SVC_STAT(xprt);
 }
 
 /* 如果处理协议存在但是相应的函数不存在，那么会执行该函数处理错误 */
-static enum xprt_stat nfs_rpc_noproc(nfs_request_t *reqdata)
-{
+enum xprt_stat nfs_rpc_noproc(nfs_request_t *reqdata) {
     LOG(MODULE_NAME, D_ERROR,
         "Invalid Procedure %" PRIu32
-        " in protocol Version %" PRIu32
-        " for Program number %" PRIu32,
+                " in protocol Version %" PRIu32
+                " for Program number %" PRIu32,
         reqdata->svc.rq_msg.cb_proc,
         reqdata->svc.rq_msg.cb_vers,
         reqdata->svc.rq_msg.cb_prog);
@@ -481,61 +482,11 @@ static enum xprt_stat nfs_rpc_noproc(nfs_request_t *reqdata)
 }
 
 /* 如果出现了一个不支持的协议版本，那么会调用该函数处理 */
-static enum xprt_stat nfs_rpc_novers(nfs_request_t *reqdata)
-{
+enum xprt_stat nfs_rpc_novers(nfs_request_t *reqdata) {
     LOG(MODULE_NAME, D_ERROR,
         "Invalid protocol Version %" PRIu32
-        " for Program number %" PRIu32,
+                " for Program number %" PRIu32,
         reqdata->svc.rq_msg.cb_vers,
         reqdata->svc.rq_msg.cb_prog);
     return svcerr_progvers(&reqdata->svc, NFS_V3, NFS_V3);
-}
-
-/* 对于一个有效的NFS调用，找到匹配的处理函数调用函数处理请求并返回结果 */
-enum xprt_stat nfs_rpc_valid_NFS(struct svc_req *req) {
-    nfs_request_t *reqdata = get_parent_struct_addr(
-            req, struct nfs_request, svc);
-
-    reqdata->funcdesc = &invalid_funcdesc;
-
-    if (req->rq_msg.cb_prog != nfs_param.core_param.program) {
-        return nfs_rpc_noprog(reqdata);
-    }
-
-    if (req->rq_msg.cb_vers == NFS_V3) {
-        if (req->rq_msg.cb_proc <= NFSPROC3_COMMIT) {
-            reqdata->funcdesc =
-                    &nfs3_func_desc[req->rq_msg.cb_proc];
-            return nfs_rpc_process_request(reqdata, false);
-        }
-        return nfs_rpc_noproc(reqdata);
-    }
-
-    return nfs_rpc_novers(reqdata);
-}
-
-/* Dispatch after rendezvous，该函数用于在接收到指定协议的UDP数据，如NFSV23的RPC请求后
- * 执行该函数进行二次分发，分发给实际RPC对应的处理函数执行处理操作并返回数据 */
-enum xprt_stat nfs_rpc_dispatch_udp_NFS(SVCXPRT *xprt) {
-    LOG(MODULE_NAME, D_INFO,
-        "NFS UDP request for SVCXPRT %p fd %d",
-        xprt, xprt->xp_fd);
-    xprt->xp_dispatch.process_cb = nfs_rpc_valid_NFS;
-    return SVC_RECV(xprt);
-}
-
-/* 该函数用于在接收到指定协议的TCP数据 */
-enum xprt_stat nfs_rpc_dispatch_tcp_NFS(SVCXPRT *xprt) {
-    LOG(MODULE_NAME, D_INFO,
-        "NFS TCP request on SVCXPRT %p fd %d",
-        xprt, xprt->xp_fd);
-    xprt->xp_dispatch.process_cb = nfs_rpc_valid_NFS;
-    return SVC_STAT(xprt->xp_parent);
-}
-
-/* 一个占位函数，基本不会使用到 */
-void nfs_rpc_dispatch_dummy([[maybe_unused]] struct svc_req *req) {
-    LOG(MODULE_NAME, L_ERROR,
-        "Possible error, function %s should never be called",
-        __func__);
 }

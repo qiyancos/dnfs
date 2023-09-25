@@ -20,11 +20,11 @@
 #define FSF3_CANSETTIME 0x0010
 
 
-#define MODULE_NAME "DNFS"
+#define MODULE_NAME "NFS"
 int nfs3_fsinfo(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
 {
 //    struct fsal_obj_handle *obj = nullptr;
-    int rc = NFS_REQ_ERROR;
+    int rc = NFS_REQ_OK;
     FSINFO3resok * const FSINFO_FIELD =
             &res->res_fsinfo3.FSINFO3res_u.resok;
 //    fsal_dynamicfsinfo_t dynamicinfo;
@@ -105,7 +105,7 @@ int nfs3_fsinfo(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
 //    nfs_SetPostOpAttr(obj,
 //                      &res->res_fsinfo3.FSINFO3res_u.resok.obj_attributes,
 //                      NULL);
-    res->res_fsinfo3.status = NFS3ERR_PERM;
+    res->res_fsinfo3.status = NFS3_OK;
 //
 //    out:
 //
