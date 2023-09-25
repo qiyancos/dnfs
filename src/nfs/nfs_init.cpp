@@ -20,6 +20,20 @@
 
 #define MODULE_NAME "NFS"
 
+/*服务udp句柄*/
+SVCXPRT *udp_xprt;
+/*服务tcp句柄*/
+SVCXPRT *tcp_xprt;
+
+/*udp协议套接字*/
+int udp_socket;
+/*tcp协议套接字*/
+int tcp_socket;
+
+/* NFSV3的socket绑定信息 */
+proto_data nfsv3_sock_info;
+
+
 /* 对于一个有效的NFS调用，找到匹配的处理函数调用函数处理请求并返回结果 */
 enum xprt_stat nfs_rpc_valid_NFS(struct svc_req *req) {
 
@@ -69,7 +83,7 @@ enum xprt_stat nfs_rpc_dispatch_tcp_NFS(SVCXPRT *xprt) {
  * */
 void nfs_init_svc(netconfig *netconfig_udpv4, netconfig *netconfig_tcpv4) {
     init_svc(udp_socket, tcp_socket,
-             udp_xprt, tcp_xprt,
+             &udp_xprt, &tcp_xprt,
              netconfig_udpv4, netconfig_tcpv4,
              nfs_rpc_dispatch_udp_NFS,
              nfs_rpc_dispatch_tcp_NFS,

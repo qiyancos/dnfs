@@ -307,31 +307,29 @@ static enum xprt_stat nfs_rpc_free_user_data(SVCXPRT *xprt) {
  * params udp_socket:udp协议套接字
   * params udp_xprt_func:udp接口处理方法
  * */
-SVCXPRT *create_udp_svcxprts(SVCXPRT *udp_xprt, const std::string &svc_name,
-                             int &udp_socket, xprt_stat (*udp_xprt_func)(SVCXPRT *xprt)) {
+void create_udp_svcxprts(SVCXPRT **udp_xprt, const std::string &svc_name,
+                         int &udp_socket, xprt_stat (*udp_xprt_func)(SVCXPRT *xprt)) {
     LOG(MODULE_NAME, D_INFO, "Create new %s xprts", svc_name.c_str());
 
     /* 创建UDP相关的XPRT */
-    udp_xprt = svc_dg_create(udp_socket,
-                             nfs_param.core_param.rpc.max_send_buffer_size,
-                             nfs_param.core_param.rpc.max_recv_buffer_size);
+    *udp_xprt = svc_dg_create(udp_socket,
+                              nfs_param.core_param.rpc.max_send_buffer_size,
+                              nfs_param.core_param.rpc.max_recv_buffer_size);
 
-    if (udp_xprt == nullptr) {
+    if (*udp_xprt == nullptr) {
         LOG(MODULE_NAME, EXIT_ERROR, "%s Cannot allocate UDP SVCXPRT",
             svc_name.c_str());
     }
 
-    udp_xprt->xp_dispatch.rendezvous_cb = (svc_xprt_fun_t) udp_xprt_func;
+    (*udp_xprt)->xp_dispatch.rendezvous_cb = (svc_xprt_fun_t) udp_xprt_func;
 
     /* Hook xp_free_user_data (finalize/free private data) */
-    (void) SVC_CONTROL(udp_xprt, SVCSET_XP_FREE_USER_DATA,
+    (void) SVC_CONTROL(*udp_xprt, SVCSET_XP_FREE_USER_DATA,
                        (void *) nfs_rpc_free_user_data);
 
     (void) svc_rqst_evchan_reg(rpc_evchan[UDP_UREG_CHAN].chan_id,
-                               udp_xprt,
+                               *udp_xprt,
                                SVC_RQST_FLAG_XPRT_UREG);
-
-    return udp_xprt;
 }
 
 /* 给每一个协议创建相应的tcp svcxprt网络传输句柄，每一个协议对应的每一个网络协议都
@@ -341,30 +339,28 @@ SVCXPRT *create_udp_svcxprts(SVCXPRT *udp_xprt, const std::string &svc_name,
  * params tcp_socket:tcp协议套接字
  * params tcp_xprt_func:tcp接口处理方法
  * */
-SVCXPRT *create_tcp_svcxprts(SVCXPRT *tcp_xprt, const std::string &svc_name,
-                             int &tcp_socket, xprt_stat (*tcp_xprt_func)(SVCXPRT *xprt)) {
+void create_tcp_svcxprts(SVCXPRT **tcp_xprt, const std::string &svc_name,
+                         int &tcp_socket, xprt_stat (*tcp_xprt_func)(SVCXPRT *xprt)) {
     LOG(MODULE_NAME, D_INFO, "Create new %s xprts", svc_name.c_str());
 
     /* 创建TCP相关的XPRT */
-    tcp_xprt = svc_vc_ncreatef(tcp_socket,
-                               nfs_param.core_param.rpc.max_send_buffer_size,
-                               nfs_param.core_param.rpc.max_recv_buffer_size,
-                               SVC_CREATE_FLAG_CLOSE | SVC_CREATE_FLAG_LISTEN);
-    if (tcp_xprt == nullptr) {
+    *tcp_xprt = svc_vc_ncreatef(tcp_socket,
+                                nfs_param.core_param.rpc.max_send_buffer_size,
+                                nfs_param.core_param.rpc.max_recv_buffer_size,
+                                SVC_CREATE_FLAG_CLOSE | SVC_CREATE_FLAG_LISTEN);
+    if (*tcp_xprt == nullptr) {
         LOG(MODULE_NAME, EXIT_ERROR, "%s Cannot allocate TCP SVCXPRT",
             svc_name.c_str());
     }
 
-    tcp_xprt->xp_dispatch.rendezvous_cb = (svc_xprt_fun_t) tcp_xprt_func;
+    (*tcp_xprt)->xp_dispatch.rendezvous_cb = (svc_xprt_fun_t) tcp_xprt_func;
 
     /* Hook xp_free_user_data (finalize/free private data) */
-    (void) SVC_CONTROL(tcp_xprt, SVCSET_XP_FREE_USER_DATA,
+    (void) SVC_CONTROL(*tcp_xprt, SVCSET_XP_FREE_USER_DATA,
                        (void *) nfs_rpc_free_user_data);
 
     (void) svc_rqst_evchan_reg(rpc_evchan[TCP_UREG_CHAN].chan_id,
-                               tcp_xprt, SVC_RQST_FLAG_XPRT_UREG);
-
-    return tcp_xprt;
+                               *tcp_xprt, SVC_RQST_FLAG_XPRT_UREG);
 }
 
 
@@ -385,13 +381,13 @@ void nfs_rpc_dispatch_dummy([[maybe_unused]] struct svc_req *req) {
  * params program_number:项目注册编号
  * */
 static void
-register_rpc_program(SVCXPRT *udp_xprt, SVCXPRT *tcp_xprt, netconfig *netconfig_udpv4,
+register_rpc_program(SVCXPRT **udp_xprt, SVCXPRT **tcp_xprt, netconfig *netconfig_udpv4,
                      netconfig *netconfig_tcpv4, u_long program_ver,
                      const string &svc_name, const rpcprog_t &program_number) {
     LOG(MODULE_NAME, D_INFO, "%s Registering V%d/UDP", svc_name.c_str(), program_ver);
 
     /* XXXX fix svc_register! */
-    if (!svc_reg(udp_xprt, program_number, program_ver,
+    if (!svc_reg(*udp_xprt, program_number, program_ver,
                  nfs_rpc_dispatch_dummy, netconfig_udpv4)) {
         LOG(MODULE_NAME, EXIT_ERROR, "%s Cannot register V%d on UDP", svc_name.c_str(),
             program_ver);
@@ -399,7 +395,7 @@ register_rpc_program(SVCXPRT *udp_xprt, SVCXPRT *tcp_xprt, netconfig *netconfig_
 
     LOG(MODULE_NAME, D_INFO, "%s Registering V%d/TCP", svc_name.c_str(), program_ver);
 
-    if (!svc_reg(tcp_xprt, program_number, program_ver,
+    if (!svc_reg(*tcp_xprt, program_number, program_ver,
                  nfs_rpc_dispatch_dummy, netconfig_tcpv4)) {
         LOG(MODULE_NAME, EXIT_ERROR, "%s Cannot register V%d on TCP", svc_name.c_str(),
             program_ver);
@@ -422,9 +418,10 @@ register_rpc_program(SVCXPRT *udp_xprt, SVCXPRT *tcp_xprt, netconfig *netconfig_
  * params program_number:项目注册编号
  * */
 void init_svc(int &udp_socket, int &tcp_socket,
-              SVCXPRT *udp_xprt, SVCXPRT *tcp_xprt,
+              SVCXPRT **udp_xprt, SVCXPRT **tcp_xprt,
               netconfig *netconfig_udpv4, netconfig *netconfig_tcpv4,
-              xprt_stat (*udp_xprt_func)(SVCXPRT *xprt), xprt_stat (*tcp_xprt_func)(SVCXPRT *xprt),
+              xprt_stat (*udp_xprt_func)(SVCXPRT *xprt),
+              xprt_stat (*tcp_xprt_func)(SVCXPRT *xprt),
               u_long program_ver,
               const std::string &svc_name,
               proto_data &sock_info,
@@ -455,8 +452,8 @@ void init_svc(int &udp_socket, int &tcp_socket,
     unregister_rpc(netconfig_udpv4, netconfig_tcpv4, program_number);
 
     /* 初始化网络传输的xprt句柄 */
-    udp_xprt = create_udp_svcxprts(udp_xprt, svc_name, tcp_socket, udp_xprt_func);
-    tcp_xprt = create_tcp_svcxprts(tcp_xprt, svc_name, udp_socket, tcp_xprt_func);
+    create_udp_svcxprts(udp_xprt, svc_name, udp_socket, udp_xprt_func);
+    create_tcp_svcxprts(tcp_xprt, svc_name, tcp_socket, tcp_xprt_func);
 
 
     /* 对RPC的程序进行正式的注册，包括UDP和TCP，一旦完成注册，就可以开始接受rpc请求了 */

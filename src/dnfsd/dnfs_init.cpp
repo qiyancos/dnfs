@@ -175,19 +175,6 @@ int init_thread_signal_mask() {
 struct netconfig *netconfig_udpv4;
 struct netconfig *netconfig_tcpv4;
 
-/*服务udp句柄*/
-SVCXPRT *udp_xprt;
-/*服务tcp句柄*/
-SVCXPRT *tcp_xprt;
-
-/*udp协议套接字*/
-int udp_socket;
-/*tcp协议套接字*/
-int tcp_socket;
-
-/* NFSV3的socket绑定信息 */
-proto_data nfsv3_sock_info;
-
 /* 初始化nfs服务相关的接口注册操作 */
 static void dnfs_init_svc() {
         /* Get the netconfig entries from /etc/netconfig */
