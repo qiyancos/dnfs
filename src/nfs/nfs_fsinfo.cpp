@@ -12,13 +12,8 @@
  * along with this project.
  *
  */
-#include "nfs/nfs_base.h"
 #include "log/log.h"
-#define FSF3_LINK 0x0001
-#define FSF3_SYMLINK 0x0002
-#define FSF3_HOMOGENEOUS 0x0008
-#define FSF3_CANSETTIME 0x0010
-
+#include "dnfsd/dnfs_meta_data.h"
 
 #define MODULE_NAME "NFS"
 int nfs3_fsinfo(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)

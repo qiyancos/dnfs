@@ -279,13 +279,13 @@ static void bind_tcp_sockets(const string &svc_name, proto_data &sock_info,
 /* 取消项目的rpc绑定
  * params netconfig_udpv4:主机udp4网络配置
  * params netconfig_tcpv4:主机tcp4网络配置
+ * params program_ver:服务版本
  * params program_number:项目注册编号
  * */
-static void unregister_rpc(netconfig *netconfig_udpv4, netconfig *netconfig_tcpv4,
+static void unregister_rpc(netconfig *netconfig_udpv4, netconfig *netconfig_tcpv4,const u_long &program_ver,
                            const rpcprog_t &program_number) {
-//    const rpcprog_t& prog = nfs_param.core_param.program;
-    rpcb_unset(program_number, NFS_V3, netconfig_udpv4);
-    rpcb_unset(program_number, NFS_V3, netconfig_tcpv4);
+    rpcb_unset(program_number, program_ver, netconfig_udpv4);
+    rpcb_unset(program_number, program_ver, netconfig_tcpv4);
 }
 
 /**
@@ -449,7 +449,7 @@ void init_svc(int &udp_socket, int &tcp_socket,
     LOG(MODULE_NAME, L_INFO, "%s Bind sockets successful", svc_name.c_str());
 
     /* 从portmapper/rpcbind中取消当前已有rpc程序的绑定关系以便进行新的绑定 */
-    unregister_rpc(netconfig_udpv4, netconfig_tcpv4, program_number);
+    unregister_rpc(netconfig_udpv4, netconfig_tcpv4,program_ver, program_number);
 
     /* 初始化网络传输的xprt句柄 */
     create_udp_svcxprts(udp_xprt, svc_name, udp_socket, udp_xprt_func);

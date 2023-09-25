@@ -21,7 +21,7 @@ extern "C" {
 #include "nfs/nfs_xdr.h"
 #include "log/log.h"
 
-#define MODULE_NAME "DNFS"
+#define MODULE_NAME "NFS"
 
 bool xdr_nfs3_uint32(XDR *xdrs, nfs3_uint32 *objp) {
     if (!xdr_u_int(xdrs, objp))

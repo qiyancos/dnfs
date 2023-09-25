@@ -24,7 +24,7 @@
 
 /* 初始化日志相关的配置 */
 void init_logging(const std::string& exec_name, const std::string& nfs_host_name,
-                  const log_level_t debug_level, const bool detach_flag,
+                  log_level_t debug_level, bool detach_flag,
                   const std::string& arg_log_path);
 
 /* 初始化错误信号的处理函数 */

@@ -16,7 +16,7 @@
 #ifndef DNFSD_NFS_XDR_H
 #define DNFSD_NFS_XDR_H
 
-#include "nfs_args.h"
+#include "dnfsd/dnfs_meta_data.h"
 extern bool xdr_nfs3_uint32(XDR *xdrs, nfs3_uint32 *objp);
 extern bool xdr_size3(XDR *xdrs, size3 *objp);
 extern bool xdr_nfs3_uint64(XDR *xdrs, nfs3_uint64 *objp);

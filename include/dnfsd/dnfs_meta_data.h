@@ -23,8 +23,7 @@ extern "C" {
 }
 
 #include <string>
-
-#include "nfs/nfs_base.h"
+#include "nfs/nfs_fsinfo.h"
 
 struct dnfs_request_lookahead {
     uint32_t flags;
@@ -89,11 +88,58 @@ typedef struct nfs_param {
     nfs_core_parameter_t core_param;
 } nfs_parameter_t;
 
-typedef enum protos {
-    P_NFS,			/*< NFS, of course. */
-    P_MNT,			/*< Mount (for v3) */
-    P_COUNT			/*< Number of protocols */
-} protos;
+/*请求参数*/
+union nfs_arg_t {
+    FSINFO3args arg_fsinfo3;
+};
+
+/*结果参数*/
+union nfs_res_t {
+    FSINFO3res res_fsinfo3;
+};
+
+
+#define NOTHING_SPECIAL 0x0000    /* Nothing to be done for this kind of
+				   request */
+#define MAKES_WRITE    0x0001    /* The function modifyes the FSAL
+				   (not permitted for RO FS) */
+#define NEEDS_CRED    0x0002    /* A credential is needed for this
+				   operation */
+#define CAN_BE_DUP    0x0004    /* Handling of dup request can be done
+				   for this request */
+#define SUPPORTS_GSS    0x0008    /* Request may be authenticated by
+				   RPCSEC_GSS */
+#define MAKES_IO    0x0010    /* Request may do I/O
+				   (not allowed on MD ONLY exports */
+
+/* 标准RPC处理函数类别 */
+typedef int (*nfs_protocol_function_t)(nfs_arg_t *,
+                                       struct svc_req *,
+                                       nfs_res_t *);
+
+/* 标准RPC函数后处理释放空间处理类别 */
+typedef void (*nfs_protocol_free_t)(nfs_res_t *);
+
+/* RPC函数的单个函数描述符结构体 */
+typedef struct nfs_function_desc_ {
+    nfs_protocol_function_t service_function;
+    nfs_protocol_free_t free_function;
+    xdrproc_t xdr_decode_func;
+    xdrproc_t xdr_encode_func;
+    const char *funcname;
+    unsigned int dispatch_behaviour;
+} nfs_function_desc_t;
+
+/* 无效操作函数的相应处理类别 */
+const nfs_function_desc_t invalid_funcdesc = {
+        .service_function = nullptr,
+        .free_function = nullptr,
+        .xdr_decode_func = (xdrproc_t) xdr_void,
+        .xdr_encode_func = (xdrproc_t) xdr_void,
+        .funcname = "invalid_function",
+        .dispatch_behaviour = NOTHING_SPECIAL,
+};
+
 
 typedef struct nfs_request {
     struct svc_req svc;

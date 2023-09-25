@@ -87,9 +87,11 @@ static void bind_tcp_sockets(const std::string &svc_name, proto_data &sock_info,
 /* 取消项目的rpc绑定
  * params netconfig_udpv4:主机udp4网络配置
  * params netconfig_tcpv4:主机tcp4网络配置
+ * params program_ver:服务版本
  * params program_number:项目注册编号
  * */
 static void unregister_rpc(netconfig *netconfig_udpv4, netconfig *netconfig_tcpv4,
+                           const u_long &program_ver,
                            const rpcprog_t &program_number);
 
 static enum xprt_stat nfs_rpc_free_user_data(SVCXPRT *xprt);
@@ -102,7 +104,7 @@ static enum xprt_stat nfs_rpc_free_user_data(SVCXPRT *xprt);
   * params udp_xprt_func:udp接口处理方法
  * */
 void create_udp_svcxprts(SVCXPRT **udp_xprt, const std::string &svc_name,
-                             int &udp_socket, xprt_stat (*udp_xprt_func)(SVCXPRT *xprt));
+                         int &udp_socket, xprt_stat (*udp_xprt_func)(SVCXPRT *xprt));
 
 /* 给每一个协议创建相应的tcp svcxprt网络传输句柄，每一个协议对应的每一个网络协议都
  * 有一个单独的XPRT传输句柄，用来执行后续的处理操作
@@ -112,7 +114,7 @@ void create_udp_svcxprts(SVCXPRT **udp_xprt, const std::string &svc_name,
  * params tcp_xprt_func:tcp接口处理方法
  * */
 void create_tcp_svcxprts(SVCXPRT **tcp_xprt, const std::string &svc_name,
-                             int &tcp_socket, xprt_stat (*tcp_xprt_func)(SVCXPRT *xprt));
+                         int &tcp_socket, xprt_stat (*tcp_xprt_func)(SVCXPRT *xprt));
 
 /* 一个占位函数，基本不会使用到 */
 void nfs_rpc_dispatch_dummy([[maybe_unused]] struct svc_req *req);

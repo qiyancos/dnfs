@@ -28,7 +28,6 @@ extern "C" {
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
-#include "nfs/nfs_base.h"
 #include "log/log.h"
 #include "log/log_exception.h"
 #include "utils/common_utils.h"
@@ -39,17 +38,18 @@ extern "C" {
 #include "dnfsd/dnfs_init.h"
 #include "dnfsd/dnfs_signal_proc.h"
 #include "nfs/nfs_init.h"
+#include "mnt/mnt_init.h"
 
 using namespace std;
 
 #define MODULE_NAME "main"
 
 /* 初始化日志相关的配置 */
-void init_logging(const string& exec_name, const string& nfs_host_name,
+void init_logging(const string &exec_name, const string &nfs_host_name,
                   const log_level_t debug_level, const bool detach_flag,
-                  const string& arg_log_path) {
+                  const string &arg_log_path) {
     fprintf(stdout, "Start init logging setup\n");
-    const dnfs_logging_config& log_config = dnfs_config.log_config;
+    const dnfs_logging_config &log_config = dnfs_config.log_config;
     /* 日志路径 */
     string log_path;
     if (!arg_log_path.empty()) {
@@ -82,7 +82,7 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
         /* 只检查log_path部分的合法性 */
         try {
             logger.set_log_output(L_INFO, log_path + ":stdout:syslog");
-        } catch (LogException& e) {
+        } catch (LogException &e) {
             fprintf(stderr, "%s\n", e.what());
             exit_process(-1);
         }
@@ -94,7 +94,7 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
         /* 只检查log_path部分的合法性 */
         try {
             logger.set_log_output(log_path);
-        } catch (LogException& e) {
+        } catch (LogException &e) {
             fprintf(stderr, "%s\n", e.what());
             exit_process(-1);
         }
@@ -104,7 +104,7 @@ void init_logging(const string& exec_name, const string& nfs_host_name,
     }
     try {
         logger.set_formatter(log_config.formatter);
-    } catch (LogException& e) {
+    } catch (LogException &e) {
         fprintf(stderr, "%s\n", e.what());
         exit_process(-1);
     }
@@ -134,16 +134,16 @@ void init_check_malloc() {
     p = malloc(0);
     if (p == nullptr) {
         LOG(MODULE_NAME, EXIT_ERROR,
-                 "DNFS's assumption that malloc(0) returns a non-NULL pointer"
-                 " is not true, Ganesha can not work with the memory allocator in use. Aborting.");
+            "DNFS's assumption that malloc(0) returns a non-NULL pointer"
+            " is not true, Ganesha can not work with the memory allocator in use. Aborting.");
     }
     free(p);
 
     p = calloc(0, 0);
     if (p == nullptr) {
         LOG(MODULE_NAME, EXIT_ERROR,
-                 "Ganesha's assumption that calloc(0, 0) returns a non-NULL pointer"
-                 " is not true, Ganesha can not work with the memory allocator in use. Aborting.");
+            "Ganesha's assumption that calloc(0, 0) returns a non-NULL pointer"
+            " is not true, Ganesha can not work with the memory allocator in use. Aborting.");
     }
     free(p);
 }
@@ -177,7 +177,7 @@ struct netconfig *netconfig_tcpv4;
 
 /* 初始化nfs服务相关的接口注册操作 */
 static void dnfs_init_svc() {
-        /* Get the netconfig entries from /etc/netconfig */
+    /* Get the netconfig entries from /etc/netconfig */
     netconfig_udpv4 = (struct netconfig *) getnetconfigent("udp");
     if (netconfig_udpv4 == nullptr)
         LOG(MODULE_NAME, L_ERROR,
@@ -192,13 +192,16 @@ static void dnfs_init_svc() {
 
     /* 初始化默认运行配置中的绑定地址数据 */
     if (!inet_pton(nfs_param.core_param.bind_addr.sin_family,
-              nfs_param.core_param.bind_addr_str.c_str(),
-              &nfs_param.core_param.bind_addr.sin_addr)) {
+                   nfs_param.core_param.bind_addr_str.c_str(),
+                   &nfs_param.core_param.bind_addr.sin_addr)) {
         LOG(MODULE_NAME, EXIT_ERROR, "Illegal bing ipv4 addr \"%s\" for nfsv3",
             nfs_param.core_param.bind_addr_str.c_str());
     }
 
-    nfs_init_svc(netconfig_udpv4,netconfig_tcpv4);
+    /*注册nfs服务*/
+    nfs_init_svc(netconfig_udpv4, netconfig_tcpv4);
+    /*注册mnt服务*/
+    mnt_init_svc(netconfig_udpv4, netconfig_tcpv4);
 
 }
 

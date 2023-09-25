@@ -26,8 +26,7 @@
 #include "nfs/nfs_utils.h"
 #include "log/log.h"
 #include "rpc/svc_auth.h"
-
-#define MODULE_NAME "DNFS"
+#define MODULE_NAME "NFS"
 
 /*释放结果存储空间*/
 void nfs_dupreq_rele(nfs_request_t *reqnfs)

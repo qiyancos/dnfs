@@ -19,5 +19,6 @@ target_link_libraries(dnfsd
         ${YAML_CPP_LIBRARIES}
         stdc++fs
         nfs
+        mnt
         file
 )

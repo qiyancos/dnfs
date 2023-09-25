@@ -12,8 +12,12 @@
  * along with this project.
  *
  */
+/*存放nfs基础数据*/
 #ifndef DNFSD_NFS_ARGS_H
 #define DNFSD_NFS_ARGS_H
+extern "C" {
+#include "rpc/svc.h"
+}
 
 #include "file/file_handle.h"
 
@@ -30,34 +34,11 @@ typedef nfs3_uint32 mode3;
 typedef nfs3_uint64 size3;
 
 typedef nfs3_uint64 fileid3;
-/* We use the fsal_types.h struct fsal_attrlist to avoid copying */
-typedef struct fsal_attrlist fattr3;
-
-typedef struct post_op_attr {
-    bool_t attributes_follow;
-    union {
-        fattr3 attributes;
-    } post_op_attr_u;
-} post_op_attr;
 
 typedef struct nfstime3 {
     nfs3_uint32 tv_sec;
     nfs3_uint32 tv_nsec;
 } nfstime3;
-
-typedef struct FSINFO3resok {
-    post_op_attr obj_attributes;
-    nfs3_uint32 rtmax;
-    nfs3_uint32 rtpref;
-    nfs3_uint32 rtmult;
-    nfs3_uint32 wtmax;
-    nfs3_uint32 wtpref;
-    nfs3_uint32 wtmult;
-    nfs3_uint32 dtpref;
-    size3 maxfilesize;
-    nfstime3 time_delta;
-    nfs3_uint32 properties;
-} FSINFO3resok;
 
 typedef enum nfsstat3 {
     NFS3_OK = 0,
@@ -91,31 +72,6 @@ typedef enum nfsstat3 {
     NFS3ERR_JUKEBOX = 10008
 } nfsstat3;
 
-typedef struct FSINFO3resfail {
-    post_op_attr obj_attributes;
-} FSINFO3resfail;
-
-typedef struct FSINFO3res {
-    nfsstat3 status;
-    union {
-        FSINFO3resok resok;
-        FSINFO3resfail resfail;
-    } FSINFO3res_u;
-} FSINFO3res;
-
-struct FSINFO3args {
-    nfs_fh3 fsroot;
-};
-typedef struct FSINFO3args FSINFO3args;
-
-typedef union nfs_arg_ {
-    FSINFO3args arg_fsinfo3;
-} nfs_arg_t;
-
-typedef union nfs_res_ {
-    FSINFO3res res_fsinfo3;
-} nfs_res_t;
-
 typedef enum ftype3 {
     NF3REG = 1,
     NF3DIR = 2,
@@ -130,5 +86,31 @@ typedef struct specdata3 {
     nfs3_uint32 specdata1;
     nfs3_uint32 specdata2;
 } specdata3;
+
+/* We use the fsal_types.h struct fsal_attrlist to avoid copying */
+typedef struct fsal_attrlist fattr3;
+
+typedef struct post_op_attr {
+    bool_t attributes_follow;
+    union {
+        fsal_attrlist attributes;
+    } post_op_attr_u;
+
+} post_op_attr;
+
+enum nfs_req_result {
+    NFS_REQ_OK,
+    NFS_REQ_DROP,
+    NFS_REQ_ERROR,
+    NFS_REQ_REPLAY,
+    NFS_REQ_ASYNC_WAIT,
+    NFS_REQ_XPRT_DIED,
+    NFS_REQ_AUTH_ERR,
+};
+
+#define FSF3_LINK 0x0001
+#define FSF3_SYMLINK 0x0002
+#define FSF3_HOMOGENEOUS 0x0008
+#define FSF3_CANSETTIME 0x0010
 
 #endif //DNFSD_NFS_ARGS_H
