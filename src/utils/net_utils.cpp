@@ -308,7 +308,7 @@ static enum xprt_stat nfs_rpc_free_user_data(SVCXPRT *xprt) {
   * params udp_xprt_func:udp接口处理方法
  * */
 SVCXPRT *create_udp_svcxprts(SVCXPRT *udp_xprt, const std::string &svc_name,
-                             int &udp_socket, xprt_stat &udp_xprt_func) {
+                             int &udp_socket, xprt_stat (*udp_xprt_func)(SVCXPRT *xprt)) {
     LOG(MODULE_NAME, D_INFO, "Create new %s xprts", svc_name.c_str());
 
     /* 创建UDP相关的XPRT */
@@ -342,7 +342,7 @@ SVCXPRT *create_udp_svcxprts(SVCXPRT *udp_xprt, const std::string &svc_name,
  * params tcp_xprt_func:tcp接口处理方法
  * */
 SVCXPRT *create_tcp_svcxprts(SVCXPRT *tcp_xprt, const std::string &svc_name,
-                             int &tcp_socket, xprt_stat &tcp_xprt_func) {
+                             int &tcp_socket, xprt_stat (*tcp_xprt_func)(SVCXPRT *xprt)) {
     LOG(MODULE_NAME, D_INFO, "Create new %s xprts", svc_name.c_str());
 
     /* 创建TCP相关的XPRT */
@@ -424,7 +424,7 @@ register_rpc_program(SVCXPRT *udp_xprt, SVCXPRT *tcp_xprt, netconfig *netconfig_
 void init_svc(int &udp_socket, int &tcp_socket,
               SVCXPRT *udp_xprt, SVCXPRT *tcp_xprt,
               netconfig *netconfig_udpv4, netconfig *netconfig_tcpv4,
-              xprt_stat &udp_xprt_func, xprt_stat &tcp_xprt_func,
+              xprt_stat (*udp_xprt_func)(SVCXPRT *xprt), xprt_stat (*tcp_xprt_func)(SVCXPRT *xprt),
               u_long program_ver,
               const std::string &svc_name,
               proto_data &sock_info,
