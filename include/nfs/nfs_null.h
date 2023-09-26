@@ -13,9 +13,10 @@
  *
  */
 
-#ifndef DNFSD_NFS_FUNC_H
-#define DNFSD_NFS_FUNC_H
-#include "nfs/nfs_args.h"
+#ifndef DNFSD_NFS_NULL_H
+#define DNFSD_NFS_NULL_H
+union nfs_arg_t;
+union nfs_res_t;
 /* NFS NULL Process function*/
 int nfs_null([[maybe_unused]] nfs_arg_t *arg,
              [[maybe_unused]] struct svc_req *req,
@@ -24,14 +25,4 @@ int nfs_null([[maybe_unused]] nfs_arg_t *arg,
 /* NFS FREE Process Function */
 void nfs_null_free([[maybe_unused]] nfs_res_t *res);
 
-/*
- * This function Implements NFSPROC3_FSINFO.
- * */
-int nfs3_fsinfo(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
-
-/**
- * @brief Free the result structure allocated for nfs3_fsinfo.
- */
-void nfs3_fsinfo_free(nfs_res_t *res);
-
-#endif //DNFSD_NFS_FUNC_H
+#endif //DNFSD_NFS_NULL_H

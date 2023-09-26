@@ -41,13 +41,13 @@ extern nfs_parameter_t nfs_param;
 /* 日志相关的配置信息 */
 struct dnfs_logging_config {
     /* 日志文件的绝对路径 */
-    std::string path = "";
+    std::string path;
 
     /* 日志文件的rotate类型，可以是size或time */
-    std::string limit_type = "";
+    std::string limit_type;
 
     /* 日志文件的rotate信息 */
-    std::string limit_info = "";
+    std::string limit_info;
 
     /* 日志文件rotate后保留的历史文件个数 */
     int backup_count = 30;

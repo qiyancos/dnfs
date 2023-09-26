@@ -19,30 +19,14 @@
 extern "C" {
 #include "rpc/svc.h"
 }
+#include "dnfsd/dnfs_meta_data.h"
 
-enum evchan {
-    UDP_UREG_CHAN,		/*< Put UDP on a dedicated channel */
-    TCP_UREG_CHAN,		/*< Accepts new TCP connections */
-#ifdef _USE_NFS_RDMA
-    RDMA_UREG_CHAN,		/*< Accepts new RDMA connections */
-#endif
-    EVCHAN_SIZE
-};
 #define N_TCP_EVENT_CHAN  3	/*< We don't really want to have too many,
 				   relative to the number of available cores. */
 #define N_EVENT_CHAN (N_TCP_EVENT_CHAN + EVCHAN_SIZE)
 
 /* TIRPC的全局操作处理函数 */
 extern tirpc_pkg_params ntirpc_pp;
-
-/**
- * TI-RPC event channels.  Each channel is a thread servicing an event
- * demultiplexer.
- */
-struct rpc_evchan {
-    uint32_t chan_id;	/*< Channel ID */
-};
-static struct rpc_evchan rpc_evchan[EVCHAN_SIZE];
 
 /* 注册tirpc的处理操作参数 */
 void init_ntirpc_settings();
@@ -72,14 +56,16 @@ struct svc_req *alloc_dnfs_request(SVCXPRT *xprt, XDR *xdrs);
 /* 释放请求数据结构体对应的内存空间并执行其他销毁操作 */
 void free_dnfs_request(struct svc_req *req, enum xprt_stat stat);
 
-/* Dispatch after rendezvous，该函数用于在接收到指定协议的UDP数据，如NFSV23的RPC请求后
- * 执行该函数进行二次分发，分发给实际RPC对应的处理函数执行处理操作并返回数据 */
-enum xprt_stat nfs_rpc_dispatch_udp_NFS(SVCXPRT *xprt);
+/* 如果收到的RPC请求Program代码错误，调用该函数处理 */
+enum xprt_stat nfs_rpc_noprog(nfs_request_t *reqdata);
 
-/* 该函数用于在接收到指定协议的TCP数据 */
-enum xprt_stat nfs_rpc_dispatch_tcp_NFS(SVCXPRT *xprt);
+/* RPC处理主程序入口 */
+enum xprt_stat nfs_rpc_process_request(nfs_request_t *reqdata, bool retry);
 
-/* 一个占位函数，基本不会使用到 */
-void nfs_rpc_dispatch_dummy([[maybe_unused]] struct svc_req *req);
+/* 如果处理协议存在但是相应的函数不存在，那么会执行该函数处理错误 */
+enum xprt_stat nfs_rpc_noproc(nfs_request_t *reqdata);
+
+/* 如果出现了一个不支持的协议版本，那么会调用该函数处理 */
+enum xprt_stat nfs_rpc_novers(nfs_request_t *reqdata);
 
 #endif //DNFSD_DNFS_NTIRPC_H

@@ -1,7 +1,7 @@
 /*
  *
  * Copyright Reserved By All Project Contributors
- * Contributor: Rock Lee lsk_mprc@pku.edu.cn
+ * Contributor: Jiao Yue 3059497228@qq.com
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the MIT License; This program is
@@ -12,18 +12,14 @@
  * along with this project.
  *
  */
+#ifndef DNFSD_MNT_NULL_H
+#define DNFSD_MNT_NULL_H
+union nfs_arg_t;
+union nfs_res_t;
+/* MNT NULL Process function*/
+int mnt_null(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
 
-#include "nfs/nfs_base.h"
-#include "log/log.h"
-#include "dnfsd/dnfs_meta_data.h"
-#define MODULE_NAME "NFS"
-int nfs_null([[maybe_unused]] nfs_arg_t *arg,
-             [[maybe_unused]] struct svc_req *req,
-             [[maybe_unused]] nfs_res_t *res) {
-    LOG(MODULE_NAME, D_INFO, "REQUEST PROCESSING: Calling NFS_NULL");
-    return 0;
-}
+/* MNT FREE Process Function */
+void mnt_null_free(nfs_res_t *res);
 
-void nfs_null_free([[maybe_unused]] nfs_res_t *res) {
-    /* Nothing to do here */
-}
+#endif //DNFSD_MNT_NULL_H

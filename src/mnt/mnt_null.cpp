@@ -12,7 +12,16 @@
  * along with this project.
  *
  */
-#ifndef DNFSD_INIT_UTILS_H
-#define DNFSD_INIT_UTILS_H
+#include "mnt/mnt_null.h"
+#include "log/log.h"
+#include "dnfsd/dnfs_meta_data.h"
+#define MODULE_NAME "MNT"
 
-#endif //DNFSD_INIT_UTILS_H
+int mnt_null(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res){
+    LOG(MODULE_NAME, D_INFO, "REQUEST PROCESSING: Calling MNT_NULL");
+    return NFS3_OK;
+}
+
+void mnt_null_free(nfs_res_t *res) {
+    /* Nothing to do here */
+}

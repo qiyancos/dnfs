@@ -12,7 +12,7 @@
  * along with this project.
  *
  */
-
+/*nfs构建数据*/
 #ifndef NFS_NFS_FUNC_H
 #define NFS_NFS_FUNC_H
 
@@ -21,11 +21,12 @@ extern "C" {
 }
 
 #include "nfs/nfs_xdr.h"
-#include "nfs/nfs_func.h"
-#include "nfs/nfs_args.h"
+#include "nfs/nfs_null.h"
+#include "nfs/nfs_fsinfo.h"
 
 #define    NFS_PROGRAM    100003
 #define    NFS_V3 3
+#define    NFS_PORT 2049
 
 #define    NFSPROC_NULL    0
 #define    NFSPROC_GETATTR    1
@@ -275,16 +276,6 @@ const nfs_function_desc_t nfs3_func_desc[] = {
                 .funcname = "NFS3_FSINFO",
                 .dispatch_behaviour = (NEEDS_CRED)
         }
-};
-
-enum nfs_req_result {
-    NFS_REQ_OK,
-    NFS_REQ_DROP,
-    NFS_REQ_ERROR,
-    NFS_REQ_REPLAY,
-    NFS_REQ_ASYNC_WAIT,
-    NFS_REQ_XPRT_DIED,
-    NFS_REQ_AUTH_ERR,
 };
 
 #endif //NFS_NFS_FUNC_H
