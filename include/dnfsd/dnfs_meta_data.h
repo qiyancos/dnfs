@@ -23,6 +23,7 @@ extern "C" {
 }
 
 #include <string>
+#include "nfs/nfs_null.h"
 #include "nfs/nfs_fsinfo.h"
 
 struct dnfs_request_lookahead {

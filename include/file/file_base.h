@@ -16,7 +16,7 @@
 #ifndef DNFSD_FILE_BASE_H
 #define DNFSD_FILE_BASE_H
 
-#include <stdint.h>
+#include <cstdint>
 #include <sys/types.h>
 
 /**
@@ -48,7 +48,7 @@ typedef uint32_t fsal_aceperm_t;
 typedef uint32_t fsal_aceflag_t;
 
 /** filesystem identifier */
-typedef struct fsal_fsid__ {
+typedef struct fsal_fsid_ {
     uint64_t major;
     uint64_t minor;
 } fsal_fsid_t;
@@ -58,7 +58,7 @@ typedef struct {
     char *utf8string_val;
 } utf8string;
 
-typedef struct fsal_ace__ {
+typedef struct fsal_ace_ {
     fsal_acetype_t type;
     fsal_aceperm_t perm;
 
@@ -70,7 +70,7 @@ typedef struct fsal_ace__ {
     } who;
 } fsal_ace_t;
 
-typedef struct fsal_acl__ {
+typedef struct fsal_acl_ {
     uint32_t naces;
     fsal_ace_t *aces;
     pthread_rwlock_t acl_lock;
@@ -92,7 +92,7 @@ typedef struct fsal_fs_locations {
 } fsal_fs_locations_t;
 
 /** raw device spec */
-typedef struct fsal_dev__ {
+typedef struct fsal_dev_ {
     uint64_t major;
     uint64_t minor;
 } fsal_dev_t;
@@ -140,7 +140,7 @@ struct fsal_attrlist {
 /**
  * @brief File system dynamic info.
  */
-typedef struct fsal_dynamicfsinfo__ {
+typedef struct fsal_dynamicfsinfo_ {
     uint64_t total_bytes;
     uint64_t free_bytes;
     uint64_t avail_bytes;
@@ -216,7 +216,7 @@ typedef enum fsal_errors_t {
 /**
  * @brief The return status of FSAL calls.
  */
-typedef struct fsal_status__ {
+typedef struct fsal_status_ {
     fsal_errors_t major;	/*< FSAL status code */
     int minor;		/*< Other error code (usually POSIX) */
 } fsal_status_t;

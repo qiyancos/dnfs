@@ -13,9 +13,10 @@
  *
  */
 
-#include "nfs/nfs_base.h"
 #include "log/log.h"
 #include "dnfsd/dnfs_meta_data.h"
+#include "nfs/nfs_null.h"
+
 #define MODULE_NAME "NFS"
 int nfs_null([[maybe_unused]] nfs_arg_t *arg,
              [[maybe_unused]] struct svc_req *req,
