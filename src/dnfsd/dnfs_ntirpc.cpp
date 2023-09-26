@@ -26,6 +26,7 @@ extern "C" {
 #include <sys/un.h>
 
 #include "log/log.h"
+#include "nfs/nfs_args.h"
 #include "nfs/nfs_base.h"
 #include "nfs/nfs_utils.h"
 #include "utils/common_utils.h"
