@@ -3,7 +3,7 @@
  * These are only templates and you can use them
  * as a guideline for developing your own functions.
  */
-
+#include <string.h>
 #include "program.h"
 
 void print_nfs_func()
@@ -286,13 +286,21 @@ void nfs_program_3(char *host)
 	{
 		FSINFO3res *result_20;
 		// FSINFO3args nfsproc3_fsinfo_3_arg;
-		u_int data_len;
-		printf("input data_len:");
-		scanf("%u", &data_len);
-		char data[data_len];
-		char *data_val = data;
+		char src[128];
+		char *src_ptr = src;
 		printf("input data: ");
-		scanf("%s", data_val);
+		scanf("%s", src_ptr);
+		// printf("sizeof: %lu\n", sizeof(data));
+		// printf("strlen: %ld\n", strlen(data));
+		u_int data_len = (u_int)strlen(src) + 1;
+		char *data_val = (char *)malloc(sizeof(char) * data_len);
+		char *dst_ptr = data_val;
+		u_int i = data_len;
+		while (i--)
+		{
+			*(dst_ptr++) = *(src_ptr++);
+		}
+		*(dst_ptr++) = '\0';
 		FSINFO3args nfsproc3_fsinfo_3_arg = {{{data_len, data_val}}};
 		result_20 = nfsproc3_fsinfo_3(&nfsproc3_fsinfo_3_arg, clnt);
 		if (result_20 == (FSINFO3res *)NULL)
@@ -303,27 +311,27 @@ void nfs_program_3(char *host)
 		{
 			printf("-----response-----\n");
 			printf("status: %d\n", result_20->status);
-			if (result_20->status == 0)
-			{
-				printf("resok\n");
-				print_post_op_attr(&result_20->FSINFO3res_u.resok.obj_attributes);
-				printf("rtmax: %u\n", result_20->FSINFO3res_u.resok.rtmax);
-				printf("rtpref: %u\n", result_20->FSINFO3res_u.resok.rtpref);
-				printf("rtmult: %u\n", result_20->FSINFO3res_u.resok.rtmult);
-				printf("wtmax: %u\n", result_20->FSINFO3res_u.resok.wtmax);
-				printf("wtpref: %u\n", result_20->FSINFO3res_u.resok.wtpref);
-				printf("wtmult: %u\n", result_20->FSINFO3res_u.resok.wtmult);
-				printf("dtpref: %u\n", result_20->FSINFO3res_u.resok.dtpref);
-				printf("maxfilesize: %lu\n", result_20->FSINFO3res_u.resok.maxfilesize);
-				printf("time_delta.seconds: %u\n", result_20->FSINFO3res_u.resok.time_delta.seconds);
-				printf("time_delta.nseconds: %u\n", result_20->FSINFO3res_u.resok.time_delta.nseconds);
-				printf("properties: %u\n", result_20->FSINFO3res_u.resok.properties);
-			}
-			else
-			{
-				printf("resfail\n");
-				print_post_op_attr(&result_20->FSINFO3res_u.resfail.obj_attributes);
-			}
+			// if (result_20->status == 0)
+			// {
+			// printf("resok\n");
+			print_post_op_attr(&result_20->FSINFO3res_u.resok.obj_attributes);
+			printf("rtmax: %u\n", result_20->FSINFO3res_u.resok.rtmax);
+			printf("rtpref: %u\n", result_20->FSINFO3res_u.resok.rtpref);
+			printf("rtmult: %u\n", result_20->FSINFO3res_u.resok.rtmult);
+			printf("wtmax: %u\n", result_20->FSINFO3res_u.resok.wtmax);
+			printf("wtpref: %u\n", result_20->FSINFO3res_u.resok.wtpref);
+			printf("wtmult: %u\n", result_20->FSINFO3res_u.resok.wtmult);
+			printf("dtpref: %u\n", result_20->FSINFO3res_u.resok.dtpref);
+			printf("maxfilesize: %lu\n", result_20->FSINFO3res_u.resok.maxfilesize);
+			printf("time_delta.seconds: %u\n", result_20->FSINFO3res_u.resok.time_delta.seconds);
+			printf("time_delta.nseconds: %u\n", result_20->FSINFO3res_u.resok.time_delta.nseconds);
+			printf("properties: %u\n", result_20->FSINFO3res_u.resok.properties);
+			// }
+			// else
+			// {
+			// 	printf("resfail\n");
+			// 	print_post_op_attr(&result_20->FSINFO3res_u.resfail.obj_attributes);
+			// }
 		}
 	}
 	// else if (strcmp(func_name, "pathconf") == 0)

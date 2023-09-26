@@ -80,7 +80,10 @@ extern "C" {
 				   RPCSEC_GSS */
 #define MAKES_IO    0x0010    /* Request may do I/O
 				   (not allowed on MD ONLY exports */
-
+#define FSF3_LINK 0x0001
+#define FSF3_SYMLINK 0x0002
+#define FSF3_HOMOGENEOUS 0x0008
+#define FSF3_CANSETTIME 0x0010
 
 /* 标准RPC处理函数类别 */
 typedef int (*nfs_protocol_function_t)(nfs_arg_t *,
