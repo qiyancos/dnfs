@@ -40,8 +40,7 @@ const nfs_function_desc_t mnt3_func_desc[] = {
                 .xdr_decode_func = (xdrproc_t) xdr_void,
                 .xdr_encode_func = (xdrproc_t) xdr_void,
                 .funcname = "MNT_NULL",
-                .dispatch_behaviour = NOTHING_SPECIAL
-        },
+                .dispatch_behaviour = NOTHING_SPECIAL},
 };
 
 
