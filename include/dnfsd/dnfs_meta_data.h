@@ -23,8 +23,12 @@ extern "C" {
 }
 
 #include <string>
+/*nfs接口*/
 #include "nfs/nfs_null.h"
 #include "nfs/nfs_fsinfo.h"
+
+/*mount 接口*/
+#include "mnt/mnt_mnt.h"
 
 struct dnfs_request_lookahead {
     uint32_t flags;
@@ -91,12 +95,18 @@ typedef struct nfs_param {
 
 /*请求参数*/
 union nfs_arg_t {
+    /*nfs*/
     FSINFO3args arg_fsinfo3;
+
+    /*mnt*/
 };
 
 /*结果参数*/
 union nfs_res_t {
+    /*nfs*/
     FSINFO3res res_fsinfo3;
+
+    /*mnt*/
 };
 
 
