@@ -86,34 +86,6 @@ extern "C" {
 #define FSF3_HOMOGENEOUS 0x0008
 #define FSF3_CANSETTIME 0x0010
 
-/* 标准RPC处理函数类别 */
-typedef int (*nfs_protocol_function_t)(nfs_arg_t *,
-                                       struct svc_req *,
-                                       nfs_res_t *);
-
-/* 标准RPC函数后处理释放空间处理类别 */
-typedef void (*nfs_protocol_free_t)(nfs_res_t *);
-
-/* RPC函数的单个函数描述符结构体 */
-typedef struct nfs_function_desc__ {
-    nfs_protocol_function_t service_function;
-    nfs_protocol_free_t free_function;
-    xdrproc_t xdr_decode_func;
-    xdrproc_t xdr_encode_func;
-    const char *funcname;
-    unsigned int dispatch_behaviour;
-} nfs_function_desc_t;
-
-/* 无效操作函数的相应处理类别 */
-const nfs_function_desc_t invalid_funcdesc = {
-        .service_function = nullptr,
-        .free_function = nullptr,
-        .xdr_decode_func = (xdrproc_t) xdr_void,
-        .xdr_encode_func = (xdrproc_t) xdr_void,
-        .funcname = "invalid_function",
-        .dispatch_behaviour = NOTHING_SPECIAL
-};
-
 /* NFS4，RPC相关函数的处理描述信息，包括函数、xdr函数、函数名等等 */
 const nfs_function_desc_t nfs3_func_desc[] = {
         {
