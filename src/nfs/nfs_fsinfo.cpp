@@ -57,23 +57,32 @@ int nfs3_fsinfo(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
         goto out;
     }
 
+    // 文件系统支持的属性
     FSINFO_FIELD->properties =
         FSF3_LINK | FSF3_SYMLINK | FSF3_HOMOGENEOUS | FSF3_CANSETTIME;
-    // todo 暂时给固定值
+    // todo 从配置文件读取，暂时给固定值
+    // read请求支持的最大大小
     FSINFO_FIELD->rtmax = 512 * 1024;
+    // read请求首选大小
     FSINFO_FIELD->rtpref = 512 * 1024;
-    /* This field is generally unused, it will be removed in V4 */
+    // read请求大小的建议倍数 This field is generally unused, it will be removed in V4
     FSINFO_FIELD->rtmult = DEV_BSIZE;
+    // write请求支持的最大大小
     FSINFO_FIELD->wtmax = 512 * 1024;
+    // write请求首选大小
     FSINFO_FIELD->wtpref = 512 * 1024;
-    /* This field is generally unused, it will be removed in V4 */
+    // write请求大小的建议倍数 This field is generally unused, it will be removed in V4
     FSINFO_FIELD->wtmult = DEV_BSIZE;
+    // readdir请求建议大小
     FSINFO_FIELD->dtpref = 512 * 1024;
-    FSINFO_FIELD->maxfilesize = 17592186040320;
+    // 文件系统上文件的最大大小
+    FSINFO_FIELD->maxfilesize = (uint64_t)1024 * 1024 * 1024 * 1024 * 16;
+    // 服务器保证的时间精确度 (0,1)纳秒 (0,1000000)毫秒 (1,0)秒
     FSINFO_FIELD->time_delta.tv_sec = 1;
     FSINFO_FIELD->time_delta.tv_nsec = 0;
-    
-    if (!nfs_set_post_op_attr(&buf, &res->res_fsinfo3.FSINFO3res_u.resok.obj_attributes)){
+
+    if (!nfs_set_post_op_attr(&buf, &res->res_fsinfo3.FSINFO3res_u.resok.obj_attributes))
+    {
         rc = NFS_REQ_ERROR;
         goto out;
     }

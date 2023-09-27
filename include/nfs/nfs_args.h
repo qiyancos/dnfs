@@ -22,6 +22,8 @@ extern "C" {
 
 #include "file/file_handle.h"
 
+typedef int32_t bool_t;
+
 typedef uint32_t nfs3_uint32;
 
 typedef uint64_t nfs3_uint64;
