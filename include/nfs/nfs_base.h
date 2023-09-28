@@ -247,7 +247,15 @@ const nfs_function_desc_t nfs3_func_desc[] = {
                 .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
                 .funcname = "NFS3_FSINFO",
                 .dispatch_behaviour = (NEEDS_CRED)
-        }
+        },
+        {
+                .service_function = nfs3_pathconf,
+                .free_function = nfs3_pathconf_free,
+                .xdr_decode_func = (xdrproc_t) xdr_PATHCONF3args,
+                .xdr_encode_func = (xdrproc_t) xdr_PATHCONF3res,
+                .funcname = "NFS3_PATHCONF",
+                .dispatch_behaviour = (NEEDS_CRED | SUPPORTS_GSS)
+        },
 };
 
 #endif //NFS_NFS_FUNC_H

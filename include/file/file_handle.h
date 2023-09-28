@@ -43,9 +43,5 @@ struct nfs_fh3 {
         char *data_val;
     } data;
 };
-typedef struct nfs_fh3 nfs_fh3;
-
-//struct fsal_obj_handle *nfs3_FhandleToCache(
-//        nfs_fh3 *fh3, nfsstat3 *status, int *rc);
 
 #endif //DNFSD_FILE_HANDLE_H

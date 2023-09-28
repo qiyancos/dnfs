@@ -34,4 +34,8 @@ extern bool xdr_FSINFO3args(XDR *, FSINFO3args *);
 extern bool xdr_FSINFO3resok(XDR *, FSINFO3resok *);
 extern bool xdr_FSINFO3resfail(XDR *, FSINFO3resfail *);
 extern bool xdr_FSINFO3res(XDR *, FSINFO3res *);
+extern bool xdr_PATHCONF3args(XDR *xdrs, PATHCONF3args *objp);
+extern bool xdr_PATHCONF3resok(XDR *xdrs, PATHCONF3resok *objp);
+extern bool xdr_PATHCONF3resfail(XDR *xdrs, PATHCONF3resfail *objp);
+extern bool xdr_PATHCONF3res(XDR *xdrs, PATHCONF3res *objp);
 #endif //DNFSD_NFS_XDR_H

@@ -26,6 +26,7 @@ extern "C" {
 /*nfs接口*/
 #include "nfs/nfs_null.h"
 #include "nfs/nfs_fsinfo.h"
+#include "nfs/nfs_pathconf.h"
 
 /*mount 接口*/
 #include "mnt/mnt_null.h"
@@ -102,6 +103,7 @@ typedef struct nfs_param {
 union nfs_arg_t {
     /*nfs*/
     FSINFO3args arg_fsinfo3;
+    PATHCONF3args arg_pathconf3;
 
     /*mnt*/
     mnt3_dirpath arg_mnt;
@@ -111,6 +113,7 @@ union nfs_arg_t {
 union nfs_res_t {
     /*nfs*/
     FSINFO3res res_fsinfo3;
+    PATHCONF3res res_pathconf3;
 
     /*mnt*/
     mountres3 res_mnt3;
