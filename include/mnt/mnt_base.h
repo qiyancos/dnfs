@@ -20,6 +20,11 @@ extern "C" {
 };
 #include "dnfsd/dnfs_meta_data.h"
 #include "mnt_null.h"
+#include "mnt_mnt.h"
+#include "mnt_dump.h"
+#include "mnt_umnt.h"
+#include "mnt_umntAll.h"
+#include "mnt_xdr.h"
 
 #define    MNT_PROGRAM    100005
 #define    MOUNT_V3 3
@@ -41,6 +46,41 @@ const nfs_function_desc_t mnt3_func_desc[] = {
                 .xdr_encode_func = (xdrproc_t) xdr_void,
                 .funcname = "MNT_NULL",
                 .dispatch_behaviour = NOTHING_SPECIAL},
+        {
+                .service_function = mnt_Mnt,
+                .free_function = mnt3_Mnt_Free,
+                .xdr_decode_func = (xdrproc_t) xdr_dirpath,
+                .xdr_encode_func = (xdrproc_t) xdr_mountres3,
+                .funcname = "MNT_MNT",
+                .dispatch_behaviour = NOTHING_SPECIAL},
+        {
+                .service_function = mnt_dump,
+                .free_function = mnt_dump_free,
+                .xdr_decode_func = (xdrproc_t) xdr_void,
+                .xdr_encode_func = (xdrproc_t) xdr_mountlist,
+                .funcname = "MNT_DUMP",
+                .dispatch_behaviour = NOTHING_SPECIAL},
+        {
+                .service_function = mnt_umnt,
+                .free_function = mnt_umnt_free,
+                .xdr_decode_func = (xdrproc_t) xdr_dirpath,
+                .xdr_encode_func = (xdrproc_t) xdr_void,
+                .funcname = "MNT_UMNT",
+                .dispatch_behaviour = NOTHING_SPECIAL},
+        {
+                .service_function = mnt_umntAll,
+                .free_function = mnt_umntAll_free,
+                .xdr_decode_func = (xdrproc_t) xdr_void,
+                .xdr_encode_func = (xdrproc_t) xdr_void,
+                .funcname = "MNT_UMNTALL",
+                .dispatch_behaviour = NOTHING_SPECIAL},
+        {
+                .service_function = mnt_export,
+                .free_function = mnt_export_free,
+                .xdr_decode_func = (xdrproc_t) xdr_void,
+                .xdr_encode_func = (xdrproc_t) xdr_exports,
+                .funcname = "MNT_EXPORT",
+                .dispatch_behaviour = NOTHING_SPECIAL}
 };
 
 

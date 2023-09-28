@@ -21,6 +21,8 @@ extern "C" {
 
 #include "file/file_handle.h"
 
+#define NFS3_FHSIZE 64
+
 typedef uint32_t nfs3_uint32;
 
 typedef uint64_t nfs3_uint64;

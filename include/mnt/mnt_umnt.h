@@ -12,35 +12,15 @@
  * along with this project.
  *
  */
-#ifndef DNFSD_MNT_MNT_H
-#define DNFSD_MNT_MNT_H
-#include "mnt_args.h"
-typedef struct {
-    u_int fhandle3_len;
-    char *fhandle3_val;
-} fhandle3;
-
-struct mountres3_ok {
-    fhandle3 fhandle;
-    struct {
-        u_int auth_flavors_len;
-        int *auth_flavors_val;
-    } auth_flavors;
-};
-
-struct mountres3 {
-    mountstat3 fhs_status;
-    union {
-        mountres3_ok mountinfo;
-    } mountres3_u;
-};
+#ifndef DNFSD_MNT_UMNT_H
+#define DNFSD_MNT_UMNT_H
 
 /*声明数据参数*/
 union nfs_arg_t;
 union nfs_res_t;
 
-int mnt_Mnt(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
+int mnt_umnt(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
+void mnt_umnt_free(nfs_res_t *res);
 
-void mnt3_Mnt_Free(nfs_res_t *res);
 
-#endif //DNFSD_MNT_MNT_H
+#endif //DNFSD_MNT_UMNT_H
