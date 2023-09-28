@@ -18,6 +18,7 @@
 extern "C" {
 #include "rpc/svc.h"
 }
+#include <sys/stat.h>
 
 #include "file/file_handle.h"
 
@@ -89,13 +90,28 @@ typedef struct specdata3 {
     nfs3_uint32 specdata2;
 } specdata3;
 
-/* We use the fsal_types.h struct fsal_attrlist to avoid copying */
-typedef struct fsal_attrlist fattr3;
+struct fattr3
+{
+    ftype3 type;
+    mode3 mode;
+    nfs3_uint32 nlink;
+    uid3 uid;
+    gid3 gid;
+    size3 size;
+    size3 used;
+    specdata3 rdev;
+    nfs3_uint64 fsid;
+    fileid3 fileid;
+    nfstime3 atime;
+    nfstime3 mtime;
+    nfstime3 ctime;
+};
+typedef struct fattr3 fattr3;
 
 typedef struct post_op_attr {
     bool_t attributes_follow;
     union {
-        fsal_attrlist attributes;
+        fattr3 attributes;
     } post_op_attr_u;
 
 } post_op_attr;
@@ -116,3 +132,6 @@ enum nfs_req_result {
 #define FSF3_CANSETTIME 0x0010
 
 #endif //DNFSD_NFS_ARGS_H
+
+/*为结构体post_op_attr赋值*/
+bool nfs_set_post_op_attr(struct stat *buf, post_op_attr *Fattr);

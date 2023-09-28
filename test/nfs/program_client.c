@@ -42,10 +42,7 @@ void print_fattr3(fattr3 *info)
 void print_post_op_attr(post_op_attr *info)
 {
 	printf("attributes_follow: %d\n", info->attributes_follow);
-	if (info->attributes_follow)
-	{
-		print_fattr3(&info->post_op_attr_u.attributes);
-	}
+	print_fattr3(&info->post_op_attr_u.attributes);
 }
 
 void nfs_program_3(char *host)
@@ -311,9 +308,14 @@ void nfs_program_3(char *host)
 		{
 			printf("-----response-----\n");
 			printf("status: %d\n", result_20->status);
-			// if (result_20->status == 0)
-			// {
-			// printf("resok\n");
+			if (result_20->status == 0)
+			{
+				printf("resok\n");
+			}
+			else
+			{
+				printf("resfail\n");
+			}
 			print_post_op_attr(&result_20->FSINFO3res_u.resok.obj_attributes);
 			printf("rtmax: %u\n", result_20->FSINFO3res_u.resok.rtmax);
 			printf("rtpref: %u\n", result_20->FSINFO3res_u.resok.rtpref);
@@ -326,12 +328,6 @@ void nfs_program_3(char *host)
 			printf("time_delta.seconds: %u\n", result_20->FSINFO3res_u.resok.time_delta.seconds);
 			printf("time_delta.nseconds: %u\n", result_20->FSINFO3res_u.resok.time_delta.nseconds);
 			printf("properties: %u\n", result_20->FSINFO3res_u.resok.properties);
-			// }
-			// else
-			// {
-			// 	printf("resfail\n");
-			// 	print_post_op_attr(&result_20->FSINFO3res_u.resfail.obj_attributes);
-			// }
 		}
 	}
 	// else if (strcmp(func_name, "pathconf") == 0)

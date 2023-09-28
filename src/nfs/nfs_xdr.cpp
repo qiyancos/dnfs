@@ -87,147 +87,44 @@ bool xdr_fileid3(XDR *xdrs, fileid3 *objp) {
     return (true);
 }
 
-bool xdr_fattr3(XDR *xdrs, fattr3 *objp) {
-    ftype3 ft;
-    specdata3 rdev;
-    uid3 uid;
-    gid3 gid;
-    nfstime3 atime, mtime, ctime;
-    /*todo 抽象层模式*/
-//    mode3 mode;
+bool
+xdr_mode3(XDR *xdrs, mode3 *objp)
+{
+	if (!xdr_nfs3_uint32(xdrs, objp))
+		return (false);
+	return (true);
+}
 
-    if (xdrs->x_op == XDR_ENCODE) {
-        /* Convert object_file_type_t to ftype3 */
-        switch (objp->type) {
-            case FIFO_FILE:
-                ft = NF3FIFO;
-                break;
-
-            case CHARACTER_FILE:
-                ft = NF3CHR;
-                break;
-
-            case DIRECTORY:
-                ft = NF3DIR;
-                break;
-
-            case BLOCK_FILE:
-                ft = NF3BLK;
-                break;
-
-            case REGULAR_FILE:
-            case EXTENDED_ATTR:
-                ft = NF3REG;
-                break;
-
-            case SYMBOLIC_LINK:
-                ft = NF3LNK;
-                break;
-
-            case SOCKET_FILE:
-                ft = NF3SOCK;
-                break;
-
-            default:
-                LOG(MODULE_NAME, L_ERROR,
-                    "xdr_fattr3: Bogus type = %d",
-                    objp->type);
-        }
-        /*todo模式判定，由于原本使用了抽象层，不进行判定*/
-//        mode = fsal2unix_mode(objp->mode);
-        rdev.specdata1 = objp->rawdev.major;
-        rdev.specdata2 = objp->rawdev.minor;
-        uid = objp->owner;
-        gid = objp->group;
-        atime.tv_sec = objp->atime.tv_sec;
-        atime.tv_nsec = objp->atime.tv_nsec;
-        mtime.tv_sec = objp->mtime.tv_sec;
-        mtime.tv_nsec = objp->mtime.tv_nsec;
-        ctime.tv_sec = objp->ctime.tv_sec;
-        ctime.tv_nsec = objp->ctime.tv_nsec;
-    }
-
-    if (!xdr_ftype3(xdrs, &ft))
-        return (false);
-//    if (!xdr_mode3(xdrs, &mode))
-//        return (false);
-    if (!xdr_nfs3_uint32(xdrs, &objp->numlinks))
-        return (false);
-    if (!xdr_uid3(xdrs, &uid))
-        return (false);
-    if (!xdr_gid3(xdrs, &gid))
-        return (false);
-    if (!xdr_size3(xdrs, &objp->filesize))
-        return (false);
-    if (!xdr_size3(xdrs, &objp->spaceused))
-        return (false);
-    if (!xdr_specdata3(xdrs, &rdev))
-        return (false);
-    if (!xdr_nfs3_uint64(xdrs, &objp->fsid3))
-        return (false);
-    if (!xdr_fileid3(xdrs, &objp->fileid))
-        return (false);
-    if (!xdr_nfstime3(xdrs, &atime))
-        return (false);
-    if (!xdr_nfstime3(xdrs, &mtime))
-        return (false);
-    if (!xdr_nfstime3(xdrs, &ctime))
-        return (false);
-
-
-    if (xdrs->x_op == XDR_DECODE) {
-        /* Convert ftype3 to object_file_type_t */
-        switch (ft) {
-            case NF3FIFO:
-                objp->type = FIFO_FILE;
-                break;
-
-            case NF3CHR:
-                objp->type = CHARACTER_FILE;
-                break;
-
-            case NF3DIR:
-                objp->type = DIRECTORY;
-                break;
-
-            case NF3BLK:
-                objp->type = BLOCK_FILE;
-                break;
-
-            case NF3REG:
-                objp->type = REGULAR_FILE;
-                break;
-
-            case NF3LNK:
-                objp->type = SYMBOLIC_LINK;
-                break;
-
-            case NF3SOCK:
-                objp->type = SOCKET_FILE;
-                break;
-
-            default:
-                LOG(MODULE_NAME, L_ERROR,
-                    "xdr_fattr3: Bogus type = %d",
-                    ft);
-        }
-
-//        objp->mode = unix2fsal_mode(mode);
-        objp->rawdev.major = rdev.specdata1;
-        objp->rawdev.minor = rdev.specdata2;
-        objp->fsid.major = objp->fsid3;
-        objp->fsid.minor = 0;
-        objp->owner = uid;
-        objp->group = gid;
-        objp->atime.tv_sec = atime.tv_sec;
-        objp->atime.tv_nsec = atime.tv_nsec;
-        objp->mtime.tv_sec = mtime.tv_sec;
-        objp->mtime.tv_nsec = mtime.tv_nsec;
-        objp->ctime.tv_sec = ctime.tv_sec;
-        objp->ctime.tv_nsec = ctime.tv_nsec;
-    }
-
-    return (true);
+bool
+xdr_fattr3(XDR *xdrs, fattr3 *objp)
+{
+	if (!xdr_ftype3(xdrs, &objp->type))
+		return (false);
+	if (!xdr_mode3(xdrs, &objp->mode))
+		return (false);
+	if (!xdr_nfs3_uint32(xdrs, &objp->nlink))
+		return (false);
+	if (!xdr_uid3(xdrs, &objp->uid))
+		return (false);
+	if (!xdr_gid3(xdrs, &objp->gid))
+		return (false);
+	if (!xdr_size3(xdrs, &objp->size))
+		return (false);
+	if (!xdr_size3(xdrs, &objp->used))
+		return (false);
+	if (!xdr_specdata3(xdrs, &objp->rdev))
+		return (false);
+	if (!xdr_nfs3_uint64(xdrs, &objp->fsid))
+		return (false);
+	if (!xdr_fileid3(xdrs, &objp->fileid))
+		return (false);
+	if (!xdr_nfstime3(xdrs, &objp->atime))
+		return (false);
+	if (!xdr_nfstime3(xdrs, &objp->mtime))
+		return (false);
+	if (!xdr_nfstime3(xdrs, &objp->ctime))
+		return (false);
+	return (true);
 }
 
 bool xdr_post_op_attr(XDR *xdrs, post_op_attr *objp) {
