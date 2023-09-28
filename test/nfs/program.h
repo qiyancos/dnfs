@@ -274,7 +274,7 @@ extern "C"
 
 	struct GETATTR3resok
 	{
-		void *obj_attributes;
+		fattr3 obj_attributes;
 	};
 	typedef struct GETATTR3resok GETATTR3resok;
 

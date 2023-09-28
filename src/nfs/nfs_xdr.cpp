@@ -282,7 +282,6 @@ bool xdr_GETATTR3res(XDR *xdrs, GETATTR3res *objp)
             break;
         default:
             return (true);
-            break;
     }
     return (true);
 }

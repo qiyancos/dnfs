@@ -106,7 +106,7 @@ void nfs_program_3(char *host)
 		{
 			clnt_perror(clnt, "call failed");
 		}else{
-            print_fattr3(result_2->GETATTR3res_u.resok.obj_attributes);
+            print_fattr3(&result_2->GETATTR3res_u.resok.obj_attributes);
         }
 	}
 	// else if (strcmp(func_name, "setattr") == 0)
