@@ -12,43 +12,36 @@
  * along with this project.
  *
  */
-#ifndef DNFSD_NFS_PATHCONF_H
-#define DNFSD_NFS_PATHCONF_H
+#ifndef DNFSD_NFS_GETATTR_H
+#define DNFSD_NFS_GETATTR_H
 
 #include "nfs_args.h"
 
-struct PATHCONF3args {
+struct GETATTR3args {
     nfs_fh3 object;
 };
+typedef struct GETATTR3args GETATTR3args;
 
-struct PATHCONF3resok {
-    post_op_attr obj_attributes;
-    nfs3_uint32 linkmax;
-    nfs3_uint32 name_max;
-    bool_t no_trunc;
-    bool_t chown_restricted;
-    bool_t case_insensitive;
-    bool_t case_preserving;
+struct GETATTR3resok {
+    fattr3 obj_attributes;
 };
+typedef struct GETATTR3resok GETATTR3resok;
 
-struct PATHCONF3resfail {
-    post_op_attr obj_attributes;
-};
-
-struct PATHCONF3res {
+struct GETATTR3res {
     nfsstat3 status;
     union {
-        PATHCONF3resok resok;
-        PATHCONF3resfail resfail;
-    } PATHCONF3res_u;
+        GETATTR3resok resok;
+    } GETATTR3res_u;
 };
+typedef struct GETATTR3res GETATTR3res;
 
 /*声明数据参数*/
 union nfs_arg_t;
 union nfs_res_t;
 
-int nfs3_pathconf(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
+int nfs3_getattr(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
 
-void nfs3_pathconf_free(nfs_res_t *res);
+void nfs3_getattr_free(nfs_res_t *resp);
 
-#endif //DNFSD_NFS_PATHCONF_H
+
+#endif //DNFSD_NFS_GETATTR_H

@@ -34,4 +34,8 @@ void nfs_dupreq_rele(nfs_request_t *reqnfs);
 
 /*为结果分配空间*/
 dupreq_status_t nfs_dupreq_start(nfs_request_t *);
+
+
+/*为结构体post_op_attr赋值*/
+nfsstat3 nfs_set_post_op_attr(char *file_path, post_op_attr *Fattr);
 #endif //DNFSD_NFS_UTILS_H

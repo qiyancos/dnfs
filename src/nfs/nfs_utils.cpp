@@ -54,3 +54,87 @@ dupreq_status_t nfs_dupreq_start(nfs_request_t *reqnfs) {
     reqnfs->svc.rq_u2 = p_;
     return DUPREQ_SUCCESS;
 }
+
+nfsstat3 nfs_set_post_op_attr(char *file_path, post_op_attr *fattr)
+{
+
+    struct stat buf{};
+    int stat_res = stat(file_path, &buf);
+    if (stat_res != 0)
+    {
+        switch (errno)
+        {
+            case ENOENT:
+                return NFS3ERR_NOENT;
+            case ENOTDIR:
+                return NFS3ERR_NOTDIR;
+            case EACCES:
+                return NFS3ERR_ACCES;
+            default:
+                return NFS3ERR_BADHANDLE;
+        }
+    }
+
+    // type 类型
+    switch (buf.st_mode & S_IFMT)
+    {
+        case S_IFDIR:
+            fattr->post_op_attr_u.attributes.type = NF3DIR;
+            break;
+        case S_IFCHR:
+            fattr->post_op_attr_u.attributes.type = NF3CHR;
+            break;
+        case S_IFBLK:
+            fattr->post_op_attr_u.attributes.type = NF3BLK;
+            break;
+        case S_IFREG:
+            fattr->post_op_attr_u.attributes.type = NF3REG;
+            break;
+        case S_IFIFO:
+            fattr->post_op_attr_u.attributes.type = NF3FIFO;
+            break;
+        case S_IFLNK:
+            fattr->post_op_attr_u.attributes.type = NF3LNK;
+            break;
+        case S_IFSOCK:
+            fattr->post_op_attr_u.attributes.type = NF3SOCK;
+            break;
+        default:
+            return NFS3ERR_BADHANDLE;
+    }
+    // 权限属性
+    fattr->post_op_attr_u.attributes.mode = (buf.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO));
+    // 硬链接数
+    fattr->post_op_attr_u.attributes.nlink = buf.st_nlink;
+    // 归属用户ID
+    fattr->post_op_attr_u.attributes.uid = buf.st_uid;
+    // 归属用户组ID
+    fattr->post_op_attr_u.attributes.gid = buf.st_gid;
+    // 文件大小
+    fattr->post_op_attr_u.attributes.size = buf.st_size;
+    // 文件实际使用的磁盘空间字节数
+    fattr->post_op_attr_u.attributes.used = buf.st_blocks * S_BLKSIZE;
+    // 设备文件描述，仅当type=NF3BLK/NF3CHR时
+    if (S_ISCHR(buf.st_mode) || S_ISBLK(buf.st_mode))
+    {
+        fattr->post_op_attr_u.attributes.rdev.specdata1 = major(buf.st_rdev);
+        fattr->post_op_attr_u.attributes.rdev.specdata2 = minor(buf.st_rdev);
+    }
+    // 文件系统的文件系统标识符
+    nfs3_uint64 st_dev_major = major(buf.st_dev);
+    nfs3_uint64 st_dev_minor = minor(buf.st_dev);
+    fattr->post_op_attr_u.attributes.fsid = st_dev_major ^ (st_dev_minor << 32 | st_dev_minor >> 32);
+    // 在文件系统中唯一标识文件的数字
+    fattr->post_op_attr_u.attributes.fileid = buf.st_ino;
+    // 文件内容上次访问时间
+    fattr->post_op_attr_u.attributes.atime.tv_sec = buf.st_atim.tv_sec;
+    fattr->post_op_attr_u.attributes.atime.tv_nsec = buf.st_atim.tv_nsec;
+    // 文件内容上次修改时间
+    fattr->post_op_attr_u.attributes.mtime.tv_sec = buf.st_mtim.tv_sec;
+    fattr->post_op_attr_u.attributes.mtime.tv_nsec = buf.st_mtim.tv_nsec;
+    // 文件属性上次修改时间
+    fattr->post_op_attr_u.attributes.ctime.tv_sec = buf.st_ctim.tv_sec;
+    fattr->post_op_attr_u.attributes.ctime.tv_nsec = buf.st_ctim.tv_nsec;
+    fattr->attributes_follow = true;
+    return NFS3_OK;
+}

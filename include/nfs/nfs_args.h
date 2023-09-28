@@ -134,6 +134,3 @@ enum nfs_req_result {
 #define FSF3_CANSETTIME 0x0010
 
 #endif //DNFSD_NFS_ARGS_H
-
-/*为结构体post_op_attr赋值*/
-bool nfs_set_post_op_attr(struct stat *buf, post_op_attr *Fattr);

@@ -84,12 +84,30 @@ void nfs_program_3(char *host)
 	else if (func_no == 1) // getattr
 	{
 		GETATTR3res *result_2;
-		GETATTR3args nfsproc3_getattr_3_arg;
+        // FSINFO3args nfsproc3_fsinfo_3_arg;
+        char src[128];
+        char *src_ptr = src;
+        printf("input data: ");
+        scanf("%s", src_ptr);
+        // printf("sizeof: %lu\n", sizeof(data));
+        // printf("strlen: %ld\n", strlen(data));
+        u_int data_len = (u_int)strlen(src) + 1;
+        char *data_val = (char *)malloc(sizeof(char) * data_len);
+        char *dst_ptr = data_val;
+        u_int i = data_len;
+        while (i--)
+        {
+            *(dst_ptr++) = *(src_ptr++);
+        }
+        *(dst_ptr++) = '\0';
+        GETATTR3args nfsproc3_getattr_3_arg = {{{data_len, data_val}}};
 		result_2 = nfsproc3_getattr_3(&nfsproc3_getattr_3_arg, clnt);
 		if (result_2 == (GETATTR3res *)NULL)
 		{
 			clnt_perror(clnt, "call failed");
-		}
+		}else{
+            print_fattr3(result_2->GETATTR3res_u.resok.obj_attributes);
+        }
 	}
 	// else if (strcmp(func_name, "setattr") == 0)
 	else if (func_no == 2) // setattr
@@ -334,12 +352,47 @@ void nfs_program_3(char *host)
 	else if (func_no == 20) // pathconf
 	{
 		PATHCONF3res *result_21;
-		PATHCONF3args nfsproc3_pathconf_3_arg;
+        char src[128];
+        char *src_ptr = src;
+        printf("input data: ");
+        scanf("%s", src_ptr);
+        // printf("sizeof: %lu\n", sizeof(data));
+        // printf("strlen: %ld\n", strlen(data));
+        u_int data_len = (u_int)strlen(src) + 1;
+        char *data_val = (char *)malloc(sizeof(char) * data_len);
+        char *dst_ptr = data_val;
+        u_int i = data_len;
+        while (i--)
+        {
+            *(dst_ptr++) = *(src_ptr++);
+        }
+        *(dst_ptr++) = '\0';
+        PATHCONF3args nfsproc3_pathconf_3_arg = {{{data_len, data_val}}};
 		result_21 = nfsproc3_pathconf_3(&nfsproc3_pathconf_3_arg, clnt);
 		if (result_21 == (PATHCONF3res *)NULL)
 		{
 			clnt_perror(clnt, "call failed");
 		}
+        else
+        {
+            printf("-----response-----\n");
+            printf("status: %d\n", result_21->status);
+            if (result_21->status == 0)
+            {
+                printf("resok\n");
+            }
+            else
+            {
+                printf("resfail\n");
+            }
+            print_post_op_attr(&result_21->PATHCONF3res_u.resok.obj_attributes);
+            printf("linkmax: %d\n", result_21->PATHCONF3res_u.resok.linkmax);
+            printf("name_max: %d\n", result_21->PATHCONF3res_u.resok.name_max);
+            printf("no_trunc: %d\n", result_21->PATHCONF3res_u.resok.no_trunc);
+            printf("chown_restricted: %d\n", result_21->PATHCONF3res_u.resok.chown_restricted);
+            printf("case_insensitive: %d\n", result_21->PATHCONF3res_u.resok.case_insensitive);
+            printf("case_preserving: %d\n", result_21->PATHCONF3res_u.resok.case_preserving);
+        }
 	}
 	// else if (strcmp(func_name, "commit") == 0)
 	else if (func_no == 21) // commit

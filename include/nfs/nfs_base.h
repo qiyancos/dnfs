@@ -97,13 +97,12 @@ const nfs_function_desc_t nfs3_func_desc[] = {
                 .dispatch_behaviour = NOTHING_SPECIAL
         },
         {
-                .service_function = nfs3_fsinfo,
-                .free_function = nfs3_fsinfo_free,
-                .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
-                .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
+                .service_function = nfs3_getattr,
+                .free_function = nfs3_getattr_free,
+                .xdr_decode_func = (xdrproc_t) xdr_GETATTR3args,
+                .xdr_encode_func = (xdrproc_t) xdr_GETATTR3res,
                 .funcname = "NFS3_GETATTR",
-                .dispatch_behaviour = (NEEDS_CRED | SUPPORTS_GSS)
-        },
+                .dispatch_behaviour = NEEDS_CRED | SUPPORTS_GSS},
         {
                 .service_function = nfs3_fsinfo,
                 .free_function = nfs3_fsinfo_free,

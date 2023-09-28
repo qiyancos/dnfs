@@ -13,7 +13,7 @@
  *
  */
 #include "nfs/nfs_pathconf.h"
-#include "nfs/nfs_base.h"
+#include "nfs/nfs_utils.h"
 #include "log/log.h"
 #include "dnfsd/dnfs_meta_data.h"
 
@@ -24,27 +24,37 @@ int nfs3_pathconf(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     PATHCONF3resfail *resfail = &res->res_pathconf3.PATHCONF3res_u.resfail;
     PATHCONF3resok *resok = &res->res_pathconf3.PATHCONF3res_u.resok;
 
-    LOG(MODULE_NAME, L_INFO, "pathconf file handle %s", &arg->arg_pathconf3.object.data.data_val);
-
-    nfs_fh3 *file_f= &arg->arg_pathconf3.object;
+    LOG(MODULE_NAME, L_INFO, "The value of the nfs_pathconf obtained file handle is '%s', and the length is data_val is '%d'",
+        arg->arg_pathconf3.object.data.data_val,
+        arg->arg_pathconf3.object.data.data_len);
 
     /* to avoid setting it on each error case */
     resfail->obj_attributes.attributes_follow = FALSE;
 
-    if (file_f == nullptr) {
-        /* Status and rc have been set by nfs3_FhandleToCache */
+    if (arg->arg_pathconf3.object.data.data_val == nullptr) {
+        rc=NFS_REQ_ERROR;
+        LOG(MODULE_NAME,L_ERROR,
+            "nfs_pathconf get file handle is null");
         goto out;
     }
 
-//    resok->linkmax = exp_hdl->exp_ops.fs_maxlink(exp_hdl);
-//    resok->name_max = exp_hdl->exp_ops.fs_maxnamelen(exp_hdl);
-//    resok->no_trunc = exp_hdl->exp_ops.fs_supports(exp_hdl, fso_no_trunc);
-//    resok->chown_restricted =
-//            exp_hdl->exp_ops.fs_supports(exp_hdl, fso_chown_restricted);
-//    resok->case_insensitive =
-//            exp_hdl->exp_ops.fs_supports(exp_hdl, fso_case_insensitive);
-//    resok->case_preserving =
-//            exp_hdl->exp_ops.fs_supports(exp_hdl, fso_case_preserving);
+    res->res_pathconf3.status =nfs_set_post_op_attr(arg->arg_pathconf3.object.data.data_val, &res->res_pathconf3.PATHCONF3res_u.resok.obj_attributes);
+    if (res->res_pathconf3.status!=NFS3_OK)
+    {
+        rc=NFS_REQ_ERROR;
+        LOG(MODULE_NAME, L_ERROR, "'stat %s' failed",
+            arg->arg_pathconf3.object.data.data_val);
+        goto out;
+    }
+
+    resok->linkmax = 1024;
+    resok->name_max = NAME_MAX;
+    resok->no_trunc = true;
+    resok->chown_restricted = true;
+    resok->case_insensitive = true;
+    resok->case_preserving = true;
+
+    res->res_pathconf3.status = NFS3_OK;
 
     out:
     return rc;
