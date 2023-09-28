@@ -14,10 +14,10 @@
  */
 #include <sys/stat.h>
 
+#include "nfs/nfs_fsinfo.h"
 #include "nfs/nfs_base.h"
 #include "log/log.h"
 #include "dnfsd/dnfs_meta_data.h"
-#include "nfs/nfs_fsinfo.h"
 
 #define MODULE_NAME "NFS"
 int nfs3_fsinfo(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)

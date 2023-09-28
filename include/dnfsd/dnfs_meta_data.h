@@ -28,7 +28,12 @@ extern "C" {
 #include "nfs/nfs_fsinfo.h"
 
 /*mount 接口*/
+#include "mnt/mnt_null.h"
 #include "mnt/mnt_mnt.h"
+#include "mnt/mnt_umnt.h"
+#include "mnt/mnt_dump.h"
+#include "mnt/mnt_umntAll.h"
+#include "mnt/mnt_export.h"
 
 struct dnfs_request_lookahead {
     uint32_t flags;
@@ -99,6 +104,7 @@ union nfs_arg_t {
     FSINFO3args arg_fsinfo3;
 
     /*mnt*/
+    mnt3_dirpath arg_mnt;
 };
 
 /*结果参数*/
@@ -107,6 +113,9 @@ union nfs_res_t {
     FSINFO3res res_fsinfo3;
 
     /*mnt*/
+    mountres3 res_mnt3;
+    mountlist res_dump;
+    mnt3_exports res_mntexport;
 };
 
 
