@@ -64,7 +64,7 @@ void mnt3_Mnt_Free(nfs_res_t *res)
     mountres3_ok *resok = &res->res_mnt3.mountres3_u.mountinfo;
 
     if (res->res_mnt3.fhs_status == MNT3_OK) {
-        free(resok->auth_flavors.auth_flavors_val);
-        free(resok->fhandle.fhandle3_val);
+//        free(resok->auth_flavors.auth_flavors_val);
+//        free(resok->fhandle.fhandle3_val);
     }
 }
