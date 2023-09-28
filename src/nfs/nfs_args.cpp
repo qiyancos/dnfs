@@ -65,7 +65,9 @@ bool nfs_set_post_op_attr(struct stat *buf, post_op_attr *fattr)
         fattr->post_op_attr_u.attributes.rdev.specdata2 = minor(buf->st_rdev);
     }
     // 文件系统的文件系统标识符
-    fattr->post_op_attr_u.attributes.fsid = buf->st_dev;
+    nfs3_uint64 st_dev_major = major(buf->st_dev);
+    nfs3_uint64 st_dev_minor = minor(buf->st_dev);
+    fattr->post_op_attr_u.attributes.fsid = st_dev_major ^ (st_dev_minor << 32 | st_dev_minor >> 32);
     // 在文件系统中唯一标识文件的数字
     fattr->post_op_attr_u.attributes.fileid = buf->st_ino;
     // 文件内容上次访问时间
