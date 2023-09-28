@@ -24,6 +24,8 @@ extern "C" {
 
 #define NFS3_FHSIZE 64
 
+typedef int32_t bool_t;
+
 typedef uint32_t nfs3_uint32;
 
 typedef uint64_t nfs3_uint64;
