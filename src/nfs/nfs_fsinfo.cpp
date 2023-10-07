@@ -24,7 +24,7 @@ int nfs3_fsinfo(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
     int rc = NFS_REQ_OK;
     FSINFO3resok *const FSINFO_FIELD = &res->res_fsinfo3.FSINFO3res_u.resok;
 
-    LOG(MODULE_NAME, L_INFO, "The value of the nfs_fsinfo obtained file handle is '%s', and the length is data_val is '%d'",
+    LOG(MODULE_NAME, D_INFO, "The value of the nfs_fsinfo obtained file handle is '%s', and the length is data_val is '%d'",
         arg->arg_fsinfo3.fsroot.data.data_val,
         arg->arg_fsinfo3.fsroot.data.data_len);
 
@@ -42,7 +42,7 @@ int nfs3_fsinfo(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
     if (res->res_fsinfo3.status!=NFS3_OK)
     {
         rc=NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR, "'stat %s' failed",
+        LOG(MODULE_NAME, L_ERROR, "Interface nfs_fsinfo failed to obtain '%s' attributes",
             arg->arg_fsinfo3.fsroot.data.data_val);
         goto out;
     }

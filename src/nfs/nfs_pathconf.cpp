@@ -25,7 +25,7 @@ int nfs3_pathconf(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     PATHCONF3resfail *resfail = &res->res_pathconf3.PATHCONF3res_u.resfail;
     PATHCONF3resok *resok = &res->res_pathconf3.PATHCONF3res_u.resok;
 
-    LOG(MODULE_NAME, L_INFO, "The value of the nfs_pathconf obtained file handle is '%s', and the length is data_val is '%d'",
+    LOG(MODULE_NAME, D_INFO, "The value of the nfs_pathconf obtained file handle is '%s', and the length is data_val is '%d'",
         arg->arg_pathconf3.object.data.data_val,
         arg->arg_pathconf3.object.data.data_len);
 
@@ -43,7 +43,7 @@ int nfs3_pathconf(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     if (res->res_pathconf3.status!=NFS3_OK)
     {
         rc=NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR, "'stat %s' failed",
+        LOG(MODULE_NAME, L_ERROR, "Interface nfs_pathconf failed to obtain '%s' attributes",
             arg->arg_pathconf3.object.data.data_val);
         goto out;
     }
