@@ -15,8 +15,11 @@
 
 #ifndef DNFSD_NFS_XDR_H
 #define DNFSD_NFS_XDR_H
-
-#include "dnfsd/dnfs_meta_data.h"
+extern "C" {
+#include "rpc/xdr_inline.h"
+#include "rpc/xdr.h"
+}
+#include "nfs/nfs_args.h"
 extern bool xdr_nfs3_uint32(XDR *xdrs, nfs3_uint32 *objp);
 extern bool xdr_size3(XDR *xdrs, size3 *objp);
 extern bool xdr_nfs3_uint64(XDR *xdrs, nfs3_uint64 *objp);
@@ -30,15 +33,4 @@ extern bool xdr_fileid3(XDR *xdrs, fileid3 *objp);
 extern bool xdr_fattr3(XDR *xdrs, fattr3 *objp);
 extern bool xdr_post_op_attr(XDR *xdrs, post_op_attr *objp);
 extern bool xdr_nfs_fh3(XDR *xdrs, nfs_fh3 *objp);
-extern bool xdr_FSINFO3args(XDR *, FSINFO3args *);
-extern bool xdr_FSINFO3resok(XDR *, FSINFO3resok *);
-extern bool xdr_FSINFO3resfail(XDR *, FSINFO3resfail *);
-extern bool xdr_FSINFO3res(XDR *, FSINFO3res *);
-extern bool xdr_PATHCONF3args(XDR *xdrs, PATHCONF3args *objp);
-extern bool xdr_PATHCONF3resok(XDR *xdrs, PATHCONF3resok *objp);
-extern bool xdr_PATHCONF3resfail(XDR *xdrs, PATHCONF3resfail *objp);
-extern bool xdr_PATHCONF3res(XDR *xdrs, PATHCONF3res *objp);
-extern bool xdr_GETATTR3args(XDR *xdrs, GETATTR3args *objp);
-extern bool xdr_GETATTR3resok(XDR *xdrs, GETATTR3resok *objp);
-extern bool xdr_GETATTR3res(XDR *xdrs, GETATTR3res *objp);
 #endif //DNFSD_NFS_XDR_H

@@ -43,5 +43,9 @@ int nfs3_getattr(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
 
 void nfs3_getattr_free(nfs_res_t *resp);
 
+extern bool xdr_GETATTR3args(XDR *xdrs, GETATTR3args *objp);
+extern bool xdr_GETATTR3resok(XDR *xdrs, GETATTR3resok *objp);
+extern bool xdr_GETATTR3res(XDR *xdrs, GETATTR3res *objp);
+
 
 #endif //DNFSD_NFS_GETATTR_H

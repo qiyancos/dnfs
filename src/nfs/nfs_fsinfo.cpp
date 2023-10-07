@@ -13,7 +13,7 @@
  *
  */
 #include "nfs/nfs_fsinfo.h"
-#include "nfs/nfs_base.h"
+#include "nfs/nfs_xdr.h"
 #include "nfs/nfs_utils.h"
 #include "log/log.h"
 #include "dnfsd/dnfs_meta_data.h"
@@ -75,17 +75,65 @@ int nfs3_fsinfo(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
 
 out:
     return rc;
-} /* nfs3_fsinfo */
+}
 
-/**
- * @brief Free the result structure allocated for nfs3_fsinfo.
- *
- * This function frees the result structure allocated for nfs3_fsinfo.
- *
- * @param[in,out] res The result structure
- *
- */
+
 void nfs3_fsinfo_free(nfs_res_t *res)
 {
     /* Nothing to do here */
 }
+
+bool xdr_FSINFO3args(XDR *xdrs, FSINFO3args *objp) {
+    if (!xdr_nfs_fh3(xdrs, &objp->fsroot))
+        return (false);
+    return (true);
+}
+
+bool xdr_FSINFO3resok(XDR *xdrs, FSINFO3resok *objp) {
+    if (!xdr_post_op_attr(xdrs, &objp->obj_attributes))
+        return (false);
+    if (!xdr_nfs3_uint32(xdrs, &objp->rtmax))
+        return (false);
+    if (!xdr_nfs3_uint32(xdrs, &objp->rtpref))
+        return (false);
+    if (!xdr_nfs3_uint32(xdrs, &objp->rtmult))
+        return (false);
+    if (!xdr_nfs3_uint32(xdrs, &objp->wtmax))
+        return (false);
+    if (!xdr_nfs3_uint32(xdrs, &objp->wtpref))
+        return (false);
+    if (!xdr_nfs3_uint32(xdrs, &objp->wtmult))
+        return (false);
+    if (!xdr_nfs3_uint32(xdrs, &objp->dtpref))
+        return (false);
+    if (!xdr_size3(xdrs, &objp->maxfilesize))
+        return (false);
+    if (!xdr_nfstime3(xdrs, &objp->time_delta))
+        return (false);
+    if (!xdr_nfs3_uint32(xdrs, &objp->properties))
+        return (false);
+    return (true);
+}
+
+bool xdr_FSINFO3resfail(XDR *xdrs, FSINFO3resfail *objp) {
+    if (!xdr_post_op_attr(xdrs, &objp->obj_attributes))
+        return (false);
+    return (true);
+}
+
+bool xdr_FSINFO3res(XDR *xdrs, FSINFO3res *objp) {
+    if (!xdr_nfsstat3(xdrs, &objp->status))
+        return (false);
+    switch (objp->status) {
+        case NFS3_OK:
+            if (!xdr_FSINFO3resok(xdrs, &objp->FSINFO3res_u.resok))
+                return (false);
+            break;
+        default:
+            if (!xdr_FSINFO3resfail(xdrs, &objp->FSINFO3res_u.resfail))
+                return (false);
+            break;
+    }
+    return (true);
+}
+

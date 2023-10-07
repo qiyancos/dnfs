@@ -16,12 +16,10 @@
 #ifndef NFS_NFS_FUNC_H
 #define NFS_NFS_FUNC_H
 
-extern "C" {
-#include "rpc/xdr.h"
-}
-
 #include "nfs/nfs_xdr.h"
+#include "dnfsd/dnfs_meta_data.h"
 #include "nfs/nfs_null.h"
+#include "nfs/nfs_getattr.h"
 #include "nfs/nfs_fsinfo.h"
 
 #define    NFS_PROGRAM    100003

@@ -5,5 +5,6 @@ add_library(nfs
         nfs_fsinfo.cpp
         nfs_init.cpp
         nfs_pathconf.cpp
-        nfs_getattr.cpp)
+        nfs_getattr.cpp
+        nfs_fsstat.cpp)
 target_link_libraries(nfs utils)

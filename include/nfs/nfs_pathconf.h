@@ -51,4 +51,9 @@ int nfs3_pathconf(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
 
 void nfs3_pathconf_free(nfs_res_t *res);
 
+extern bool xdr_PATHCONF3args(XDR *xdrs, PATHCONF3args *objp);
+extern bool xdr_PATHCONF3resok(XDR *xdrs, PATHCONF3resok *objp);
+extern bool xdr_PATHCONF3resfail(XDR *xdrs, PATHCONF3resfail *objp);
+extern bool xdr_PATHCONF3res(XDR *xdrs, PATHCONF3res *objp);
+
 #endif //DNFSD_NFS_PATHCONF_H

@@ -13,6 +13,7 @@
  *
  */
 #include "nfs/nfs_getattr.h"
+#include "nfs/nfs_xdr.h"
 #include "nfs/nfs_utils.h"
 #include "log/log.h"
 #include "dnfsd/dnfs_meta_data.h"
@@ -59,4 +60,33 @@ int nfs3_getattr(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
 void nfs3_getattr_free(nfs_res_t *resp)
 {
     /* Nothing to do here */
+}
+
+bool xdr_GETATTR3args(XDR *xdrs, GETATTR3args *objp)
+{
+    if (!xdr_nfs_fh3(xdrs, &objp->object))
+        return (false);
+    return (true);
+}
+
+bool xdr_GETATTR3resok(XDR *xdrs, GETATTR3resok *objp)
+{
+    if (!xdr_fattr3(xdrs, &objp->obj_attributes))
+        return (false);
+    return (true);
+}
+
+bool xdr_GETATTR3res(XDR *xdrs, GETATTR3res *objp)
+{
+    if (!xdr_nfsstat3(xdrs, &objp->status))
+        return (false);
+    switch (objp->status) {
+        case NFS3_OK:
+            if (!xdr_GETATTR3resok(xdrs, &objp->GETATTR3res_u.resok))
+                return (false);
+            break;
+        default:
+            return (true);
+    }
+    return (true);
 }

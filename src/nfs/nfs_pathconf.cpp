@@ -13,6 +13,7 @@
  *
  */
 #include "nfs/nfs_pathconf.h"
+#include "nfs/nfs_xdr.h"
 #include "nfs/nfs_utils.h"
 #include "log/log.h"
 #include "dnfsd/dnfs_meta_data.h"
@@ -62,4 +63,55 @@ int nfs3_pathconf(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
 void nfs3_pathconf_free(nfs_res_t *res) {
     /* Nothing to do here */
+}
+
+
+bool xdr_PATHCONF3args(XDR *xdrs, PATHCONF3args *objp)
+{
+    if (!xdr_nfs_fh3(xdrs, &objp->object))
+        return (false);
+    return (true);
+}
+
+bool xdr_PATHCONF3resok(XDR *xdrs, PATHCONF3resok *objp)
+{
+    if (!xdr_post_op_attr(xdrs, &objp->obj_attributes))
+        return (false);
+    if (!xdr_nfs3_uint32(xdrs, &objp->linkmax))
+        return (false);
+    if (!xdr_nfs3_uint32(xdrs, &objp->name_max))
+        return (false);
+    if (!xdr_bool(xdrs, &objp->no_trunc))
+        return (false);
+    if (!xdr_bool(xdrs, &objp->chown_restricted))
+        return (false);
+    if (!xdr_bool(xdrs, &objp->case_insensitive))
+        return (false);
+    if (!xdr_bool(xdrs, &objp->case_preserving))
+        return (false);
+    return (true);
+}
+
+bool xdr_PATHCONF3resfail(XDR *xdrs, PATHCONF3resfail *objp)
+{
+    if (!xdr_post_op_attr(xdrs, &objp->obj_attributes))
+        return (false);
+    return (true);
+}
+
+bool xdr_PATHCONF3res(XDR *xdrs, PATHCONF3res *objp)
+{
+    if (!xdr_nfsstat3(xdrs, &objp->status))
+        return (false);
+    switch (objp->status) {
+        case NFS3_OK:
+            if (!xdr_PATHCONF3resok(xdrs, &objp->PATHCONF3res_u.resok))
+                return (false);
+            break;
+        default:
+            if (!xdr_PATHCONF3resfail(xdrs, &objp->PATHCONF3res_u.resfail))
+                return (false);
+            break;
+    }
+    return (true);
 }
