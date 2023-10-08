@@ -20,6 +20,9 @@ extern "C" {
 #include "rpc/xdr.h"
 }
 #include "nfs/nfs_args.h"
+
+#define XDR_STRING_MAXLEN (8*1024)
+
 extern bool xdr_nfs3_uint32(XDR *xdrs, nfs3_uint32 *objp);
 extern bool xdr_size3(XDR *xdrs, size3 *objp);
 extern bool xdr_nfs3_uint64(XDR *xdrs, nfs3_uint64 *objp);
@@ -33,4 +36,9 @@ extern bool xdr_fileid3(XDR *xdrs, fileid3 *objp);
 extern bool xdr_fattr3(XDR *xdrs, fattr3 *objp);
 extern bool xdr_post_op_attr(XDR *xdrs, post_op_attr *objp);
 extern bool xdr_nfs_fh3(XDR *xdrs, nfs_fh3 *objp);
+extern bool xdr_cookie3(XDR *xdrs, cookie3 *objp);
+extern bool xdr_cookieverf3(XDR *xdrs, cookieverf3 objp);
+extern bool xdr_count3(XDR *xdrs, count3 *objp);
+extern bool xdr_filename3(XDR *xdrs, filename3 *objp);
+extern bool xdr_post_op_fh3(XDR *xdrs, post_op_fh3 *objp);
 #endif //DNFSD_NFS_XDR_H

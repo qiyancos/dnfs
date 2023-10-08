@@ -21,6 +21,7 @@
 #include "nfs/nfs_null.h"
 #include "nfs/nfs_getattr.h"
 #include "nfs/nfs_fsinfo.h"
+#include "nfs/nfs_readdirplus.h"
 
 #define    NFS_PROGRAM    100003
 #define    NFS_V3 3
@@ -222,10 +223,10 @@ const nfs_function_desc_t nfs3_func_desc[] = {
                 .dispatch_behaviour = (NEEDS_CRED | SUPPORTS_GSS)
         },
         {
-                .service_function = nfs3_fsinfo,
-                .free_function = nfs3_fsinfo_free,
-                .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
-                .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
+                .service_function = nfs3_readdirplus,
+                .free_function = nfs3_readdirplus_free,
+                .xdr_decode_func = (xdrproc_t) xdr_READDIRPLUS3args,
+                .xdr_encode_func = (xdrproc_t) xdr_READDIRPLUS3res,
                 .funcname = "NFS3_READDIRPLUS",
                 .dispatch_behaviour = (NEEDS_CRED | SUPPORTS_GSS)
         },

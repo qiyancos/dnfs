@@ -28,6 +28,7 @@ extern "C" {
 #include "nfs/nfs_getattr.h"
 #include "nfs/nfs_fsinfo.h"
 #include "nfs/nfs_pathconf.h"
+#include "nfs/nfs_readdirplus.h"
 
 /*mount 接口*/
 #include "mnt/mnt_null.h"
@@ -93,6 +94,14 @@ typedef struct nfs_core_param {
     uint32_t tcp_keepidle = 0;
     /** Time between each keepalive probe */
     uint32_t tcp_keepintvl = 0;
+    /** Readdir response size, default is 64M (limited by maxcount from
+	*  nfs request. range 4K-64M
+	*/
+	uint32_t readdir_res_size = 64 * 1024 * 1024;
+    /** Readdir max entries count, default is 1M (limited by dircount from
+	*  nfs request). range 32-1M
+	*/
+	uint32_t readdir_max_count = 1 * 1024 * 1024;
 } nfs_core_parameter_t;
 
 typedef struct nfs_param {
@@ -106,6 +115,7 @@ union nfs_arg_t {
     GETATTR3args arg_getattr3;
     FSINFO3args arg_fsinfo3;
     PATHCONF3args arg_pathconf3;
+    READDIRPLUS3args arg_readdirplus3;
 
     /*mnt*/
     mnt3_dirpath arg_mnt;
@@ -117,6 +127,7 @@ union nfs_res_t {
     FSINFO3res res_fsinfo3;
     PATHCONF3res res_pathconf3;
     GETATTR3res res_getattr3;
+    READDIRPLUS3res res_readdirplus3;
 
     /*mnt*/
     mountres3 res_mnt3;

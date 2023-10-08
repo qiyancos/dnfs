@@ -15,10 +15,10 @@
 /*存放nfs基础数据*/
 #ifndef DNFSD_NFS_ARGS_H
 #define DNFSD_NFS_ARGS_H
-extern "C" {
+extern "C"
+{
 #include "rpc/svc.h"
 }
-#include <sys/stat.h>
 
 #include "file/file_handle.h"
 
@@ -40,12 +40,22 @@ typedef nfs3_uint64 size3;
 
 typedef nfs3_uint64 fileid3;
 
-typedef struct nfstime3 {
+typedef nfs3_uint64 cookie3;
+
+typedef char cookieverf3[8];
+
+typedef nfs3_uint32 count3;
+
+typedef char *filename3;
+
+typedef struct nfstime3
+{
     nfs3_uint32 tv_sec;
     nfs3_uint32 tv_nsec;
 } nfstime3;
 
-typedef enum nfsstat3 {
+typedef enum nfsstat3
+{
     NFS3_OK = 0,
     NFS3ERR_PERM = 1,
     NFS3ERR_NOENT = 2,
@@ -77,7 +87,8 @@ typedef enum nfsstat3 {
     NFS3ERR_JUKEBOX = 10008
 } nfsstat3;
 
-typedef enum ftype3 {
+typedef enum ftype3
+{
     NF3REG = 1,
     NF3DIR = 2,
     NF3BLK = 3,
@@ -87,7 +98,8 @@ typedef enum ftype3 {
     NF3FIFO = 7
 } ftype3;
 
-typedef struct specdata3 {
+typedef struct specdata3
+{
     nfs3_uint32 specdata1;
     nfs3_uint32 specdata2;
 } specdata3;
@@ -110,15 +122,28 @@ struct fattr3
 };
 typedef struct fattr3 fattr3;
 
-typedef struct post_op_attr {
+typedef struct post_op_attr
+{
     bool_t attributes_follow;
-    union {
+    union
+    {
         fattr3 attributes;
     } post_op_attr_u;
 
 } post_op_attr;
 
-enum nfs_req_result {
+struct post_op_fh3
+{
+    bool_t handle_follows;
+    union
+    {
+        nfs_fh3 handle;
+    } post_op_fh3_u;
+};
+typedef struct post_op_fh3 post_op_fh3;
+
+enum nfs_req_result
+{
     NFS_REQ_OK,
     NFS_REQ_DROP,
     NFS_REQ_ERROR,
@@ -133,4 +158,4 @@ enum nfs_req_result {
 #define FSF3_HOMOGENEOUS 0x0008
 #define FSF3_CANSETTIME 0x0010
 
-#endif //DNFSD_NFS_ARGS_H
+#endif // DNFSD_NFS_ARGS_H
