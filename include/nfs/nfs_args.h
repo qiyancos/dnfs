@@ -24,6 +24,8 @@ extern "C" {
 
 #define NFS3_FHSIZE 64
 
+#define XDR_STRING_MAXLEN (8*1024)
+
 typedef int32_t bool_t;
 
 typedef uint32_t nfs3_uint32;
@@ -39,6 +41,8 @@ typedef nfs3_uint32 mode3;
 typedef nfs3_uint64 size3;
 
 typedef nfs3_uint64 fileid3;
+
+typedef char *filename3;
 
 typedef struct nfstime3 {
     nfs3_uint32 tv_sec;
@@ -127,6 +131,30 @@ enum nfs_req_result {
     NFS_REQ_XPRT_DIED,
     NFS_REQ_AUTH_ERR,
 };
+
+struct diropargs3 {
+    nfs_fh3 dir;
+    filename3 name;
+};
+
+struct wcc_attr {
+    size3 size;
+    nfstime3 mtime;
+    nfstime3 ctime;
+};
+
+struct pre_op_attr {
+    bool_t attributes_follow;
+    union {
+        wcc_attr attributes;
+    } pre_op_attr_u;
+};
+
+struct wcc_data {
+    pre_op_attr before;
+    post_op_attr after;
+};
+typedef struct wcc_data wcc_data;
 
 #define FSF3_LINK 0x0001
 #define FSF3_SYMLINK 0x0002

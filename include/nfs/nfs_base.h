@@ -108,7 +108,8 @@ const nfs_function_desc_t nfs3_func_desc[] = {
                 .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
                 .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
                 .funcname = "NFS3_SETATTR",
-                .dispatch_behaviour = (MAKES_WRITE | NEEDS_CRED | CAN_BE_DUP | SUPPORTS_GSS)
+                .dispatch_behaviour = (MAKES_WRITE | NEEDS_CRED | CAN_BE_DUP |
+                                       SUPPORTS_GSS)
         },
         {
                 .service_function = nfs3_fsinfo,
@@ -148,7 +149,8 @@ const nfs_function_desc_t nfs3_func_desc[] = {
                 .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
                 .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
                 .funcname = "NFS3_WRITE",
-                .dispatch_behaviour = (MAKES_WRITE | NEEDS_CRED | CAN_BE_DUP | SUPPORTS_GSS | MAKES_IO)
+                .dispatch_behaviour = (MAKES_WRITE | NEEDS_CRED | CAN_BE_DUP |
+                                       SUPPORTS_GSS | MAKES_IO)
         },
         {
                 .service_function = nfs3_fsinfo,
@@ -156,7 +158,8 @@ const nfs_function_desc_t nfs3_func_desc[] = {
                 .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
                 .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
                 .funcname = "NFS3_CREATE",
-                .dispatch_behaviour = (MAKES_WRITE | NEEDS_CRED | CAN_BE_DUP | SUPPORTS_GSS)
+                .dispatch_behaviour = (MAKES_WRITE | NEEDS_CRED | CAN_BE_DUP |
+                                       SUPPORTS_GSS)
         },
         {
                 .service_function = nfs3_fsinfo,
@@ -164,7 +167,8 @@ const nfs_function_desc_t nfs3_func_desc[] = {
                 .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
                 .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
                 .funcname = "NFS3_MKDIR",
-                .dispatch_behaviour = (MAKES_WRITE | NEEDS_CRED | CAN_BE_DUP | SUPPORTS_GSS)
+                .dispatch_behaviour = (MAKES_WRITE | NEEDS_CRED | CAN_BE_DUP |
+                                       SUPPORTS_GSS)
         },
         {
                 .service_function = nfs3_fsinfo,
@@ -172,7 +176,8 @@ const nfs_function_desc_t nfs3_func_desc[] = {
                 .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
                 .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
                 .funcname = "NFS3_SYMLINK",
-                .dispatch_behaviour = (MAKES_WRITE | NEEDS_CRED | CAN_BE_DUP | SUPPORTS_GSS)
+                .dispatch_behaviour = (MAKES_WRITE | NEEDS_CRED | CAN_BE_DUP |
+                                       SUPPORTS_GSS)
         },
         {
                 .service_function = nfs3_fsinfo,
@@ -180,7 +185,8 @@ const nfs_function_desc_t nfs3_func_desc[] = {
                 .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
                 .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
                 .funcname = "NFS3_MKNOD",
-                .dispatch_behaviour = (MAKES_WRITE | NEEDS_CRED | CAN_BE_DUP | SUPPORTS_GSS)
+                .dispatch_behaviour = (MAKES_WRITE | NEEDS_CRED | CAN_BE_DUP |
+                                       SUPPORTS_GSS)
         },
         {
                 .service_function = nfs3_fsinfo,
@@ -188,7 +194,8 @@ const nfs_function_desc_t nfs3_func_desc[] = {
                 .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
                 .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
                 .funcname = "NFS3_REMOVE",
-                .dispatch_behaviour = (MAKES_WRITE | NEEDS_CRED | CAN_BE_DUP | SUPPORTS_GSS)
+                .dispatch_behaviour = (MAKES_WRITE | NEEDS_CRED | CAN_BE_DUP |
+                                       SUPPORTS_GSS)
         },
         {
                 .service_function = nfs3_fsinfo,
@@ -196,7 +203,8 @@ const nfs_function_desc_t nfs3_func_desc[] = {
                 .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
                 .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
                 .funcname = "NFS3_RMDIR",
-                .dispatch_behaviour = (MAKES_WRITE | NEEDS_CRED | CAN_BE_DUP | SUPPORTS_GSS)
+                .dispatch_behaviour = (MAKES_WRITE | NEEDS_CRED | CAN_BE_DUP |
+                                       SUPPORTS_GSS)
         },
         {
                 .service_function = nfs3_fsinfo,
@@ -204,15 +212,17 @@ const nfs_function_desc_t nfs3_func_desc[] = {
                 .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
                 .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
                 .funcname = "NFS3_RENAME",
-                .dispatch_behaviour = (MAKES_WRITE | NEEDS_CRED | CAN_BE_DUP | SUPPORTS_GSS)
+                .dispatch_behaviour = (MAKES_WRITE | NEEDS_CRED | CAN_BE_DUP |
+                                       SUPPORTS_GSS)
         },
         {
-                .service_function = nfs3_fsinfo,
-                .free_function = nfs3_fsinfo_free,
-                .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
-                .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
+                .service_function = nfs3_link,
+                .free_function = nfs3_link_free,
+                .xdr_decode_func = (xdrproc_t) xdr_LINK3args,
+                .xdr_encode_func = (xdrproc_t) xdr_LINK3res,
                 .funcname = "NFS3_LINK",
-                .dispatch_behaviour = (MAKES_WRITE | NEEDS_CRED | CAN_BE_DUP | SUPPORTS_GSS)
+                .dispatch_behaviour =
+                (MAKES_WRITE | NEEDS_CRED | CAN_BE_DUP | SUPPORTS_GSS)
         },
         {
                 .service_function = nfs3_fsinfo,
@@ -253,7 +263,14 @@ const nfs_function_desc_t nfs3_func_desc[] = {
                 .xdr_encode_func = (xdrproc_t) xdr_PATHCONF3res,
                 .funcname = "NFS3_PATHCONF",
                 .dispatch_behaviour = (NEEDS_CRED | SUPPORTS_GSS)
-        }
+        },
+        {
+                .service_function = nfs3_pathconf,
+                .free_function = nfs3_pathconf_free,
+                .xdr_decode_func = (xdrproc_t) xdr_PATHCONF3args,
+                .xdr_encode_func = (xdrproc_t) xdr_PATHCONF3res,
+                .funcname = "NFS3_COMMIT",
+                .dispatch_behaviour = (MAKES_WRITE | NEEDS_CRED | SUPPORTS_GSS)}
 };
 
 #endif //NFS_NFS_FUNC_H

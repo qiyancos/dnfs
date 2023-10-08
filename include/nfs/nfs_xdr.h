@@ -33,4 +33,9 @@ extern bool xdr_fileid3(XDR *xdrs, fileid3 *objp);
 extern bool xdr_fattr3(XDR *xdrs, fattr3 *objp);
 extern bool xdr_post_op_attr(XDR *xdrs, post_op_attr *objp);
 extern bool xdr_nfs_fh3(XDR *xdrs, nfs_fh3 *objp);
+extern bool xdr_filename3(XDR *xdrs, filename3 *objp);
+extern bool xdr_diropargs3(XDR *xdrs, diropargs3 *objp);
+extern bool xdr_wcc_attr(XDR *xdrs, wcc_attr *objp);
+extern bool xdr_pre_op_attr(XDR *xdrs, pre_op_attr *objp);
+extern bool xdr_wcc_data(XDR *xdrs, wcc_data *objp);
 #endif //DNFSD_NFS_XDR_H

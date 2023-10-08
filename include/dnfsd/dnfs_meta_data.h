@@ -29,6 +29,7 @@ extern "C" {
 #include "nfs/nfs_fsstat.h"
 #include "nfs/nfs_fsinfo.h"
 #include "nfs/nfs_pathconf.h"
+#include "nfs/nfs_link.h"
 
 /*mount 接口*/
 #include "mnt/mnt_null.h"
@@ -105,6 +106,7 @@ typedef struct nfs_param {
 union nfs_arg_t {
     /*nfs*/
     GETATTR3args arg_getattr3;
+    LINK3args arg_link3;
     FSSTAT3args arg_fsstat3;
     FSINFO3args arg_fsinfo3;
     PATHCONF3args arg_pathconf3;
@@ -117,6 +119,7 @@ union nfs_arg_t {
 union nfs_res_t {
     /*nfs*/
     GETATTR3res res_getattr3;
+    LINK3res res_link3;
     FSSTAT3res res_fsstat3;
     FSINFO3res res_fsinfo3;
     PATHCONF3res res_pathconf3;

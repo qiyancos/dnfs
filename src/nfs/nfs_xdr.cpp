@@ -144,3 +144,56 @@ bool xdr_nfs_fh3(XDR *xdrs, nfs_fh3 *objp) {
         return (false);
     return (true);
 }
+
+bool xdr_filename3(XDR *xdrs, filename3 *objp)
+{
+    if (!xdr_string(xdrs, objp, XDR_STRING_MAXLEN))
+        return (false);
+    return (true);
+}
+
+bool xdr_diropargs3(XDR *xdrs, diropargs3 *objp)
+{
+    if (!xdr_nfs_fh3(xdrs, &objp->dir))
+        return (false);
+    if (!xdr_filename3(xdrs, &objp->name))
+        return (false);
+    return (true);
+}
+
+bool xdr_wcc_attr(XDR *xdrs, wcc_attr *objp)
+{
+    if (!xdr_size3(xdrs, &objp->size))
+        return (false);
+    if (!xdr_nfstime3(xdrs, &objp->mtime))
+        return (false);
+    if (!xdr_nfstime3(xdrs, &objp->ctime))
+        return (false);
+    return (true);
+}
+
+bool xdr_pre_op_attr(XDR *xdrs, pre_op_attr *objp)
+{
+    if (!xdr_bool(xdrs, &objp->attributes_follow))
+        return (false);
+    switch (objp->attributes_follow) {
+        case TRUE:
+            if (!xdr_wcc_attr(xdrs, &objp->pre_op_attr_u.attributes))
+                return (false);
+            break;
+        case FALSE:
+            break;
+        default:
+            return (false);
+    }
+    return (true);
+}
+
+bool xdr_wcc_data(XDR *xdrs, wcc_data *objp)
+{
+    if (!xdr_pre_op_attr(xdrs, &objp->before))
+        return (false);
+    if (!xdr_post_op_attr(xdrs, &objp->after))
+        return (false);
+    return (true);
+}
