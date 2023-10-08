@@ -42,7 +42,31 @@ void print_fattr3(fattr3 *info)
 void print_post_op_attr(post_op_attr *info)
 {
 	printf("attributes_follow: %d\n", info->attributes_follow);
-	print_fattr3(&info->post_op_attr_u.attributes);
+	if (info->attributes_follow)
+		print_fattr3(&info->post_op_attr_u.attributes);
+}
+
+void print_post_op_fh3(post_op_fh3 *info)
+{
+	printf("handle_follows: %d\n", info->handle_follows);
+	if (info->handle_follows)
+	{
+		printf("handle.data_val: %s\n", info->post_op_fh3_u.handle.data.data_val);
+		printf("handle.data_len: %d\n", info->post_op_fh3_u.handle.data.data_len);
+	}
+}
+
+void print_entryplus3(entryplus3 *entry)
+{
+	entryplus3 *node = entry;
+	u_int i = 0;
+	while (node != NULL)
+	{
+		printf("[index: %d] name: %s\n", i++, node->name);
+		print_post_op_attr(&node->name_attributes);
+		print_post_op_fh3(&node->name_handle);
+		node = node->nextentry;
+	}
 }
 
 void nfs_program_3(char *host)
@@ -84,30 +108,32 @@ void nfs_program_3(char *host)
 	else if (func_no == 1) // getattr
 	{
 		GETATTR3res *result_2;
-        // FSINFO3args nfsproc3_fsinfo_3_arg;
-        char src[128];
-        char *src_ptr = src;
-        printf("input data: ");
-        scanf("%s", src_ptr);
-        // printf("sizeof: %lu\n", sizeof(data));
-        // printf("strlen: %ld\n", strlen(data));
-        u_int data_len = (u_int)strlen(src) + 1;
-        char *data_val = (char *)malloc(sizeof(char) * data_len);
-        char *dst_ptr = data_val;
-        u_int i = data_len;
-        while (i--)
-        {
-            *(dst_ptr++) = *(src_ptr++);
-        }
-        *(dst_ptr++) = '\0';
-        GETATTR3args nfsproc3_getattr_3_arg = {{{data_len, data_val}}};
+		// FSINFO3args nfsproc3_fsinfo_3_arg;
+		char src[128];
+		char *src_ptr = src;
+		printf("input data: ");
+		scanf("%s", src_ptr);
+		// printf("sizeof: %lu\n", sizeof(data));
+		// printf("strlen: %ld\n", strlen(data));
+		u_int data_len = (u_int)strlen(src) + 1;
+		char *data_val = (char *)malloc(sizeof(char) * data_len);
+		char *dst_ptr = data_val;
+		u_int i = data_len;
+		while (i--)
+		{
+			*(dst_ptr++) = *(src_ptr++);
+		}
+		*(dst_ptr++) = '\0';
+		GETATTR3args nfsproc3_getattr_3_arg = {{{data_len, data_val}}};
 		result_2 = nfsproc3_getattr_3(&nfsproc3_getattr_3_arg, clnt);
 		if (result_2 == (GETATTR3res *)NULL)
 		{
 			clnt_perror(clnt, "call failed");
-		}else{
-            print_fattr3(&result_2->GETATTR3res_u.resok.obj_attributes);
-        }
+		}
+		else
+		{
+			print_fattr3(&result_2->GETATTR3res_u.resok.obj_attributes);
+		}
 	}
 	// else if (strcmp(func_name, "setattr") == 0)
 	else if (func_no == 2) // setattr
@@ -278,12 +304,34 @@ void nfs_program_3(char *host)
 	else if (func_no == 17) // readdirplus
 	{
 		READDIRPLUS3res *result_18;
-		READDIRPLUS3args nfsproc3_readdirplus_3_arg;
+		// READDIRPLUS3args nfsproc3_readdirplus_3_arg;
+		char src[128];
+		char *src_ptr = src;
+		printf("input data: ");
+		scanf("%s", src_ptr);
+		// printf("sizeof: %lu\n", sizeof(data));
+		// printf("strlen: %ld\n", strlen(data));
+		u_int data_len = (u_int)strlen(src) + 1;
+		char *data_val = (char *)malloc(sizeof(char) * data_len);
+		char *dst_ptr = data_val;
+		u_int i = data_len;
+		while (i--)
+		{
+			*(dst_ptr++) = *(src_ptr++);
+		}
+		*(dst_ptr++) = '\0';
+		READDIRPLUS3args nfsproc3_readdirplus_3_arg = {{{data_len, data_val}}, 0, 0, 0, 0};
 		result_18 = nfsproc3_readdirplus_3(&nfsproc3_readdirplus_3_arg, clnt);
 		if (result_18 == (READDIRPLUS3res *)NULL)
 		{
 			clnt_perror(clnt, "call failed");
 		}
+		else
+		{
+			print_post_op_attr(&result_18->READDIRPLUS3res_u.resok.dir_attributes);
+			print_entryplus3(result_18->READDIRPLUS3res_u.resok.reply.entries);
+		}
+		free(data_val);
 	}
 	// else if (strcmp(func_name, "fsstat") == 0)
 	else if (func_no == 18) // fsstat
@@ -383,52 +431,53 @@ void nfs_program_3(char *host)
 			printf("time_delta.nseconds: %u\n", result_20->FSINFO3res_u.resok.time_delta.nseconds);
 			printf("properties: %u\n", result_20->FSINFO3res_u.resok.properties);
 		}
+		free(data_val);
 	}
 	// else if (strcmp(func_name, "pathconf") == 0)
 	else if (func_no == 20) // pathconf
 	{
 		PATHCONF3res *result_21;
-        char src[128];
-        char *src_ptr = src;
-        printf("input data: ");
-        scanf("%s", src_ptr);
-        // printf("sizeof: %lu\n", sizeof(data));
-        // printf("strlen: %ld\n", strlen(data));
-        u_int data_len = (u_int)strlen(src) + 1;
-        char *data_val = (char *)malloc(sizeof(char) * data_len);
-        char *dst_ptr = data_val;
-        u_int i = data_len;
-        while (i--)
-        {
-            *(dst_ptr++) = *(src_ptr++);
-        }
-        *(dst_ptr++) = '\0';
-        PATHCONF3args nfsproc3_pathconf_3_arg = {{{data_len, data_val}}};
+		char src[128];
+		char *src_ptr = src;
+		printf("input data: ");
+		scanf("%s", src_ptr);
+		// printf("sizeof: %lu\n", sizeof(data));
+		// printf("strlen: %ld\n", strlen(data));
+		u_int data_len = (u_int)strlen(src) + 1;
+		char *data_val = (char *)malloc(sizeof(char) * data_len);
+		char *dst_ptr = data_val;
+		u_int i = data_len;
+		while (i--)
+		{
+			*(dst_ptr++) = *(src_ptr++);
+		}
+		*(dst_ptr++) = '\0';
+		PATHCONF3args nfsproc3_pathconf_3_arg = {{{data_len, data_val}}};
 		result_21 = nfsproc3_pathconf_3(&nfsproc3_pathconf_3_arg, clnt);
 		if (result_21 == (PATHCONF3res *)NULL)
 		{
 			clnt_perror(clnt, "call failed");
 		}
-        else
-        {
-            printf("-----response-----\n");
-            printf("status: %d\n", result_21->status);
-            if (result_21->status == 0)
-            {
-                printf("resok\n");
-            }
-            else
-            {
-                printf("resfail\n");
-            }
-            print_post_op_attr(&result_21->PATHCONF3res_u.resok.obj_attributes);
-            printf("linkmax: %d\n", result_21->PATHCONF3res_u.resok.linkmax);
-            printf("name_max: %d\n", result_21->PATHCONF3res_u.resok.name_max);
-            printf("no_trunc: %d\n", result_21->PATHCONF3res_u.resok.no_trunc);
-            printf("chown_restricted: %d\n", result_21->PATHCONF3res_u.resok.chown_restricted);
-            printf("case_insensitive: %d\n", result_21->PATHCONF3res_u.resok.case_insensitive);
-            printf("case_preserving: %d\n", result_21->PATHCONF3res_u.resok.case_preserving);
-        }
+		else
+		{
+			printf("-----response-----\n");
+			printf("status: %d\n", result_21->status);
+			if (result_21->status == 0)
+			{
+				printf("resok\n");
+			}
+			else
+			{
+				printf("resfail\n");
+			}
+			print_post_op_attr(&result_21->PATHCONF3res_u.resok.obj_attributes);
+			printf("linkmax: %d\n", result_21->PATHCONF3res_u.resok.linkmax);
+			printf("name_max: %d\n", result_21->PATHCONF3res_u.resok.name_max);
+			printf("no_trunc: %d\n", result_21->PATHCONF3res_u.resok.no_trunc);
+			printf("chown_restricted: %d\n", result_21->PATHCONF3res_u.resok.chown_restricted);
+			printf("case_insensitive: %d\n", result_21->PATHCONF3res_u.resok.case_insensitive);
+			printf("case_preserving: %d\n", result_21->PATHCONF3res_u.resok.case_preserving);
+		}
 	}
 	// else if (strcmp(func_name, "commit") == 0)
 	else if (func_no == 21) // commit

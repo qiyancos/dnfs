@@ -23,6 +23,9 @@
  *
  * @retval DUPREQ_SUCCESS if successful.
  */
+#include <sys/stat.h>
+#include <sys/sysmacros.h>
+
 #include "nfs/nfs_utils.h"
 #include "log/log.h"
 #include "rpc/svc_auth.h"

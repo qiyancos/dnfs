@@ -5,6 +5,7 @@ add_library(nfs
         nfs_null.cpp
         nfs_getattr.cpp
         nfs_link.cpp
+        nfs_readdirplus.cpp
         nfs_fsstat.cpp
         nfs_fsinfo.cpp
         nfs_pathconf.cpp)

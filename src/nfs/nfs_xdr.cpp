@@ -145,11 +145,50 @@ bool xdr_nfs_fh3(XDR *xdrs, nfs_fh3 *objp) {
     return (true);
 }
 
-bool xdr_filename3(XDR *xdrs, filename3 *objp)
+
+bool xdr_cookie3(XDR *xdrs, cookie3 *objp)
 {
-    if (!xdr_string(xdrs, objp, XDR_STRING_MAXLEN))
+    if (!xdr_nfs3_uint64(xdrs, objp))
         return (false);
     return (true);
+}
+
+bool xdr_cookieverf3(XDR *xdrs, cookieverf3 objp)
+{
+    if (!xdr_opaque(xdrs, objp, 8))
+        return (false);
+    return (true);
+}
+
+bool xdr_count3(XDR *xdrs, count3 *objp)
+{
+    if (!xdr_nfs3_uint32(xdrs, objp))
+        return (false);
+    return (true);
+}
+
+bool xdr_filename3(XDR *xdrs, filename3 *objp)
+{
+	if (!xdr_string(xdrs, objp, XDR_STRING_MAXLEN))
+		return (false);
+	return (true);
+}
+
+bool xdr_post_op_fh3(XDR *xdrs, post_op_fh3 *objp)
+{
+	if (!xdr_bool(xdrs, &objp->handle_follows))
+		return (false);
+	switch (objp->handle_follows) {
+	case TRUE:
+		if (!xdr_nfs_fh3(xdrs, &objp->post_op_fh3_u.handle))
+			return (false);
+		break;
+	case FALSE:
+		break;
+	default:
+		return (false);
+	}
+	return (true);
 }
 
 bool xdr_diropargs3(XDR *xdrs, diropargs3 *objp)
