@@ -47,8 +47,8 @@ const nfs_function_desc_t mnt3_func_desc[] = {
                 .funcname = "MNT_NULL",
                 .dispatch_behaviour = NOTHING_SPECIAL},
         {
-                .service_function = mnt_Mnt,
-                .free_function = mnt3_Mnt_Free,
+                .service_function = mnt_mnt,
+                .free_function = mnt3_mnt_free,
                 .xdr_decode_func = (xdrproc_t) xdr_dirpath,
                 .xdr_encode_func = (xdrproc_t) xdr_mountres3,
                 .funcname = "MNT_MNT",

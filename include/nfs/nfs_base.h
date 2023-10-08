@@ -16,11 +16,12 @@
 #ifndef NFS_NFS_FUNC_H
 #define NFS_NFS_FUNC_H
 
-#include "nfs/nfs_xdr.h"
 #include "dnfsd/dnfs_meta_data.h"
 #include "nfs/nfs_null.h"
 #include "nfs/nfs_getattr.h"
+#include "nfs/nfs_fsstat.h"
 #include "nfs/nfs_fsinfo.h"
+#include "nfs/nfs_pathconf.h"
 #include "nfs/nfs_readdirplus.h"
 
 #define    NFS_PROGRAM    100003
@@ -231,10 +232,10 @@ const nfs_function_desc_t nfs3_func_desc[] = {
                 .dispatch_behaviour = (NEEDS_CRED | SUPPORTS_GSS)
         },
         {
-                .service_function = nfs3_fsinfo,
-                .free_function = nfs3_fsinfo_free,
-                .xdr_decode_func = (xdrproc_t) xdr_FSINFO3args,
-                .xdr_encode_func = (xdrproc_t) xdr_FSINFO3res,
+                .service_function = nfs3_fsstat,
+                .free_function = nfs3_fsstat_free,
+                .xdr_decode_func = (xdrproc_t) xdr_FSSTAT3args,
+                .xdr_encode_func = (xdrproc_t) xdr_FSSTAT3res,
                 .funcname = "NFS3_FSSTAT",
                 .dispatch_behaviour = (NEEDS_CRED | SUPPORTS_GSS)
         },

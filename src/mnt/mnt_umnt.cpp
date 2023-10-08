@@ -18,7 +18,7 @@
 #define MODULE_NAME "MNT"
 
 int mnt_umnt(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
-    LOG(MODULE_NAME, L_INFO,
+    LOG(MODULE_NAME, D_INFO,
         "REQUEST PROCESSING: Calling MNT_UMNT path %s", arg->arg_mnt);
     return NFS_REQ_OK;
 }

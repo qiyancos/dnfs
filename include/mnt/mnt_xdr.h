@@ -14,15 +14,14 @@
  */
 #ifndef DNFSD_MNT_XDR_H
 #define DNFSD_MNT_XDR_H
+extern "C" {
+#include "rpc/xdr_inline.h"
+}
+#include <cassert>
 #include "dnfsd/dnfs_meta_data.h"
 extern bool xdr_mountstat3(XDR *, mountstat3 *);
 extern bool xdr_fhandle3(XDR *, fhandle3 *);
 extern bool xdr_dirpath(XDR *, mnt3_dirpath *);
 extern bool xdr_name(XDR *, mnt3_name *);
-extern bool xdr_mountres3_ok(XDR *, mountres3_ok *);
-extern bool xdr_mountres3(XDR *, mountres3 *);
-extern bool xdr_mountlist(XDR *, mountlist *);
-extern bool xdr_groups(XDR *, mnt3_groups *);
-extern bool xdr_exports(XDR *, mnt3_exports *);
 
 #endif //DNFSD_MNT_XDR_H

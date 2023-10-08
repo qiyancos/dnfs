@@ -142,7 +142,6 @@ bool xdr_nfs_fh3(XDR *xdrs, nfs_fh3 *objp) {
             (xdrs, (char **) &objp->data.data_val,
              (u_int *) &objp->data.data_len, 64))
         return (false);
-
     return (true);
 }
 

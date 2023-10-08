@@ -15,5 +15,48 @@
 #ifndef DNFSD_NFS_FSSTAT_H
 #define DNFSD_NFS_FSSTAT_H
 
+#include "nfs_args.h"
+
+struct FSSTAT3args {
+    nfs_fh3 fsroot;
+};
+
+struct FSSTAT3resok {
+    post_op_attr obj_attributes;
+    size3 tbytes;
+    size3 fbytes;
+    size3 abytes;
+    size3 tfiles;
+    size3 ffiles;
+    size3 afiles;
+    nfs3_uint32 invarsec;
+};
+struct FSSTAT3resfail {
+    post_op_attr obj_attributes;
+};
+
+struct FSSTAT3res {
+    nfsstat3 status;
+    union {
+        FSSTAT3resok resok;
+        FSSTAT3resfail resfail;
+    } FSSTAT3res_u;
+};
+
+/*声明数据参数*/
+union nfs_arg_t;
+union nfs_res_t;
+
+int nfs3_fsstat(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
+
+void nfs3_fsstat_free(nfs_res_t *res);
+
+bool xdr_FSSTAT3args(XDR *xdrs, FSSTAT3args *objp);
+
+bool xdr_FSSTAT3resok(XDR *xdrs, FSSTAT3resok *objp);
+
+bool xdr_FSSTAT3resfail(XDR *xdrs, FSSTAT3resfail *objp);
+
+bool xdr_FSSTAT3res(XDR *xdrs, FSSTAT3res *objp);
 
 #endif //DNFSD_NFS_FSSTAT_H
