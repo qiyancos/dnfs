@@ -289,12 +289,48 @@ void nfs_program_3(char *host)
 	else if (func_no == 18) // fsstat
 	{
 		FSSTAT3res *result_19;
-		FSSTAT3args nfsproc3_fsstat_3_arg;
+        char src[128];
+        char *src_ptr = src;
+        printf("input data: ");
+        scanf("%s", src_ptr);
+        // printf("sizeof: %lu\n", sizeof(data));
+        // printf("strlen: %ld\n", strlen(data));
+        u_int data_len = (u_int)strlen(src) + 1;
+        char *data_val = (char *)malloc(sizeof(char) * data_len);
+        char *dst_ptr = data_val;
+        u_int i = data_len;
+        while (i--)
+        {
+            *(dst_ptr++) = *(src_ptr++);
+        }
+        *(dst_ptr++) = '\0';
+		FSSTAT3args nfsproc3_fsstat_3_arg= {{{data_len, data_val}}};
 		result_19 = nfsproc3_fsstat_3(&nfsproc3_fsstat_3_arg, clnt);
 		if (result_19 == (FSSTAT3res *)NULL)
 		{
 			clnt_perror(clnt, "call failed");
 		}
+        else
+        {
+            printf("-----response-----\n");
+            printf("status: %d\n", result_19->status);
+            if (result_19->status == 0)
+            {
+                printf("resok\n");
+            }
+            else
+            {
+                printf("resfail\n");
+            }
+            print_post_op_attr(&result_19->FSSTAT3res_u.resok.obj_attributes);
+            printf("tbytes: %u\n", result_19->FSSTAT3res_u.resok.tbytes);
+            printf("fbytes: %u\n", result_19->FSSTAT3res_u.resok.fbytes);
+            printf("abytes: %u\n", result_19->FSSTAT3res_u.resok.abytes);
+            printf("tfiles: %u\n", result_19->FSSTAT3res_u.resok.tfiles);
+            printf("ffiles: %u\n", result_19->FSSTAT3res_u.resok.ffiles);
+            printf("afiles: %u\n", result_19->FSSTAT3res_u.resok.afiles);
+            printf("invarsec: %u\n", result_19->FSSTAT3res_u.resok.invarsec);
+        }
 	}
 	// else if (strcmp(func_name, "fsinfo") == 0)
 	else if (func_no == 19) // fsinfo

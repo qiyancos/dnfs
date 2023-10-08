@@ -43,4 +43,7 @@ int mnt_Mnt(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
 
 void mnt3_Mnt_Free(nfs_res_t *res);
 
+extern bool xdr_mountres3_ok(XDR *, mountres3_ok *);
+extern bool xdr_mountres3(XDR *, mountres3 *);
+
 #endif //DNFSD_MNT_MNT_H

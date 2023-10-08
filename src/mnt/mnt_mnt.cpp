@@ -13,9 +13,10 @@
  *
  */
 #include "mnt/mnt_mnt.h"
+#include "mnt/mnt_base.h"
+#include "mnt/mnt_xdr.h"
 #include "log/log.h"
 #include "dnfsd/dnfs_meta_data.h"
-#include "mnt/mnt_base.h"
 
 #define MODULE_NAME "MNT"
 int mnt_Mnt(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
@@ -27,7 +28,7 @@ int mnt_Mnt(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
             &res->res_mnt3.mountres3_u.mountinfo;
 
 
-    LOG(MODULE_NAME,L_INFO,
+    LOG(MODULE_NAME,D_INFO,
              "REQUEST PROCESSING: Calling MNT_MNT path=%s", arg->arg_mnt);
 
     /* Quick escape if an unsupported MOUNT version */
@@ -54,6 +55,9 @@ int mnt_Mnt(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
 
     RES_MOUNTINFO->auth_flavors.auth_flavors_len = index_auth;
 
+    LOG(MODULE_NAME,D_INFO,
+        "REQUEST PROCESSING: Request MNT_MNT file_handle=%s", fh3->data.data_val);
+
     out:
     return retval;
 
@@ -67,4 +71,44 @@ void mnt3_Mnt_Free(nfs_res_t *res)
 //        free(resok->auth_flavors.auth_flavors_val);
 //        free(resok->fhandle.fhandle3_val);
     }
+}
+
+
+bool xdr_mountres3_ok(XDR *xdrs, mountres3_ok *objp) {
+
+#if defined(_LP64) || defined(_KERNEL)
+    int __attribute__ ((__unused__)) *buf;
+#else
+    register long __attribute__ ((__unused__)) * buf;
+#endif
+
+    if (!xdr_fhandle3(xdrs, &objp->fhandle))
+        return (false);
+    if (!xdr_array
+            (xdrs, (char **) &objp->auth_flavors.auth_flavors_val,
+             &objp->auth_flavors.auth_flavors_len, XDR_ARRAY_MAXLEN,
+             sizeof(int), (xdrproc_t) xdr_int))
+        return (false);
+    return (true);
+}
+
+bool xdr_mountres3(XDR *xdrs, mountres3 *objp) {
+
+#if defined(_LP64) || defined(_KERNEL)
+    int __attribute__ ((__unused__)) *buf;
+#else
+    register long __attribute__ ((__unused__)) * buf;
+#endif
+
+    if (!xdr_mountstat3(xdrs, &objp->fhs_status))
+        return (false);
+    switch (objp->fhs_status) {
+        case MNT3_OK:
+            if (!xdr_mountres3_ok(xdrs, &objp->mountres3_u.mountinfo))
+                return (false);
+            break;
+        default:
+            return (true);
+    }
+    return (true);
 }

@@ -17,12 +17,14 @@
 #include "nfs/nfs_utils.h"
 #include "log/log.h"
 #include "dnfsd/dnfs_meta_data.h"
-
+#include <sys/statvfs.h>
 #define MODULE_NAME "NFS"
 
 int nfs3_fsstat(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
 {
     int rc = NFS_REQ_OK;
+    struct statvfs buffstatvfs{};
+    int retval = 0;
 
     LOG(MODULE_NAME, D_INFO, "The value of the nfs_fsstat obtained file handle is '%s', and the length is data_val is '%d'",
         arg->arg_fsstat3.fsroot.data.data_val,
@@ -48,18 +50,19 @@ int nfs3_fsstat(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
         goto out;
     }
 
-//    res->res_fsstat3.FSSTAT3res_u.resok.tbytes = dynamicinfo.total_bytes;
-    res->res_fsstat3.FSSTAT3res_u.resok.tbytes = 10000;
-//    res->res_fsstat3.FSSTAT3res_u.resok.fbytes = dynamicinfo.free_bytes;
-    res->res_fsstat3.FSSTAT3res_u.resok.fbytes = 10000;
-//    res->res_fsstat3.FSSTAT3res_u.resok.abytes = dynamicinfo.avail_bytes;
-    res->res_fsstat3.FSSTAT3res_u.resok.abytes = 5;
-//    res->res_fsstat3.FSSTAT3res_u.resok.tfiles = dynamicinfo.total_files;
-    res->res_fsstat3.FSSTAT3res_u.resok.tfiles = 5;
-//    res->res_fsstat3.FSSTAT3res_u.resok.ffiles = dynamicinfo.free_files;
-    res->res_fsstat3.FSSTAT3res_u.resok.ffiles = 5;
-//    res->res_fsstat3.FSSTAT3res_u.resok.afiles = dynamicinfo.avail_files;
-    res->res_fsstat3.FSSTAT3res_u.resok.afiles = 6;
+    retval=statvfs(arg->arg_fsstat3.fsroot.data.data_val, &buffstatvfs);
+
+    if (retval < 0) {
+        rc=NFS_REQ_ERROR;
+        goto out;
+    }
+
+    res->res_fsstat3.FSSTAT3res_u.resok.tbytes = buffstatvfs.f_frsize * buffstatvfs.f_blocks;
+    res->res_fsstat3.FSSTAT3res_u.resok.fbytes = buffstatvfs.f_frsize * buffstatvfs.f_bfree;
+    res->res_fsstat3.FSSTAT3res_u.resok.abytes = buffstatvfs.f_frsize * buffstatvfs.f_bavail;
+    res->res_fsstat3.FSSTAT3res_u.resok.tfiles = buffstatvfs.f_files;
+    res->res_fsstat3.FSSTAT3res_u.resok.ffiles = buffstatvfs.f_ffree;
+    res->res_fsstat3.FSSTAT3res_u.resok.afiles = buffstatvfs.f_favail;
     /* volatile FS */
     res->res_fsstat3.FSSTAT3res_u.resok.invarsec = 0;
 
@@ -76,8 +79,6 @@ int nfs3_fsstat(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
                  res->res_fsstat3.FSSTAT3res_u.resok.tfiles,
                  res->res_fsstat3.FSSTAT3res_u.resok.ffiles,
                  res->res_fsstat3.FSSTAT3res_u.resok.afiles);
-
-    rc = NFS_REQ_OK;
     
     out:
 
