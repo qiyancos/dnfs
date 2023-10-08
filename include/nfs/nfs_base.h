@@ -19,10 +19,11 @@
 #include "dnfsd/dnfs_meta_data.h"
 #include "nfs/nfs_null.h"
 #include "nfs/nfs_getattr.h"
+#include "nfs/nfs_link.h"
+#include "nfs/nfs_readdirplus.h"
 #include "nfs/nfs_fsstat.h"
 #include "nfs/nfs_fsinfo.h"
 #include "nfs/nfs_pathconf.h"
-#include "nfs/nfs_readdirplus.h"
 
 #define    NFS_PROGRAM    100003
 #define    NFS_V3 3
