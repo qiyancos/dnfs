@@ -26,17 +26,18 @@
 #include "nfs/nfs_utils.h"
 #include "log/log.h"
 #include "rpc/svc_auth.h"
+#include "string"
+using namespace std;
 #define MODULE_NAME "NFS"
 
 /*释放结果存储空间*/
-void nfs_dupreq_rele(nfs_request_t *reqnfs)
-{
+void nfs_dupreq_rele(nfs_request_t *reqnfs) {
 
-        LOG(MODULE_NAME,L_INFO, "releasing res %p",
-                     reqnfs->svc.rq_u2);
-        reqnfs->funcdesc->free_function(
-                static_cast<nfs_res_t *>(reqnfs->svc.rq_u2));
-        free_nfs_res((nfs_res_t *)reqnfs->svc.rq_u2);
+    LOG(MODULE_NAME, L_INFO, "releasing res %p",
+        reqnfs->svc.rq_u2);
+    reqnfs->funcdesc->free_function(
+            static_cast<nfs_res_t *>(reqnfs->svc.rq_u2));
+    free_nfs_res((nfs_res_t *) reqnfs->svc.rq_u2);
 
 
     if (reqnfs->svc.rq_auth)
@@ -45,25 +46,23 @@ void nfs_dupreq_rele(nfs_request_t *reqnfs)
 
 /*为结果分配空间*/
 dupreq_status_t nfs_dupreq_start(nfs_request_t *reqnfs) {
-    auto *p_ =(nfs_res_t *) malloc(sizeof(nfs_res_t));
-        if (nullptr == p_) {
-        LOG(MODULE_NAME, L_ERROR, "Request '%s' result failed to allocate memory",reqnfs->funcdesc->funcname);
+    auto *p_ = (nfs_res_t *) malloc(sizeof(nfs_res_t));
+    if (nullptr == p_) {
+        LOG(MODULE_NAME, L_ERROR, "Request '%s' result failed to allocate memory",
+            reqnfs->funcdesc->funcname);
         return DUPREQ_DROP;
     }
-    reqnfs->res_nfs= p_;
+    reqnfs->res_nfs = p_;
     reqnfs->svc.rq_u2 = p_;
     return DUPREQ_SUCCESS;
 }
 
-nfsstat3 nfs_set_post_op_attr(char *file_path, post_op_attr *fattr)
-{
+nfsstat3 nfs_set_post_op_attr(char *file_path, post_op_attr *fattr) {
 
     struct stat buf{};
     int stat_res = stat(file_path, &buf);
-    if (stat_res != 0)
-    {
-        switch (errno)
-        {
+    if (stat_res != 0) {
+        switch (errno) {
             case ENOENT:
                 return NFS3ERR_NOENT;
             case ENOTDIR:
@@ -76,8 +75,7 @@ nfsstat3 nfs_set_post_op_attr(char *file_path, post_op_attr *fattr)
     }
 
     // type 类型
-    switch (buf.st_mode & S_IFMT)
-    {
+    switch (buf.st_mode & S_IFMT) {
         case S_IFDIR:
             fattr->post_op_attr_u.attributes.type = NF3DIR;
             break;
@@ -115,15 +113,15 @@ nfsstat3 nfs_set_post_op_attr(char *file_path, post_op_attr *fattr)
     // 文件实际使用的磁盘空间字节数
     fattr->post_op_attr_u.attributes.used = buf.st_blocks * S_BLKSIZE;
     // 设备文件描述，仅当type=NF3BLK/NF3CHR时
-    if (S_ISCHR(buf.st_mode) || S_ISBLK(buf.st_mode))
-    {
+    if (S_ISCHR(buf.st_mode) || S_ISBLK(buf.st_mode)) {
         fattr->post_op_attr_u.attributes.rdev.specdata1 = major(buf.st_rdev);
         fattr->post_op_attr_u.attributes.rdev.specdata2 = minor(buf.st_rdev);
     }
     // 文件系统的文件系统标识符
     nfs3_uint64 st_dev_major = major(buf.st_dev);
     nfs3_uint64 st_dev_minor = minor(buf.st_dev);
-    fattr->post_op_attr_u.attributes.fsid = st_dev_major ^ (st_dev_minor << 32 | st_dev_minor >> 32);
+    fattr->post_op_attr_u.attributes.fsid =
+            st_dev_major ^ (st_dev_minor << 32 | st_dev_minor >> 32);
     // 在文件系统中唯一标识文件的数字
     fattr->post_op_attr_u.attributes.fileid = buf.st_ino;
     // 文件内容上次访问时间
@@ -137,4 +135,18 @@ nfsstat3 nfs_set_post_op_attr(char *file_path, post_op_attr *fattr)
     fattr->post_op_attr_u.attributes.ctime.tv_nsec = buf.st_ctim.tv_nsec;
     fattr->attributes_follow = true;
     return NFS3_OK;
+}
+
+/*获取文件句柄*/
+void get_file_handle(nfs_fh3 &request_handle) {
+    /*获取句柄*/
+    char *split_file=(char*)malloc(sizeof(char) * request_handle.data.data_len);
+    char *head=split_file;
+    u_int i=request_handle.data.data_len;
+    while (i--)
+    {
+        *(head++) =*request_handle.data.data_val++;
+    }
+    *(head++)='\0';
+    request_handle.data.data_val=split_file;
 }

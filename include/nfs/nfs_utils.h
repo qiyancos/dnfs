@@ -38,4 +38,8 @@ dupreq_status_t nfs_dupreq_start(nfs_request_t *);
 
 /*为结构体post_op_attr赋值*/
 nfsstat3 nfs_set_post_op_attr(char *file_path, post_op_attr *Fattr);
+
+/*获取文件句柄*/
+void get_file_handle(nfs_fh3 &request_handle);
+
 #endif //DNFSD_NFS_UTILS_H

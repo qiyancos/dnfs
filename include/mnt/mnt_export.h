@@ -30,7 +30,6 @@ struct exportnode {
     mnt3_groups ex_groups;
     mnt3_exports ex_next;
 };
-typedef struct exportnode exportnode;
 
 
 struct proc_state {

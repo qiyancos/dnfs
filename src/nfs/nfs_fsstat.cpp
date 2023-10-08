@@ -26,6 +26,15 @@ int nfs3_fsstat(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
     struct statvfs buffstatvfs{};
     int retval = 0;
 
+    if (arg->arg_fsstat3.fsroot.data.data_len == 0) {
+        rc=NFS_REQ_ERROR;
+        LOG(MODULE_NAME,L_ERROR,
+            "nfs_fsstat get file handle len is 0");
+        goto out;
+    }
+
+    get_file_handle(arg->arg_fsstat3.fsroot);
+
     LOG(MODULE_NAME, D_INFO, "The value of the nfs_fsstat obtained file handle is '%s', and the length is data_val is '%d'",
         arg->arg_fsstat3.fsroot.data.data_val,
         arg->arg_fsstat3.fsroot.data.data_len);
@@ -33,13 +42,6 @@ int nfs3_fsstat(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
     /* to avoid setting it on each error case */
     res->res_fsstat3.FSSTAT3res_u.resfail.obj_attributes.attributes_follow =
             FALSE;
-
-    if (arg->arg_fsstat3.fsroot.data.data_val == nullptr) {
-        rc=NFS_REQ_ERROR;
-        LOG(MODULE_NAME,L_ERROR,
-            "nfs_fsstat get file handle is null");
-        goto out;
-    }
 
     res->res_fsstat3.status =nfs_set_post_op_attr(arg->arg_fsstat3.fsroot.data.data_val, &res->res_fsstat3.FSSTAT3res_u.resok.obj_attributes);
     if (res->res_fsstat3.status!=NFS3_OK)
@@ -95,6 +97,7 @@ bool xdr_FSSTAT3args(XDR *xdrs, FSSTAT3args *objp)
 {
     if (!xdr_nfs_fh3(xdrs, &objp->fsroot))
         return (false);
+
     return (true);
 }
 
