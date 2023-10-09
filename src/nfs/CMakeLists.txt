@@ -11,6 +11,8 @@ add_library(nfs
         nfs_read.cpp
         nfs_write.cpp
         nfs_create.cpp
+        nfs_remove.cpp
+        nfs_rmdir.cpp
         nfs_rename.cpp
         nfs_link.cpp
         nfs_readdir.cpp
