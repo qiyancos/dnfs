@@ -84,8 +84,8 @@ extern bool xdr_sattr3(XDR *xdrs, sattr3 *objp);
 
 extern bool xdr_nfspath3(XDR *xdrs, nfspath3 *objp);
 
-extern bool xdr_offset3(XDR *xdrs, offset3 *objp);
-
 extern bool xdr_writeverf3(XDR *xdrs, writeverf3 objp);
+
+extern bool xdr_offset3(XDR *xdrs, offset3 *objp);
 
 #endif //DNFSD_NFS_XDR_H
