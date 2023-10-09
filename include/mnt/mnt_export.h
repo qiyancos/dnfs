@@ -16,6 +16,7 @@
 #define DNFSD_MNT_EXPORT_H
 
 #include "mnt_args.h"
+
 typedef struct groupnode *mnt3_groups;
 
 struct groupnode {
@@ -37,16 +38,18 @@ struct proc_state {
     mnt3_exports tail;
     int retval;
 };
-/*声明数据参数*/
-union nfs_arg_t;
-union nfs_res_t;
 
 
 int mnt_export(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
+
 void mnt_export_free(nfs_res_t *res);
 
 extern bool xdr_groupnode_x(XDR *xdrs, groupnode *objp);
+
 extern bool xdr_groups(XDR *xdrs, struct groupnode **objp);
+
 extern bool xdr_exportnode_x(XDR *xdrs, exportnode *objp);
+
 extern bool xdr_exports(XDR *, mnt3_exports *);
+
 #endif //DNFSD_MNT_EXPORT_H

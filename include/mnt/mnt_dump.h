@@ -16,9 +16,7 @@
 #define DNFSD_MNT_DUMP_H
 
 #include "mnt_args.h"
-/*声明数据参数*/
-union nfs_arg_t;
-union nfs_res_t;
+
 typedef struct exportnode exportnode;
 
 typedef struct mountbody *mountlist;

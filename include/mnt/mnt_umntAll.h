@@ -14,9 +14,8 @@
  */
 #ifndef DNFSD_MNT_UMNTALL_H
 #define DNFSD_MNT_UMNTALL_H
-/*声明数据参数*/
-union nfs_arg_t;
-union nfs_res_t;
+
+#include "mnt_args.h"
 
 int mnt_umntAll(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
 

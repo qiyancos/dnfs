@@ -17,6 +17,7 @@
 #define DNFSD_NFS_UTILS_H
 
 #include "dnfsd/dnfs_meta_data.h"
+#include "string"
 
 typedef enum dupreq_status {
     DUPREQ_SUCCESS = 0,
@@ -37,10 +38,44 @@ void nfs_dupreq_rele(nfs_request_t *reqnfs);
 dupreq_status_t nfs_dupreq_start(nfs_request_t *);
 
 
-/*为结构体post_op_attr赋值*/
+/* 获取文件属性
+ * params file_path:获取属性文件路径
+ * params Fattr:保存获取属性
+ * return 是否获取成功
+ * */
 nfsstat3 nfs_set_post_op_attr(char *file_path, post_op_attr *Fattr);
 
-/*获取文件句柄*/
+/*获取文件句柄
+ * params request_handle:请求参数句柄
+ * */
 void get_file_handle(nfs_fh3 &request_handle);
+
+/*获取文件操作之前属性信息
+ * params file_path:获取属性文件路径
+ * params pre_attr:保存文件操作前属性
+ * return 是否获取成功
+ * */
+nfsstat3 get_pre_op_attr(char *file_path, pre_op_attr &pre_attr);
+
+/*判断文件是否存在
+ * params file_path:判断存在的文件路径
+ * params judge_mode:判断文件格式（文件,文件夹）
+ * return 是否满足要求
+ * */
+bool judge_file_exit(const std::string &file_path, int judge_mode);
+
+/*获取文件弱属性对比信息
+ * params file_path:获取属性文件路径
+ * params pre_attr:文件操作前属性
+ * params wccData:保存文件若属性对比信息
+ * return 是否获取成功
+ * */
+nfsstat3 get_wcc_data(char *file_path, pre_op_attr &pre_attr, wcc_data &wccData);
+
+/*删除目录
+ * params path:删除的目录
+ * return 是否删除成功
+ * */
+bool remove_directory(const std::string& path);
 
 #endif //DNFSD_NFS_UTILS_H

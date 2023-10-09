@@ -14,8 +14,9 @@
  */
 #ifndef DNFSD_MNT_NULL_H
 #define DNFSD_MNT_NULL_H
-union nfs_arg_t;
-union nfs_res_t;
+
+#include "mnt_args.h"
+
 /* MNT NULL Process function*/
 int mnt_null(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
 

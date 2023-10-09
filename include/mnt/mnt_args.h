@@ -22,9 +22,9 @@ extern "C" {
 
 #define XDR_ARRAY_MAXLEN 1024
 
-#define	MNTPATHLEN 1024
+#define    MNTPATHLEN 1024
 
-#define	MNTNAMLEN 255
+#define    MNTNAMLEN 255
 
 typedef char *mnt3_name;
 
@@ -44,4 +44,7 @@ enum mountstat3 {
     MNT3ERR_SERVERFAULT = 10006
 };
 
+/*声明数据参数*/
+union nfs_arg_t;
+union nfs_res_t;
 #endif //DNFSD_MNT_ARGS_H

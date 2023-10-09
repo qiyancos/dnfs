@@ -14,7 +14,9 @@
  */
 #ifndef DNFSD_MNT_MNT_H
 #define DNFSD_MNT_MNT_H
+
 #include "mnt_args.h"
+
 typedef struct {
     u_int fhandle3_len;
     char *fhandle3_val;
@@ -35,15 +37,12 @@ struct mountres3 {
     } mountres3_u;
 };
 
-/*声明数据参数*/
-union nfs_arg_t;
-union nfs_res_t;
-
 int mnt_mnt(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
 
 void mnt3_mnt_free(nfs_res_t *res);
 
 extern bool xdr_mountres3_ok(XDR *, mountres3_ok *);
+
 extern bool xdr_mountres3(XDR *, mountres3 *);
 
 #endif //DNFSD_MNT_MNT_H

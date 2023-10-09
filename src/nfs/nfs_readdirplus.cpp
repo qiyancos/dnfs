@@ -19,8 +19,7 @@
 #include "log/log.h"
 #include "dnfsd/dnfs_meta_data.h"
 #include "dnfsd/dnfs_config.h"
-#include "string"
-using namespace std;
+
 #define MODULE_NAME "NFS"
 
 int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
@@ -39,7 +38,7 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
             &res->res_readdirplus3.READDIRPLUS3res_u.resfail;
     READDIRPLUS3resok *resok =
             &res->res_readdirplus3.READDIRPLUS3res_u.resok;
-    resok->reply.entries = NULL;
+    resok->reply.entries = nullptr;
     entryplus3 *head;
     entryplus3 *current;
     entryplus3 *node;

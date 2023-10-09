@@ -61,6 +61,11 @@ dupreq_status_t nfs_dupreq_start(nfs_request_t *reqnfs) {
     return DUPREQ_SUCCESS;
 }
 
+/* 获取文件属性
+ * params file_path:获取属性文件路径
+ * params Fattr:保存获取属性
+ * return 是否获取成功
+ * */
 nfsstat3 nfs_set_post_op_attr(char *file_path, post_op_attr *fattr) {
 
     struct stat buf{};
@@ -141,7 +146,9 @@ nfsstat3 nfs_set_post_op_attr(char *file_path, post_op_attr *fattr) {
     return NFS3_OK;
 }
 
-/*获取文件句柄*/
+/*获取文件句柄
+ * params request_handle:请求参数句柄
+ * */
 void get_file_handle(nfs_fh3 &request_handle) {
     /*获取句柄*/
     char *split_file = (char *) malloc(sizeof(char) * request_handle.data.data_len);
@@ -152,4 +159,110 @@ void get_file_handle(nfs_fh3 &request_handle) {
     }
     *(head++) = '\0';
     request_handle.data.data_val = split_file;
+}
+
+/*获取文件操作之前属性信息
+ * params file_path:获取属性文件路径
+ * params pre_attr:保存文件操作前属性
+ * return 是否获取成功
+ * */
+nfsstat3 get_pre_op_attr(char *file_path, pre_op_attr &pre_attr) {
+    struct post_op_attr get_a{};
+    nfsstat3 status = nfs_set_post_op_attr(
+            file_path, &get_a);
+    if (status != NFS3_OK) {
+        return status;
+    }
+
+    pre_attr.attributes_follow = true;
+
+    /*添加属性*/
+    pre_attr.pre_op_attr_u.attributes.size = get_a.post_op_attr_u.attributes.size;
+    pre_attr.pre_op_attr_u.attributes.ctime.tv_sec = get_a.post_op_attr_u.attributes.ctime.tv_sec;
+    pre_attr.pre_op_attr_u.attributes.ctime.tv_nsec = get_a.post_op_attr_u.attributes.ctime.tv_nsec;
+    pre_attr.pre_op_attr_u.attributes.mtime.tv_sec = get_a.post_op_attr_u.attributes.mtime.tv_sec;
+    pre_attr.pre_op_attr_u.attributes.mtime.tv_nsec = get_a.post_op_attr_u.attributes.mtime.tv_nsec;
+    return NFS3_OK;
+}
+
+/*判断文件是否存在
+ * params file_path:判断存在的文件路径
+ * params judge_mode:判断文件格式（文件,文件夹）
+ * return 是否满足要求
+ * */
+bool judge_file_exit(const std::string &file_path, int judge_mode) {
+    struct stat info{};
+    /*不存在直接返回*/
+    if (stat(file_path.c_str(), &info) != 0) {
+        return false;
+    } else if (!(info.st_mode & judge_mode)) {
+        /*存在但不是需要的文件格式*/
+        return false;
+    }
+    return true;
+}
+
+/*获取文件弱属性对比信息
+ * params file_path:获取属性文件路径
+ * params pre_attr:文件操作前属性
+ * params wccData:保存文件若属性对比信息
+ * return 是否获取成功
+ * */
+nfsstat3 get_wcc_data(char *file_path, pre_op_attr &pre_attr, wcc_data &wccData) {
+    struct post_op_attr get_a{};
+    nfsstat3 status = nfs_set_post_op_attr(
+            file_path, &get_a);
+    if (status != NFS3_OK) {
+        return status;
+    }
+    wccData.before = pre_attr;
+    wccData.after = get_a;
+    return NFS3_OK;
+}
+
+/*删除目录
+ * params path:删除的目录
+ * return 是否删除成功
+ * */
+bool remove_directory(const std::string& path) {
+    DIR *dir = opendir(path.c_str());
+    if (dir == nullptr) {
+        // 打开目录失败
+        return false;
+    }
+
+    dirent *entry;
+    while ((entry = readdir(dir)) != nullptr) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            // 跳过当前目录和父目录
+            continue;
+        }
+
+        // 构造文件/文件夹的完整路径
+        std::string fullPath = std::string(path) + "/" + entry->d_name;
+
+        if (entry->d_type == DT_DIR) {
+            // 如果是文件夹，递归删除
+            if (!remove_directory(fullPath)) {
+                closedir(dir);
+                return false;
+            }
+        } else {
+            // 如果是文件，直接删除
+            if (remove(fullPath.c_str()) != 0) {
+                closedir(dir);
+                return false;
+            }
+        }
+    }
+
+    // 关闭目录流
+    closedir(dir);
+
+    // 删除当前目录
+    if (rmdir(path.c_str()) != 0) {
+        return false;
+    }
+
+    return true;
 }
