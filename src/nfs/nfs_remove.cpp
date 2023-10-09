@@ -21,12 +21,10 @@
 
 #define MODULE_NAME "NFS"
 
-int nfs3_remove(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
-{
+int nfs3_remove(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     int rc = NFS_REQ_OK;
 
-    if (arg->arg_remove3.object.dir.data.data_len == 0)
-    {
+    if (arg->arg_remove3.object.dir.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
         LOG(MODULE_NAME, L_ERROR,
             "arg_remove get dir handle len is 0");
@@ -39,50 +37,44 @@ int nfs3_remove(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
         "The value of the arg_remove obtained file handle is '%s', and the length is '%d'",
         arg->arg_remove3.object.dir.data.data_val,
         arg->arg_remove3.object.dir.data.data_len);
-out:
+    out:
 
     return rc;
 }
 
-void nfs3_remove_free(nfs_res_t *res)
-{
+void nfs3_remove_free(nfs_res_t *res) {
 }
 
-bool xdr_REMOVE3args(XDR *xdrs, REMOVE3args *objp)
-{
-	if (!xdr_diropargs3(xdrs, &objp->object))
-		return FALSE;
-	return TRUE;
+bool xdr_REMOVE3args(XDR *xdrs, REMOVE3args *objp) {
+    if (!xdr_diropargs3(xdrs, &objp->object))
+        return FALSE;
+    return TRUE;
 }
 
-bool xdr_REMOVE3resok(XDR *xdrs, REMOVE3resok *objp)
-{
-	if (!xdr_wcc_data(xdrs, &objp->dir_wcc))
-		return FALSE;
-	return TRUE;
+bool xdr_REMOVE3resok(XDR *xdrs, REMOVE3resok *objp) {
+    if (!xdr_wcc_data(xdrs, &objp->dir_wcc))
+        return FALSE;
+    return TRUE;
 }
 
-bool xdr_REMOVE3resfail(XDR *xdrs, REMOVE3resfail *objp)
-{
-	if (!xdr_wcc_data(xdrs, &objp->dir_wcc))
-		return FALSE;
-	return TRUE;
+bool xdr_REMOVE3resfail(XDR *xdrs, REMOVE3resfail *objp) {
+    if (!xdr_wcc_data(xdrs, &objp->dir_wcc))
+        return FALSE;
+    return TRUE;
 }
 
-bool xdr_REMOVE3res(XDR *xdrs, REMOVE3res *objp)
-{
-	if (!xdr_nfsstat3(xdrs, &objp->status))
-		return FALSE;
-	switch (objp->status)
-	{
-	case NFS3_OK:
-		if (!xdr_REMOVE3resok(xdrs, &objp->REMOVE3res_u.resok))
-			return FALSE;
-		break;
-	default:
-		if (!xdr_REMOVE3resfail(xdrs, &objp->REMOVE3res_u.resfail))
-			return FALSE;
-		break;
-	}
-	return TRUE;
+bool xdr_REMOVE3res(XDR *xdrs, REMOVE3res *objp) {
+    if (!xdr_nfsstat3(xdrs, &objp->status))
+        return FALSE;
+    switch (objp->status) {
+        case NFS3_OK:
+            if (!xdr_REMOVE3resok(xdrs, &objp->REMOVE3res_u.resok))
+                return FALSE;
+            break;
+        default:
+            if (!xdr_REMOVE3resfail(xdrs, &objp->REMOVE3res_u.resfail))
+                return FALSE;
+            break;
+    }
+    return TRUE;
 }

@@ -253,7 +253,7 @@ struct nfs_request_lookahead {
     uint16_t write;
 };
 
-struct nfs_request_lookahead dummy_lookahead = {
+static struct nfs_request_lookahead dummy_lookahead = {
         .flags = 0,
         .read = 0,
         .write = 0

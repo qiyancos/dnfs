@@ -15,18 +15,17 @@
  */
 
 #include "nfs/nfs_rename.h"
+#include "nfs/nfs_xdr.h"
 #include "nfs/nfs_utils.h"
 #include "log/log.h"
 #include "dnfsd/dnfs_meta_data.h"
-#include "dnfsd/dnfs_config.h"
 
 #define MODULE_NAME "NFS"
-int nfs3_rename(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
-{
+
+int nfs3_rename(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     int rc = NFS_REQ_OK;
 
-    if (arg->arg_rename3.from.dir.data.data_len == 0)
-    {
+    if (arg->arg_rename3.from.dir.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
         LOG(MODULE_NAME, L_ERROR,
             "arg_rename get dir handle len is 0");
@@ -39,17 +38,15 @@ int nfs3_rename(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
         "The value of the arg_rename obtained dir handle is '%s', and the length is '%d'",
         arg->arg_rename3.from.dir.data.data_val,
         arg->arg_rename3.from.dir.data.data_len);
-out:
+    out:
 
     return rc;
 }
 
-void nfs3_rename_free(nfs_res_t *res)
-{
+void nfs3_rename_free(nfs_res_t *res) {
 }
 
-bool xdr_RENAME3args(XDR *xdrs, RENAME3args *objp)
-{
+bool xdr_RENAME3args(XDR *xdrs, RENAME3args *objp) {
     if (!xdr_diropargs3(xdrs, &objp->from))
         return FALSE;
     if (!xdr_diropargs3(xdrs, &objp->to))
@@ -57,8 +54,7 @@ bool xdr_RENAME3args(XDR *xdrs, RENAME3args *objp)
     return TRUE;
 }
 
-bool xdr_RENAME3resok(XDR *xdrs, RENAME3resok *objp)
-{
+bool xdr_RENAME3resok(XDR *xdrs, RENAME3resok *objp) {
     if (!xdr_wcc_data(xdrs, &objp->fromdir_wcc))
         return FALSE;
     if (!xdr_wcc_data(xdrs, &objp->todir_wcc))
@@ -66,8 +62,7 @@ bool xdr_RENAME3resok(XDR *xdrs, RENAME3resok *objp)
     return TRUE;
 }
 
-bool xdr_RENAME3resfail(XDR *xdrs, RENAME3resfail *objp)
-{
+bool xdr_RENAME3resfail(XDR *xdrs, RENAME3resfail *objp) {
     if (!xdr_wcc_data(xdrs, &objp->fromdir_wcc))
         return FALSE;
     if (!xdr_wcc_data(xdrs, &objp->todir_wcc))
@@ -75,20 +70,18 @@ bool xdr_RENAME3resfail(XDR *xdrs, RENAME3resfail *objp)
     return TRUE;
 }
 
-bool xdr_RENAME3res(XDR *xdrs, RENAME3res *objp)
-{
+bool xdr_RENAME3res(XDR *xdrs, RENAME3res *objp) {
     if (!xdr_nfsstat3(xdrs, &objp->status))
         return FALSE;
-    switch (objp->status)
-    {
-    case NFS3_OK:
-        if (!xdr_RENAME3resok(xdrs, &objp->RENAME3res_u.resok))
-            return FALSE;
-        break;
-    default:
-        if (!xdr_RENAME3resfail(xdrs, &objp->RENAME3res_u.resfail))
-            return FALSE;
-        break;
+    switch (objp->status) {
+        case NFS3_OK:
+            if (!xdr_RENAME3resok(xdrs, &objp->RENAME3res_u.resok))
+                return FALSE;
+            break;
+        default:
+            if (!xdr_RENAME3resfail(xdrs, &objp->RENAME3res_u.resfail))
+                return FALSE;
+            break;
     }
     return TRUE;
 }

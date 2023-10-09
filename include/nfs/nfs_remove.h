@@ -16,7 +16,6 @@
 #ifndef DNFSD_NFS_REMOVE_H
 #define DNFSD_NFS_REMOVE_H
 
-#include "nfs_xdr.h"
 #include "nfs_args.h"
 
 struct REMOVE3args
