@@ -247,6 +247,18 @@ struct sattr3 {
     set_mtime mtime;
 };
 
+struct nfs_request_lookahead {
+    uint32_t flags;
+    uint16_t read;
+    uint16_t write;
+};
+
+struct nfs_request_lookahead dummy_lookahead = {
+        .flags = 0,
+        .read = 0,
+        .write = 0
+};
+
 #define FSF3_LINK 0x0001
 #define FSF3_SYMLINK 0x0002
 #define FSF3_HOMOGENEOUS 0x0008
