@@ -50,9 +50,13 @@ int nfs3_symlink(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
 void nfs3_symlink_free(nfs_res_t *res);
 
 extern bool xdr_symlinkdata3(XDR *xdrs, symlinkdata3 *objp);
+
 extern bool xdr_SYMLINK3args(XDR *xdrs, SYMLINK3args *objp);
+
 extern bool xdr_SYMLINK3resok(XDR *xdrs, SYMLINK3resok *objp);
+
 extern bool xdr_SYMLINK3resfail(XDR *xdrs, SYMLINK3resfail *objp);
+
 extern bool xdr_SYMLINK3res(XDR *xdrs, SYMLINK3res *objp);
 
 #endif //DNFSD_NFS_SYMLINK_H

@@ -28,6 +28,7 @@
 #include "nfs/nfs_create.h"
 #include "nfs/nfs_mkdir.h"
 #include "nfs/nfs_symlink.h"
+#include "nfs/nfs_mknod.h"
 #include "nfs/nfs_rename.h"
 #include "nfs/nfs_link.h"
 #include "nfs/nfs_readdir.h"
