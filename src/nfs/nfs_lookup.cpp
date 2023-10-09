@@ -2,6 +2,7 @@
  *
  * Copyright Reserved By All Project Contributors
  * Contributor: Jiao Yue 3059497228@qq.com
+ *              Piyuyang pi_yuyang@163.com
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the MIT License; This program is
@@ -20,10 +21,18 @@
 
 #define MODULE_NAME "NFS"
 
-int nfs3_lookup(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
+int nfs3_lookup(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
+{
+    char *name = arg->arg_lookup3.what.name;
+    LOOKUP3resfail *resfail = &res->res_lookup3.LOOKUP3res_u.resfail;
+    LOOKUP3resok *resok = &res->res_lookup3.LOOKUP3res_u.resok;
     int rc = NFS_REQ_OK;
 
-    if (arg->arg_lookup3.what.dir.data.data_len == 0) {
+    /* to avoid setting it on each error case */
+    resfail->dir_attributes.attributes_follow = FALSE;
+
+    if (arg->arg_lookup3.what.dir.data.data_len == 0)
+    {
         rc = NFS_REQ_ERROR;
         LOG(MODULE_NAME, L_ERROR,
             "arg_link get dir handle len is 0");
@@ -36,26 +45,24 @@ int nfs3_lookup(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
         "The value of the arg_lookup obtained dir handle is '%s', and the length is '%d'",
         arg->arg_lookup3.what.dir.data.data_val,
         arg->arg_lookup3.what.dir.data.data_len);
-    out:
+out:
 
     return rc;
 }
 
-void nfs3_lookup_free(nfs_res_t *res) {
-/*    if (res->res_lookup3.status == NFS3_OK) {
-        free(
-                res->res_lookup3.LOOKUP3res_u.resok.object.data.data_val);
-    }*/
+void nfs3_lookup_free(nfs_res_t *res)
+{
 }
 
-
-bool xdr_LOOKUP3args(XDR *xdrs, LOOKUP3args *objp) {
+bool xdr_LOOKUP3args(XDR *xdrs, LOOKUP3args *objp)
+{
     if (!xdr_diropargs3(xdrs, &objp->what))
         return (false);
     return (true);
 }
 
-bool xdr_LOOKUP3resok(XDR *xdrs, LOOKUP3resok *objp) {
+bool xdr_LOOKUP3resok(XDR *xdrs, LOOKUP3resok *objp)
+{
     if (!xdr_nfs_fh3(xdrs, &objp->object))
         return (false);
     if (!xdr_post_op_attr(xdrs, &objp->obj_attributes))
@@ -65,24 +72,27 @@ bool xdr_LOOKUP3resok(XDR *xdrs, LOOKUP3resok *objp) {
     return (true);
 }
 
-bool xdr_LOOKUP3resfail(XDR *xdrs, LOOKUP3resfail *objp) {
+bool xdr_LOOKUP3resfail(XDR *xdrs, LOOKUP3resfail *objp)
+{
     if (!xdr_post_op_attr(xdrs, &objp->dir_attributes))
         return (false);
     return (true);
 }
 
-bool xdr_LOOKUP3res(XDR *xdrs, LOOKUP3res *objp) {
+bool xdr_LOOKUP3res(XDR *xdrs, LOOKUP3res *objp)
+{
     if (!xdr_nfsstat3(xdrs, &objp->status))
         return (false);
-    switch (objp->status) {
-        case NFS3_OK:
-            if (!xdr_LOOKUP3resok(xdrs, &objp->LOOKUP3res_u.resok))
-                return (false);
-            break;
-        default:
-            if (!xdr_LOOKUP3resfail(xdrs, &objp->LOOKUP3res_u.resfail))
-                return (false);
-            break;
+    switch (objp->status)
+    {
+    case NFS3_OK:
+        if (!xdr_LOOKUP3resok(xdrs, &objp->LOOKUP3res_u.resok))
+            return (false);
+        break;
+    default:
+        if (!xdr_LOOKUP3resfail(xdrs, &objp->LOOKUP3res_u.resfail))
+            return (false);
+        break;
     }
     return (true);
 }
