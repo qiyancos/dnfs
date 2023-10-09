@@ -17,7 +17,7 @@
 
 #include "nfs_args.h"
 
-typedef struct FSINFO3resok {
+struct FSINFO3resok {
     post_op_attr obj_attributes;
     nfs3_uint32 rtmax;
     nfs3_uint32 rtpref;
@@ -29,24 +29,23 @@ typedef struct FSINFO3resok {
     size3 maxfilesize;
     nfstime3 time_delta;
     nfs3_uint32 properties;
-} FSINFO3resok;
+};
 
-typedef struct FSINFO3resfail {
+struct FSINFO3resfail {
     post_op_attr obj_attributes;
-} FSINFO3resfail;
+};
 
-typedef struct FSINFO3res {
+struct FSINFO3res {
     nfsstat3 status;
     union {
         FSINFO3resok resok;
         FSINFO3resfail resfail;
     } FSINFO3res_u;
-} FSINFO3res;
+};
 
 struct FSINFO3args {
     nfs_fh3 fsroot;
 };
-typedef struct FSINFO3args FSINFO3args;
 
 /*声明数据参数*/
 union nfs_arg_t;

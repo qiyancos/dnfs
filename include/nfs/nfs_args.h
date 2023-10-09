@@ -52,14 +52,13 @@ typedef nfs3_uint32 count3;
 
 typedef char *filename3;
 
-typedef struct nfstime3 {
+struct nfstime3 {
 
     nfs3_uint32 tv_sec;
     nfs3_uint32 tv_nsec;
-} nfstime3;
+};
 
-typedef enum nfsstat3
-{
+enum nfsstat3 {
     NFS3_OK = 0,
     NFS3ERR_PERM = 1,
     NFS3ERR_NOENT = 2,
@@ -89,10 +88,9 @@ typedef enum nfsstat3
     NFS3ERR_SERVERFAULT = 10006,
     NFS3ERR_BADTYPE = 10007,
     NFS3ERR_JUKEBOX = 10008
-} nfsstat3;
+};
 
-typedef enum ftype3
-{
+enum ftype3 {
     NF3REG = 1,
     NF3DIR = 2,
     NF3BLK = 3,
@@ -100,16 +98,14 @@ typedef enum ftype3
     NF3LNK = 5,
     NF3SOCK = 6,
     NF3FIFO = 7
-} ftype3;
+};
 
-typedef struct specdata3
-{
+struct specdata3 {
     nfs3_uint32 specdata1;
     nfs3_uint32 specdata2;
-} specdata3;
+};
 
-struct fattr3
-{
+struct fattr3 {
     ftype3 type;
     mode3 mode;
     nfs3_uint32 nlink;
@@ -124,30 +120,23 @@ struct fattr3
     nfstime3 mtime;
     nfstime3 ctime;
 };
-typedef struct fattr3 fattr3;
 
-typedef struct post_op_attr
-{
+struct post_op_attr {
     bool_t attributes_follow;
-    union
-    {
+    union {
         fattr3 attributes;
     } post_op_attr_u;
 
-} post_op_attr;
+};
 
-struct post_op_fh3
-{
+struct post_op_fh3 {
     bool_t handle_follows;
-    union
-    {
+    union {
         nfs_fh3 handle;
     } post_op_fh3_u;
 };
-typedef struct post_op_fh3 post_op_fh3;
 
-enum nfs_req_result
-{
+enum nfs_req_result {
     NFS_REQ_OK,
     NFS_REQ_DROP,
     NFS_REQ_ERROR,
@@ -179,7 +168,63 @@ struct wcc_data {
     pre_op_attr before;
     post_op_attr after;
 };
-typedef struct wcc_data wcc_data;
+
+struct set_mode3 {
+    bool_t set_it;
+    union {
+        mode3 mode;
+    } set_mode3_u;
+};
+
+struct set_uid3 {
+    bool_t set_it;
+    union {
+        uid3 uid;
+    } set_uid3_u;
+};
+
+struct set_gid3 {
+    bool_t set_it;
+    union {
+        gid3 gid;
+    } set_gid3_u;
+};
+
+struct set_size3 {
+    bool_t set_it;
+    union {
+        size3 size;
+    } set_size3_u;
+};
+
+enum time_how {
+    DONT_CHANGE = 0,
+    SET_TO_SERVER_TIME = 1,
+    SET_TO_CLIENT_TIME = 2
+};
+
+struct set_atime {
+    time_how set_it;
+    union {
+        nfstime3 atime;
+    } set_atime_u;
+};
+
+struct set_mtime {
+    time_how set_it;
+    union {
+        nfstime3 mtime;
+    } set_mtime_u;
+};
+
+struct sattr3 {
+    set_mode3 mode;
+    set_uid3 uid;
+    set_gid3 gid;
+    set_size3 size;
+    set_atime atime;
+    set_mtime mtime;
+};
 
 #define FSF3_LINK 0x0001
 #define FSF3_SYMLINK 0x0002

@@ -43,4 +43,12 @@ extern bool xdr_cookie3(XDR *xdrs, cookie3 *objp);
 extern bool xdr_cookieverf3(XDR *xdrs, cookieverf3 objp);
 extern bool xdr_count3(XDR *xdrs, count3 *objp);
 extern bool xdr_post_op_fh3(XDR *xdrs, post_op_fh3 *objp);
+extern bool xdr_set_mode3(XDR *xdrs, set_mode3 *objp);
+extern bool xdr_set_uid3(XDR *xdrs, set_uid3 *objp);
+extern bool xdr_set_gid3(XDR *xdrs, set_gid3 *objp);
+extern bool xdr_set_size3(XDR *xdrs, set_size3 *objp);
+extern bool xdr_time_how(XDR *xdrs, time_how *objp);
+extern bool xdr_set_atime(XDR *xdrs, set_atime *objp);
+extern bool xdr_set_mtime(XDR *xdrs, set_mtime *objp);
+extern bool xdr_sattr3(XDR *xdrs, sattr3 *objp);
 #endif //DNFSD_NFS_XDR_H

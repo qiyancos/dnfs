@@ -33,7 +33,7 @@ int nfs3_getattr(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
 
     get_file_handle(arg->arg_getattr3.object);
 
-    LOG(MODULE_NAME, D_INFO, "The value of the nfs_getattr obtained file handle is '%s', and the length is data_val is '%d'",
+    LOG(MODULE_NAME, D_INFO, "The value of the nfs_getattr obtained file handle is '%s', and the length is '%d'",
         arg->arg_getattr3.object.data.data_val,
         arg->arg_getattr3.object.data.data_len);
 

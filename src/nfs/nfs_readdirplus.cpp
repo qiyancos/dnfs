@@ -17,22 +17,16 @@
 #include "nfs/nfs_utils.h"
 #include "log/log.h"
 #include "dnfsd/dnfs_meta_data.h"
-#include "dnfsd/dnfs_config.h"
 
 #define MODULE_NAME "NFS"
 int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
 {
-    uint64_t begin_cookie = arg->arg_readdirplus3.cookie;
-    uint32_t maxcount;
-    uint64_t mem_avail = 0;
-    uint32_t cfg_readdir_size = nfs_param.core_param.readdir_res_size;
-    uint32_t cfg_readdir_count = nfs_param.core_param.readdir_max_count;
     int rc = NFS_REQ_OK;
     READDIRPLUS3resfail *resfail =
         &res->res_readdirplus3.READDIRPLUS3res_u.resfail;
     READDIRPLUS3resok *resok =
         &res->res_readdirplus3.READDIRPLUS3res_u.resok;
-    resok->reply.entries = NULL;
+    resok->reply.entries = nullptr;
     entryplus3 *head;
     entryplus3 *current;
     entryplus3 *node;
@@ -43,8 +37,18 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
     char *filepath;
     u_long filepath_len;
 
-    LOG(MODULE_NAME, L_INFO, "The value of the nfs_readdirplus obtained file handle is '%s'",
-        arg->arg_readdirplus3.dir.data.data_val);
+    if (arg->arg_readdirplus3.dir.data.data_len == 0) {
+        rc=NFS_REQ_ERROR;
+        LOG(MODULE_NAME,L_ERROR,
+            "nfs_readdirplus get file handle len is 0");
+        goto out;
+    }
+
+    get_file_handle(arg->arg_readdirplus3.dir);
+
+    LOG(MODULE_NAME, D_INFO, "The value of the nfs_readdirplus obtained file handle is '%s', and the length is '%d'",
+        arg->arg_readdirplus3.dir.data.data_val,
+        arg->arg_readdirplus3.dir.data.data_len);
 
     // if (cfg_readdir_size < arg->arg_readdirplus3.maxcount)
     //     maxcount = cfg_readdir_size;
@@ -79,7 +83,7 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
         goto out;
     }
 
-    n = scandir(arg->arg_readdirplus3.dir.data.data_val, &namelist, 0, alphasort);
+    n = scandir(arg->arg_readdirplus3.dir.data.data_val, &namelist, nullptr, alphasort);
     if (n < 0)
     {
         LOG(MODULE_NAME, L_ERROR, "scandir '%s' failed", arg->arg_readdirplus3.dir.data.data_val);
@@ -98,7 +102,7 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
             node = new entryplus3;
             node->name = namelist[index]->d_name;
             node->fileid = namelist[index]->d_ino;
-            node->nextentry = NULL;
+            node->nextentry = nullptr;
             if (strcmp(node->name, ".") == 0 || strcmp(node->name, "..") == 0)
             {
                 node->name_attributes.attributes_follow = FALSE;
@@ -139,10 +143,10 @@ void nfs3_readdirplus_free(nfs_res_t *res)
     // delete entry
     entryplus3 *cur = res->res_readdirplus3.READDIRPLUS3res_u.resok.reply.entries;
     entryplus3 *nxt;
-    while (cur->nextentry != NULL)
+    while (cur->nextentry != nullptr)
     {
         nxt = cur->nextentry;
-        // delete[] (cur->name_handle.post_op_fh3_u.handle.data.data_val);
+        delete[] (cur->name_handle.post_op_fh3_u.handle.data.data_val);
         delete (cur);
         cur = nxt;
     }

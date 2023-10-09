@@ -25,6 +25,32 @@ int nfs3_link(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
 
     int rc = NFS_REQ_OK;
 
+    if (arg->arg_link3.file.data.data_len == 0) {
+        rc=NFS_REQ_ERROR;
+        LOG(MODULE_NAME,L_ERROR,
+            "arg_link get file handle len is 0");
+        goto out;
+    }
+
+    if (arg->arg_link3.link.dir.data.data_len == 0) {
+        rc=NFS_REQ_ERROR;
+        LOG(MODULE_NAME,L_ERROR,
+            "arg_link get dir handle len is 0");
+        goto out;
+    }
+
+    get_file_handle(arg->arg_link3.link.dir);
+    get_file_handle(arg->arg_link3.file);
+
+    LOG(MODULE_NAME, D_INFO, "The value of the arg_link obtained file handle is '%s', and the length is '%d'",
+        arg->arg_link3.file.data.data_val,
+        arg->arg_link3.file.data.data_len);
+
+    LOG(MODULE_NAME, D_INFO, "The value of the arg_link obtained dir handle is '%s', and the length is '%d'",
+        arg->arg_link3.link.dir.data.data_val,
+        arg->arg_link3.link.dir.data.data_len);
+    out:
+
     return rc;
 }
 

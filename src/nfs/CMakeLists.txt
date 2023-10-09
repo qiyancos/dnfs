@@ -4,6 +4,8 @@ add_library(nfs
         nfs_utils.cpp
         nfs_null.cpp
         nfs_getattr.cpp
+        nfs_setattr.cpp
+        nfs_lookup.cpp
         nfs_link.cpp
         nfs_readdirplus.cpp
         nfs_fsstat.cpp

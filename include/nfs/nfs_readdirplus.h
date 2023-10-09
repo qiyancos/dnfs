@@ -26,7 +26,6 @@ struct READDIRPLUS3args
     count3 dircount;
     count3 maxcount;
 };
-typedef struct READDIRPLUS3args READDIRPLUS3args;
 
 struct entryplus3
 {
@@ -37,14 +36,12 @@ struct entryplus3
     post_op_fh3 name_handle;
     struct entryplus3 *nextentry;
 };
-typedef struct entryplus3 entryplus3;
 
 struct dirlistplus3
 {
     entryplus3 *entries;
     bool_t eof;
 };
-typedef struct dirlistplus3 dirlistplus3;
 
 struct READDIRPLUS3resok
 {
@@ -52,13 +49,11 @@ struct READDIRPLUS3resok
     cookieverf3 cookieverf;
     dirlistplus3 reply;
 };
-typedef struct READDIRPLUS3resok READDIRPLUS3resok;
 
 struct READDIRPLUS3resfail
 {
     post_op_attr dir_attributes;
 };
-typedef struct READDIRPLUS3resfail READDIRPLUS3resfail;
 
 struct READDIRPLUS3res
 {
@@ -69,7 +64,6 @@ struct READDIRPLUS3res
         READDIRPLUS3resfail resfail;
     } READDIRPLUS3res_u;
 };
-typedef struct READDIRPLUS3res READDIRPLUS3res;
 
 /*声明数据参数*/
 union nfs_arg_t;

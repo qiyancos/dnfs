@@ -26,6 +26,8 @@ extern "C" {
 /*nfs接口*/
 #include "nfs/nfs_null.h"
 #include "nfs/nfs_getattr.h"
+#include "nfs/nfs_setattr.h"
+#include "nfs/nfs_lookup.h"
 #include "nfs/nfs_link.h"
 #include "nfs/nfs_readdirplus.h"
 #include "nfs/nfs_fsstat.h"
@@ -115,11 +117,26 @@ typedef struct nfs_param {
 union nfs_arg_t {
     /*nfs*/
     GETATTR3args arg_getattr3;
+    SETATTR3args arg_setattr3;
+    LOOKUP3args arg_lookup3;
+    ACCESS3args arg_access3;
+    READLINK3args arg_readlink3;
+    READ3args arg_read3;
+    WRITE3args arg_write3;
+    CREATE3args arg_create3;
+    MKDIR3args arg_mkdir3;
+    SYMLINK3args arg_symlink3;
+    MKNOD3args arg_mknod3;
+    REMOVE3args arg_remove3;
+    RMDIR3args arg_rmdir3;
+    RENAME3args arg_rename3;
     LINK3args arg_link3;
+    READDIR3args arg_readdir3;
     READDIRPLUS3args arg_readdirplus3;
     FSSTAT3args arg_fsstat3;
     FSINFO3args arg_fsinfo3;
     PATHCONF3args arg_pathconf3;
+    COMMIT3args arg_commit3;
 
     /*mnt*/
     mnt3_dirpath arg_mnt;
@@ -129,11 +146,26 @@ union nfs_arg_t {
 union nfs_res_t {
     /*nfs*/
     GETATTR3res res_getattr3;
+    SETATTR3res res_setattr3;
+    LOOKUP3res res_lookup3;
+    ACCESS3res res_access3;
+    READLINK3res res_readlink3;
+    READ3res res_read3;
+    WRITE3res res_write3;
+    CREATE3res res_create3;
+    MKDIR3res res_mkdir3;
+    SYMLINK3res res_symlink3;
+    MKNOD3res res_mknod3;
+    REMOVE3res res_remove3;
+    RMDIR3res res_rmdir3;
+    RENAME3res res_rename3;
     LINK3res res_link3;
+    READDIR3res res_readdir3;
     READDIRPLUS3res res_readdirplus3;
     FSSTAT3res res_fsstat3;
     FSINFO3res res_fsinfo3;
     PATHCONF3res res_pathconf3;
+    COMMIT3res res_commit3;
 
     /*mnt*/
     mountres3 res_mnt3;

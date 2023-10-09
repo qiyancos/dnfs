@@ -12,37 +12,37 @@
  * along with this project.
  *
  */
-#ifndef DNFSD_NFS_GETATTR_H
-#define DNFSD_NFS_GETATTR_H
-
+#ifndef DNFSD_NFS_LOOKUP_H
+#define DNFSD_NFS_LOOKUP_H
 #include "nfs_args.h"
 
-struct GETATTR3args {
+struct LOOKUP3args {
+    diropargs3 what;
+};
+struct LOOKUP3resok {
     nfs_fh3 object;
+    post_op_attr obj_attributes;
+    post_op_attr dir_attributes;
+};
+struct LOOKUP3resfail {
+    post_op_attr dir_attributes;
 };
 
-struct GETATTR3resok {
-    fattr3 obj_attributes;
-};
-
-struct GETATTR3res {
+struct LOOKUP3res {
     nfsstat3 status;
     union {
-        GETATTR3resok resok;
-    } GETATTR3res_u;
+        LOOKUP3resok resok;
+        LOOKUP3resfail resfail;
+    } LOOKUP3res_u;
 };
 
 /*声明数据参数*/
 union nfs_arg_t;
 union nfs_res_t;
 
-int nfs3_getattr(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
+int nfs3_lookup(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
 
-void nfs3_getattr_free(nfs_res_t *resp);
-
-extern bool xdr_GETATTR3args(XDR *xdrs, GETATTR3args *objp);
-extern bool xdr_GETATTR3resok(XDR *xdrs, GETATTR3resok *objp);
-extern bool xdr_GETATTR3res(XDR *xdrs, GETATTR3res *objp);
+void nfs3_lookup_free(nfs_res_t *res);
 
 
-#endif //DNFSD_NFS_GETATTR_H
+#endif //DNFSD_NFS_LOOKUP_H

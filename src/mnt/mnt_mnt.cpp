@@ -21,7 +21,7 @@
 #define MODULE_NAME "MNT"
 int mnt_mnt(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
 {
-    int index_auth = 0;
+    int index_auth = 1;
     int retval = NFS_REQ_OK;
     auto *fh3 = (nfs_fh3 *) &res->res_mnt3.mountres3_u.mountinfo.fhandle;
     mountres3_ok * const RES_MOUNTINFO =
@@ -52,7 +52,7 @@ int mnt_mnt(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
     fh3->data.data_len=strlen(arg->arg_mnt);
 
     RES_MOUNTINFO->auth_flavors.auth_flavors_val = (int*)calloc(index_auth, sizeof(int));
-
+    RES_MOUNTINFO->auth_flavors.auth_flavors_val[0]=AUTH_NONE;
     RES_MOUNTINFO->auth_flavors.auth_flavors_len = index_auth;
 
     LOG(MODULE_NAME,D_INFO,
