@@ -45,10 +45,6 @@ struct READ3res {
     } READ3res_u;
 };
 
-/*声明数据参数*/
-union nfs_arg_t;
-union nfs_res_t;
-
 int nfs3_read(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
 
 void nfs3_read_free(nfs_res_t *res);

@@ -59,10 +59,6 @@ struct READDIRPLUS3res {
     } READDIRPLUS3res_u;
 };
 
-/*声明数据参数*/
-union nfs_arg_t;
-union nfs_res_t;
-
 /*
  * This function Implements NFSPROC3_READDIRPLUS.
  * */

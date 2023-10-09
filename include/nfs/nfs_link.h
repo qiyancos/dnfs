@@ -40,10 +40,6 @@ struct LINK3res {
     } LINK3res_u;
 };
 
-/*声明数据参数*/
-union nfs_arg_t;
-union nfs_res_t;
-
 int nfs3_link(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
 
 void nfs3_link_free(nfs_res_t *resp);

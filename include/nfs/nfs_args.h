@@ -33,6 +33,8 @@ extern "C"
 
 #define NFS_LOOKAHEAD_WRITE 0x0010
 
+#define NFS_LOOKAHEAD_CREATE 0x0040
+
 typedef int32_t bool_t;
 
 typedef uint32_t nfs3_uint32;
@@ -65,6 +67,11 @@ typedef nfs3_uint64 offset3;
 
 typedef char writeverf3[8];
 
+typedef char createverf3[8];
+
+/*声明数据参数*/
+union nfs_arg_t;
+union nfs_res_t;
 
 struct nfstime3 {
 

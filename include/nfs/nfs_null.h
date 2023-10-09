@@ -15,8 +15,8 @@
 
 #ifndef DNFSD_NFS_NULL_H
 #define DNFSD_NFS_NULL_H
-union nfs_arg_t;
-union nfs_res_t;
+
+#include "nfs/nfs_args.h"
 
 /* NFS NULL Process function*/
 int nfs_null([[maybe_unused]] nfs_arg_t *arg,

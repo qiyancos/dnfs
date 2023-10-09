@@ -25,6 +25,7 @@
 #include "nfs/nfs_readlink.h"
 #include "nfs/nfs_read.h"
 #include "nfs/nfs_write.h"
+#include "nfs/nfs_create.h"
 #include "nfs/nfs_link.h"
 #include "nfs/nfs_readdirplus.h"
 #include "nfs/nfs_fsstat.h"
