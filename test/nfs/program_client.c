@@ -321,6 +321,8 @@ void nfs_program_3(char *host)
 		}
 		*(dst_ptr++) = '\0';
 		READDIRPLUS3args nfsproc3_readdirplus_3_arg = {{{data_len, data_val}}, 0, 0, 0, 0};
+		nfsproc3_readdirplus_3_arg.dircount = 65536;
+		nfsproc3_readdirplus_3_arg.maxcount = 524288;
 		result_18 = nfsproc3_readdirplus_3(&nfsproc3_readdirplus_3_arg, clnt);
 		if (result_18 == (READDIRPLUS3res *)NULL)
 		{
@@ -371,12 +373,12 @@ void nfs_program_3(char *host)
                 printf("resfail\n");
             }
             print_post_op_attr(&result_19->FSSTAT3res_u.resok.obj_attributes);
-            printf("tbytes: %u\n", result_19->FSSTAT3res_u.resok.tbytes);
-            printf("fbytes: %u\n", result_19->FSSTAT3res_u.resok.fbytes);
-            printf("abytes: %u\n", result_19->FSSTAT3res_u.resok.abytes);
-            printf("tfiles: %u\n", result_19->FSSTAT3res_u.resok.tfiles);
-            printf("ffiles: %u\n", result_19->FSSTAT3res_u.resok.ffiles);
-            printf("afiles: %u\n", result_19->FSSTAT3res_u.resok.afiles);
+            printf("tbytes: %lu\n", result_19->FSSTAT3res_u.resok.tbytes);
+            printf("fbytes: %lu\n", result_19->FSSTAT3res_u.resok.fbytes);
+            printf("abytes: %lu\n", result_19->FSSTAT3res_u.resok.abytes);
+            printf("tfiles: %lu\n", result_19->FSSTAT3res_u.resok.tfiles);
+            printf("ffiles: %lu\n", result_19->FSSTAT3res_u.resok.ffiles);
+            printf("afiles: %lu\n", result_19->FSSTAT3res_u.resok.afiles);
             printf("invarsec: %u\n", result_19->FSSTAT3res_u.resok.invarsec);
         }
 	}
