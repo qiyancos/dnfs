@@ -55,6 +55,10 @@ typedef char *filename3;
 
 typedef char *nfspath3;
 
+typedef nfs3_uint64 offset3;
+
+typedef char writeverf3[8];
+
 struct nfstime3 {
 
     nfs3_uint32 tv_sec;
