@@ -7,8 +7,9 @@ add_library(nfs
         nfs_setattr.cpp
         nfs_lookup.cpp
         nfs_access.cpp
-        nfs_read.cpp
         nfs_readlink.cpp
+        nfs_read.cpp
+        nfs_write.cpp
         nfs_link.cpp
         nfs_readdirplus.cpp
         nfs_fsstat.cpp

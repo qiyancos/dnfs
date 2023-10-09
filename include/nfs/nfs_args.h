@@ -27,6 +27,12 @@ extern "C"
 
 #define XDR_STRING_MAXLEN (8*1024)
 
+#define XDR_BYTES_MAXLEN_IO (64*1024*1024)
+
+#define NFS_LOOKAHEAD_READ 0x0008
+
+#define NFS_LOOKAHEAD_WRITE 0x0010
+
 typedef int32_t bool_t;
 
 typedef uint32_t nfs3_uint32;
@@ -54,6 +60,11 @@ typedef nfs3_uint32 count3;
 typedef char *filename3;
 
 typedef char *nfspath3;
+
+typedef nfs3_uint64 offset3;
+
+typedef char writeverf3[8];
+
 
 struct nfstime3 {
 
@@ -227,6 +238,18 @@ struct sattr3 {
     set_size3 size;
     set_atime atime;
     set_mtime mtime;
+};
+
+struct nfs_request_lookahead {
+    uint32_t flags;
+    uint16_t read;
+    uint16_t write;
+};
+
+struct nfs_request_lookahead dummy_lookahead = {
+        .flags = 0,
+        .read = 0,
+        .write = 0
 };
 
 #define FSF3_LINK 0x0001

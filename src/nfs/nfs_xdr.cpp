@@ -331,3 +331,17 @@ bool xdr_nfspath3(XDR *xdrs, nfspath3 *objp) {
         return (false);
     return (true);
 }
+
+bool xdr_offset3(XDR *xdrs, offset3 *objp)
+{
+    if (!xdr_nfs3_uint64(xdrs, objp))
+        return (false);
+    return (true);
+}
+
+bool xdr_writeverf3(XDR *xdrs, writeverf3 objp)
+{
+    if (!xdr_opaque(xdrs, objp, 8))
+        return (false);
+    return (true);
+}

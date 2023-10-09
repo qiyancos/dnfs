@@ -30,6 +30,8 @@ extern "C" {
 #include "nfs/nfs_lookup.h"
 #include "nfs/nfs_access.h"
 #include "nfs/nfs_readlink.h"
+#include "nfs/nfs_read.h"
+#include "nfs/nfs_write.h"
 #include "nfs/nfs_link.h"
 #include "nfs/nfs_readdirplus.h"
 #include "nfs/nfs_fsstat.h"
