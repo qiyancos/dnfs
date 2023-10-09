@@ -20,21 +20,21 @@
 
 #define MODULE_NAME "NFS"
 
-int nfs3_setattr(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
-{
+int nfs3_setattr(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     int rc = NFS_REQ_OK;
 
     if (arg->arg_setattr3.object.data.data_len == 0) {
-        rc=NFS_REQ_ERROR;
-        LOG(MODULE_NAME,L_ERROR,
+        rc = NFS_REQ_ERROR;
+        LOG(MODULE_NAME, L_ERROR,
             "nfs_setattr get file handle len is 0");
         goto out;
     }
 
     get_file_handle(arg->arg_setattr3.object);
 
-    LOG(MODULE_NAME, D_INFO, "The value of the nfs_setattr obtained file handle is '%s', and the length is '%d'",
+    LOG(MODULE_NAME, D_INFO,
+        "The value of the nfs_setattr obtained file handle is '%s', and the length is '%d'",
         arg->arg_setattr3.object.data.data_val,
         arg->arg_setattr3.object.data.data_len);
     out:
@@ -43,12 +43,11 @@ int nfs3_setattr(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
 
 }
 
-void nfs3_setattr_free(nfs_res_t *res)
-{
+void nfs3_setattr_free(nfs_res_t *res) {
     /* Nothing to do here */
 }
-bool xdr_sattrguard3(XDR *xdrs, sattrguard3 *objp)
-{
+
+bool xdr_sattrguard3(XDR *xdrs, sattrguard3 *objp) {
     if (!xdr_bool(xdrs, &objp->check))
         return (false);
     switch (objp->check) {
@@ -64,8 +63,7 @@ bool xdr_sattrguard3(XDR *xdrs, sattrguard3 *objp)
     return (true);
 }
 
-bool xdr_SETATTR3args(XDR *xdrs, SETATTR3args *objp)
-{
+bool xdr_SETATTR3args(XDR *xdrs, SETATTR3args *objp) {
     if (!xdr_nfs_fh3(xdrs, &objp->object))
         return (false);
     if (!xdr_sattr3(xdrs, &objp->new_attributes))
@@ -75,22 +73,19 @@ bool xdr_SETATTR3args(XDR *xdrs, SETATTR3args *objp)
     return (true);
 }
 
-bool xdr_SETATTR3resok(XDR *xdrs, SETATTR3resok *objp)
-{
+bool xdr_SETATTR3resok(XDR *xdrs, SETATTR3resok *objp) {
     if (!xdr_wcc_data(xdrs, &objp->obj_wcc))
         return (false);
     return (true);
 }
 
-bool xdr_SETATTR3resfail(XDR *xdrs, SETATTR3resfail *objp)
-{
+bool xdr_SETATTR3resfail(XDR *xdrs, SETATTR3resfail *objp) {
     if (!xdr_wcc_data(xdrs, &objp->obj_wcc))
         return (false);
     return (true);
 }
 
-bool xdr_SETATTR3res(XDR *xdrs, SETATTR3res *objp)
-{
+bool xdr_SETATTR3res(XDR *xdrs, SETATTR3res *objp) {
     if (!xdr_nfsstat3(xdrs, &objp->status))
         return (false);
     switch (objp->status) {

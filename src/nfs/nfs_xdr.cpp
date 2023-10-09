@@ -82,43 +82,41 @@ bool xdr_fileid3(XDR *xdrs, fileid3 *objp) {
 }
 
 bool
-xdr_mode3(XDR *xdrs, mode3 *objp)
-{
-	if (!xdr_nfs3_uint32(xdrs, objp))
-		return (false);
-	return (true);
+xdr_mode3(XDR *xdrs, mode3 *objp) {
+    if (!xdr_nfs3_uint32(xdrs, objp))
+        return (false);
+    return (true);
 }
 
 bool
-xdr_fattr3(XDR *xdrs, fattr3 *objp)
-{
-	if (!xdr_ftype3(xdrs, &objp->type))
-		return (false);
-	if (!xdr_mode3(xdrs, &objp->mode))
-		return (false);
-	if (!xdr_nfs3_uint32(xdrs, &objp->nlink))
-		return (false);
-	if (!xdr_uid3(xdrs, &objp->uid))
-		return (false);
-	if (!xdr_gid3(xdrs, &objp->gid))
-		return (false);
-	if (!xdr_size3(xdrs, &objp->size))
-		return (false);
-	if (!xdr_size3(xdrs, &objp->used))
-		return (false);
-	if (!xdr_specdata3(xdrs, &objp->rdev))
-		return (false);
-	if (!xdr_nfs3_uint64(xdrs, &objp->fsid))
-		return (false);
-	if (!xdr_fileid3(xdrs, &objp->fileid))
-		return (false);
-	if (!xdr_nfstime3(xdrs, &objp->atime))
-		return (false);
-	if (!xdr_nfstime3(xdrs, &objp->mtime))
-		return (false);
-	if (!xdr_nfstime3(xdrs, &objp->ctime))
-		return (false);
-	return (true);
+xdr_fattr3(XDR *xdrs, fattr3 *objp) {
+    if (!xdr_ftype3(xdrs, &objp->type))
+        return (false);
+    if (!xdr_mode3(xdrs, &objp->mode))
+        return (false);
+    if (!xdr_nfs3_uint32(xdrs, &objp->nlink))
+        return (false);
+    if (!xdr_uid3(xdrs, &objp->uid))
+        return (false);
+    if (!xdr_gid3(xdrs, &objp->gid))
+        return (false);
+    if (!xdr_size3(xdrs, &objp->size))
+        return (false);
+    if (!xdr_size3(xdrs, &objp->used))
+        return (false);
+    if (!xdr_specdata3(xdrs, &objp->rdev))
+        return (false);
+    if (!xdr_nfs3_uint64(xdrs, &objp->fsid))
+        return (false);
+    if (!xdr_fileid3(xdrs, &objp->fileid))
+        return (false);
+    if (!xdr_nfstime3(xdrs, &objp->atime))
+        return (false);
+    if (!xdr_nfstime3(xdrs, &objp->mtime))
+        return (false);
+    if (!xdr_nfstime3(xdrs, &objp->ctime))
+        return (false);
+    return (true);
 }
 
 bool xdr_post_op_attr(XDR *xdrs, post_op_attr *objp) {
@@ -146,53 +144,47 @@ bool xdr_nfs_fh3(XDR *xdrs, nfs_fh3 *objp) {
 }
 
 
-bool xdr_cookie3(XDR *xdrs, cookie3 *objp)
-{
+bool xdr_cookie3(XDR *xdrs, cookie3 *objp) {
     if (!xdr_nfs3_uint64(xdrs, objp))
         return (false);
     return (true);
 }
 
-bool xdr_cookieverf3(XDR *xdrs, cookieverf3 objp)
-{
+bool xdr_cookieverf3(XDR *xdrs, cookieverf3 objp) {
     if (!xdr_opaque(xdrs, objp, 8))
         return (false);
     return (true);
 }
 
-bool xdr_count3(XDR *xdrs, count3 *objp)
-{
+bool xdr_count3(XDR *xdrs, count3 *objp) {
     if (!xdr_nfs3_uint32(xdrs, objp))
         return (false);
     return (true);
 }
 
-bool xdr_filename3(XDR *xdrs, filename3 *objp)
-{
-	if (!xdr_string(xdrs, objp, XDR_STRING_MAXLEN))
-		return (false);
-	return (true);
+bool xdr_filename3(XDR *xdrs, filename3 *objp) {
+    if (!xdr_string(xdrs, objp, XDR_STRING_MAXLEN))
+        return (false);
+    return (true);
 }
 
-bool xdr_post_op_fh3(XDR *xdrs, post_op_fh3 *objp)
-{
-	if (!xdr_bool(xdrs, &objp->handle_follows))
-		return (false);
-	switch (objp->handle_follows) {
-	case TRUE:
-		if (!xdr_nfs_fh3(xdrs, &objp->post_op_fh3_u.handle))
-			return (false);
-		break;
-	case FALSE:
-		break;
-	default:
-		return (false);
-	}
-	return (true);
+bool xdr_post_op_fh3(XDR *xdrs, post_op_fh3 *objp) {
+    if (!xdr_bool(xdrs, &objp->handle_follows))
+        return (false);
+    switch (objp->handle_follows) {
+        case TRUE:
+            if (!xdr_nfs_fh3(xdrs, &objp->post_op_fh3_u.handle))
+                return (false);
+            break;
+        case FALSE:
+            break;
+        default:
+            return (false);
+    }
+    return (true);
 }
 
-bool xdr_diropargs3(XDR *xdrs, diropargs3 *objp)
-{
+bool xdr_diropargs3(XDR *xdrs, diropargs3 *objp) {
     if (!xdr_nfs_fh3(xdrs, &objp->dir))
         return (false);
     if (!xdr_filename3(xdrs, &objp->name))
@@ -200,8 +192,7 @@ bool xdr_diropargs3(XDR *xdrs, diropargs3 *objp)
     return (true);
 }
 
-bool xdr_wcc_attr(XDR *xdrs, wcc_attr *objp)
-{
+bool xdr_wcc_attr(XDR *xdrs, wcc_attr *objp) {
     if (!xdr_size3(xdrs, &objp->size))
         return (false);
     if (!xdr_nfstime3(xdrs, &objp->mtime))
@@ -211,8 +202,7 @@ bool xdr_wcc_attr(XDR *xdrs, wcc_attr *objp)
     return (true);
 }
 
-bool xdr_pre_op_attr(XDR *xdrs, pre_op_attr *objp)
-{
+bool xdr_pre_op_attr(XDR *xdrs, pre_op_attr *objp) {
     if (!xdr_bool(xdrs, &objp->attributes_follow))
         return (false);
     switch (objp->attributes_follow) {
@@ -228,8 +218,7 @@ bool xdr_pre_op_attr(XDR *xdrs, pre_op_attr *objp)
     return (true);
 }
 
-bool xdr_wcc_data(XDR *xdrs, wcc_data *objp)
-{
+bool xdr_wcc_data(XDR *xdrs, wcc_data *objp) {
     if (!xdr_pre_op_attr(xdrs, &objp->before))
         return (false);
     if (!xdr_post_op_attr(xdrs, &objp->after))
@@ -237,8 +226,7 @@ bool xdr_wcc_data(XDR *xdrs, wcc_data *objp)
     return (true);
 }
 
-bool xdr_set_mode3(XDR *xdrs, set_mode3 *objp)
-{
+bool xdr_set_mode3(XDR *xdrs, set_mode3 *objp) {
     if (!xdr_bool(xdrs, &objp->set_it))
         return (false);
     switch (objp->set_it) {
@@ -250,8 +238,7 @@ bool xdr_set_mode3(XDR *xdrs, set_mode3 *objp)
     return (true);
 }
 
-bool xdr_set_uid3(XDR *xdrs, set_uid3 *objp)
-{
+bool xdr_set_uid3(XDR *xdrs, set_uid3 *objp) {
     if (!xdr_bool(xdrs, &objp->set_it))
         return (false);
     switch (objp->set_it) {
@@ -263,8 +250,7 @@ bool xdr_set_uid3(XDR *xdrs, set_uid3 *objp)
     return (true);
 }
 
-bool xdr_set_gid3(XDR *xdrs, set_gid3 *objp)
-{
+bool xdr_set_gid3(XDR *xdrs, set_gid3 *objp) {
     if (!xdr_bool(xdrs, &objp->set_it))
         return (false);
     switch (objp->set_it) {
@@ -276,8 +262,7 @@ bool xdr_set_gid3(XDR *xdrs, set_gid3 *objp)
     return (true);
 }
 
-bool xdr_set_size3(XDR *xdrs, set_size3 *objp)
-{
+bool xdr_set_size3(XDR *xdrs, set_size3 *objp) {
     if (!xdr_bool(xdrs, &objp->set_it))
         return (false);
     switch (objp->set_it) {
@@ -289,15 +274,13 @@ bool xdr_set_size3(XDR *xdrs, set_size3 *objp)
     return (true);
 }
 
-bool xdr_time_how(XDR *xdrs, time_how *objp)
-{
+bool xdr_time_how(XDR *xdrs, time_how *objp) {
     if (!xdr_enum(xdrs, (enum_t *) objp))
         return (false);
     return (true);
 }
 
-bool xdr_set_atime(XDR *xdrs, set_atime *objp)
-{
+bool xdr_set_atime(XDR *xdrs, set_atime *objp) {
     if (!xdr_time_how(xdrs, &objp->set_it))
         return (false);
     switch (objp->set_it) {
@@ -312,8 +295,7 @@ bool xdr_set_atime(XDR *xdrs, set_atime *objp)
     return (true);
 }
 
-bool xdr_set_mtime(XDR *xdrs, set_mtime *objp)
-{
+bool xdr_set_mtime(XDR *xdrs, set_mtime *objp) {
     if (!xdr_time_how(xdrs, &objp->set_it))
         return (false);
     switch (objp->set_it) {
@@ -328,8 +310,7 @@ bool xdr_set_mtime(XDR *xdrs, set_mtime *objp)
     return (true);
 }
 
-bool xdr_sattr3(XDR *xdrs, sattr3 *objp)
-{
+bool xdr_sattr3(XDR *xdrs, sattr3 *objp) {
     if (!xdr_set_mode3(xdrs, &objp->mode))
         return (false);
     if (!xdr_set_uid3(xdrs, &objp->uid))
@@ -341,6 +322,12 @@ bool xdr_sattr3(XDR *xdrs, sattr3 *objp)
     if (!xdr_set_atime(xdrs, &objp->atime))
         return (false);
     if (!xdr_set_mtime(xdrs, &objp->mtime))
+        return (false);
+    return (true);
+}
+
+bool xdr_nfspath3(XDR *xdrs, nfspath3 *objp) {
+    if (!xdr_string(xdrs, objp, XDR_STRING_MAXLEN))
         return (false);
     return (true);
 }

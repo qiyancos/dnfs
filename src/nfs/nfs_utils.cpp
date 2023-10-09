@@ -30,6 +30,7 @@
 #include "log/log.h"
 #include "rpc/svc_auth.h"
 #include "string"
+
 using namespace std;
 #define MODULE_NAME "NFS"
 
@@ -143,13 +144,12 @@ nfsstat3 nfs_set_post_op_attr(char *file_path, post_op_attr *fattr) {
 /*获取文件句柄*/
 void get_file_handle(nfs_fh3 &request_handle) {
     /*获取句柄*/
-    char *split_file=(char*)malloc(sizeof(char) * request_handle.data.data_len);
-    char *head=split_file;
-    u_int i=request_handle.data.data_len;
-    while (i--)
-    {
-        *(head++) =*request_handle.data.data_val++;
+    char *split_file = (char *) malloc(sizeof(char) * request_handle.data.data_len);
+    char *head = split_file;
+    u_int i = request_handle.data.data_len;
+    while (i--) {
+        *(head++) = *request_handle.data.data_val++;
     }
-    *(head++)='\0';
-    request_handle.data.data_val=split_file;
+    *(head++) = '\0';
+    request_handle.data.data_val = split_file;
 }

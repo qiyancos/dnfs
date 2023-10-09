@@ -29,6 +29,7 @@ extern "C" {
 #include "nfs/nfs_setattr.h"
 #include "nfs/nfs_lookup.h"
 #include "nfs/nfs_access.h"
+#include "nfs/nfs_readlink.h"
 #include "nfs/nfs_link.h"
 #include "nfs/nfs_readdirplus.h"
 #include "nfs/nfs_fsstat.h"
@@ -102,11 +103,11 @@ typedef struct nfs_core_param {
     /** Readdir response size, default is 64M (limited by maxcount from
 	*  nfs request. range 4K-64M
 	*/
-	uint32_t readdir_res_size = 64 * 1024 * 1024;
+    uint32_t readdir_res_size = 64 * 1024 * 1024;
     /** Readdir max entries count, default is 1M (limited by dircount from
 	*  nfs request). range 32-1M
 	*/
-	uint32_t readdir_max_count = 1 * 1024 * 1024;
+    uint32_t readdir_max_count = 1 * 1024 * 1024;
 } nfs_core_parameter_t;
 
 typedef struct nfs_param {

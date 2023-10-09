@@ -15,9 +15,10 @@
 #include "mnt/mnt_null.h"
 #include "log/log.h"
 #include "dnfsd/dnfs_meta_data.h"
+
 #define MODULE_NAME "MNT"
 
-int mnt_null(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res){
+int mnt_null(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     LOG(MODULE_NAME, D_INFO, "REQUEST PROCESSING: Calling MNT_NULL");
     return NFS3_OK;
 }

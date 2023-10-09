@@ -14,6 +14,7 @@
  */
 #ifndef DNFSD_NFS_LINK_H
 #define DNFSD_NFS_LINK_H
+
 #include "nfs_args.h"
 
 struct LINK3args {
@@ -48,7 +49,11 @@ int nfs3_link(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
 void nfs3_link_free(nfs_res_t *resp);
 
 extern bool xdr_LINK3args(XDR *xdrs, LINK3args *objp);
+
 extern bool xdr_LINK3resok(XDR *xdrs, LINK3resok *objp);
+
 extern bool xdr_LINK3resfail(XDR *xdrs, LINK3resfail *objp);
+
 extern bool xdr_LINK3res(XDR *xdrs, LINK3res *objp);
+
 #endif //DNFSD_NFS_LINK_H

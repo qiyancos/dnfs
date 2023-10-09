@@ -16,19 +16,18 @@
 #include "mnt/mnt_xdr.h"
 #include "log/log.h"
 #include "dnfsd/dnfs_meta_data.h"
+
 #define MODULE_NAME "MNT"
 
-int mnt_dump(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
-{
-    LOG(MODULE_NAME, D_INFO,"REQUEST PROCESSING: Calling MNT_DUMP");
+int mnt_dump(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
+    LOG(MODULE_NAME, D_INFO, "REQUEST PROCESSING: Calling MNT_DUMP");
 
     res->res_dump = nullptr;
 
     return NFS_REQ_OK;
 }
 
-void mnt_dump_free(nfs_res_t *res)
-{
+void mnt_dump_free(nfs_res_t *res) {
     /* Nothing to do */
 }
 

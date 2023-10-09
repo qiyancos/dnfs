@@ -22,6 +22,7 @@
 #include "nfs/nfs_setattr.h"
 #include "nfs/nfs_lookup.h"
 #include "nfs/nfs_access.h"
+#include "nfs/nfs_readlink.h"
 #include "nfs/nfs_link.h"
 #include "nfs/nfs_readdirplus.h"
 #include "nfs/nfs_fsstat.h"

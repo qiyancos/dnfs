@@ -26,26 +26,30 @@ int nfs3_pathconf(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     PATHCONF3resok *resok = &res->res_pathconf3.PATHCONF3res_u.resok;
 
     if (arg->arg_pathconf3.object.data.data_len == 0) {
-        rc=NFS_REQ_ERROR;
-        LOG(MODULE_NAME,L_ERROR,
+        rc = NFS_REQ_ERROR;
+        LOG(MODULE_NAME, L_ERROR,
             "nfs_pathconf get file handle len is 0");
         goto out;
     }
 
     get_file_handle(arg->arg_pathconf3.object);
 
-    LOG(MODULE_NAME, D_INFO, "The value of the nfs_pathconf obtained file handle is '%s', and the length is '%d'",
+    LOG(MODULE_NAME, D_INFO,
+        "The value of the nfs_pathconf obtained file handle is '%s', and the length is '%d'",
         arg->arg_pathconf3.object.data.data_val,
         arg->arg_pathconf3.object.data.data_len);
 
     /* to avoid setting it on each error case */
     resfail->obj_attributes.attributes_follow = FALSE;
 
-    res->res_pathconf3.status =nfs_set_post_op_attr(arg->arg_pathconf3.object.data.data_val, &res->res_pathconf3.PATHCONF3res_u.resok.obj_attributes);
-    if (res->res_pathconf3.status!=NFS3_OK)
-    {
-        rc=NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR, "Interface nfs_pathconf failed to obtain '%s' attributes",
+    res->res_pathconf3.status = nfs_set_post_op_attr(
+            arg->arg_pathconf3.object.data.data_val,
+            &res->res_pathconf3.PATHCONF3res_u.resok.obj_attributes);
+
+    if (res->res_pathconf3.status != NFS3_OK) {
+        rc = NFS_REQ_ERROR;
+        LOG(MODULE_NAME, L_ERROR,
+            "Interface nfs_pathconf failed to obtain '%s' attributes",
             arg->arg_pathconf3.object.data.data_val);
         goto out;
     }
@@ -68,15 +72,13 @@ void nfs3_pathconf_free(nfs_res_t *res) {
 }
 
 
-bool xdr_PATHCONF3args(XDR *xdrs, PATHCONF3args *objp)
-{
+bool xdr_PATHCONF3args(XDR *xdrs, PATHCONF3args *objp) {
     if (!xdr_nfs_fh3(xdrs, &objp->object))
         return (false);
     return (true);
 }
 
-bool xdr_PATHCONF3resok(XDR *xdrs, PATHCONF3resok *objp)
-{
+bool xdr_PATHCONF3resok(XDR *xdrs, PATHCONF3resok *objp) {
     if (!xdr_post_op_attr(xdrs, &objp->obj_attributes))
         return (false);
     if (!xdr_nfs3_uint32(xdrs, &objp->linkmax))
@@ -94,15 +96,13 @@ bool xdr_PATHCONF3resok(XDR *xdrs, PATHCONF3resok *objp)
     return (true);
 }
 
-bool xdr_PATHCONF3resfail(XDR *xdrs, PATHCONF3resfail *objp)
-{
+bool xdr_PATHCONF3resfail(XDR *xdrs, PATHCONF3resfail *objp) {
     if (!xdr_post_op_attr(xdrs, &objp->obj_attributes))
         return (false);
     return (true);
 }
 
-bool xdr_PATHCONF3res(XDR *xdrs, PATHCONF3res *objp)
-{
+bool xdr_PATHCONF3res(XDR *xdrs, PATHCONF3res *objp) {
     if (!xdr_nfsstat3(xdrs, &objp->status))
         return (false);
     switch (objp->status) {

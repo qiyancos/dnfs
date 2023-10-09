@@ -19,28 +19,28 @@
 #include "dnfsd/dnfs_meta_data.h"
 
 #define MODULE_NAME "MNT"
-int mnt_mnt(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
-{
+
+int mnt_mnt(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     int index_auth = 1;
     int retval = NFS_REQ_OK;
     auto *fh3 = (nfs_fh3 *) &res->res_mnt3.mountres3_u.mountinfo.fhandle;
-    mountres3_ok * const RES_MOUNTINFO =
+    mountres3_ok *const RES_MOUNTINFO =
             &res->res_mnt3.mountres3_u.mountinfo;
 
 
-    LOG(MODULE_NAME,D_INFO,
-             "REQUEST PROCESSING: Calling MNT_MNT path=%s", arg->arg_mnt);
+    LOG(MODULE_NAME, D_INFO,
+        "REQUEST PROCESSING: Calling MNT_MNT path=%s", arg->arg_mnt);
 
     /* Quick escape if an unsupported MOUNT version */
     if (req->rq_msg.cb_vers != MOUNT_V3) {
-        LOG(MODULE_NAME,L_WARN,"Only supports mount 3 protocol");
+        LOG(MODULE_NAME, L_WARN, "Only supports mount 3 protocol");
         retval = NFS_REQ_ERROR;
         goto out;
     }
 
     if (arg->arg_mnt == nullptr) {
-        LOG(MODULE_NAME,L_ERROR,
-                "NULL path passed as Mount argument !!!");
+        LOG(MODULE_NAME, L_ERROR,
+            "NULL path passed as Mount argument !!!");
         retval = NFS_REQ_DROP;
         goto out;
     }
@@ -48,23 +48,24 @@ int mnt_mnt(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
     /* Paranoid command to clean the result struct. */
     memset(res, 0, sizeof(nfs_res_t));
 
-    fh3->data.data_val=arg->arg_mnt;
-    fh3->data.data_len=strlen(arg->arg_mnt);
+    fh3->data.data_val = arg->arg_mnt;
+    fh3->data.data_len = strlen(arg->arg_mnt);
 
-    RES_MOUNTINFO->auth_flavors.auth_flavors_val = (int*)calloc(index_auth, sizeof(int));
-    RES_MOUNTINFO->auth_flavors.auth_flavors_val[0]=AUTH_NONE;
+    RES_MOUNTINFO->auth_flavors.auth_flavors_val = (int *) calloc(index_auth,
+                                                                  sizeof(int));
+    RES_MOUNTINFO->auth_flavors.auth_flavors_val[0] = AUTH_NONE;
     RES_MOUNTINFO->auth_flavors.auth_flavors_len = index_auth;
 
-    LOG(MODULE_NAME,D_INFO,
-        "REQUEST PROCESSING: Request MNT_MNT file_handle=%s,len is %d", fh3->data.data_val,fh3->data.data_len);
+    LOG(MODULE_NAME, D_INFO,
+        "REQUEST PROCESSING: Request MNT_MNT file_handle=%s,len is %d",
+        fh3->data.data_val, fh3->data.data_len);
 
     out:
     return retval;
 
 }
 
-void mnt3_mnt_free(nfs_res_t *res)
-{
+void mnt3_mnt_free(nfs_res_t *res) {
     mountres3_ok *resok = &res->res_mnt3.mountres3_u.mountinfo;
 
     if (res->res_mnt3.fhs_status == MNT3_OK) {

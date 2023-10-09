@@ -14,6 +14,7 @@
  */
 #ifndef DNFSD_NFS_SETATTR_H
 #define DNFSD_NFS_SETATTR_H
+
 #include "nfs_args.h"
 
 struct sattrguard3 {
@@ -54,9 +55,13 @@ int nfs3_setattr(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
 void nfs3_setattr_free(nfs_res_t *res);
 
 extern bool xdr_sattrguard3(XDR *xdrs, sattrguard3 *objp);
+
 extern bool xdr_SETATTR3args(XDR *xdrs, SETATTR3args *objp);
+
 extern bool xdr_SETATTR3resok(XDR *xdrs, SETATTR3resok *objp);
+
 extern bool xdr_SETATTR3resfail(XDR *xdrs, SETATTR3resfail *objp);
+
 extern bool xdr_SETATTR3res(XDR *xdrs, SETATTR3res *objp);
 
 #endif //DNFSD_NFS_SETATTR_H

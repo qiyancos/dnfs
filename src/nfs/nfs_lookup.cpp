@@ -20,20 +20,20 @@
 
 #define MODULE_NAME "NFS"
 
-int nfs3_lookup(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
-{
+int nfs3_lookup(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     int rc = NFS_REQ_OK;
 
     if (arg->arg_lookup3.what.dir.data.data_len == 0) {
-        rc=NFS_REQ_ERROR;
-        LOG(MODULE_NAME,L_ERROR,
+        rc = NFS_REQ_ERROR;
+        LOG(MODULE_NAME, L_ERROR,
             "arg_link get dir handle len is 0");
         goto out;
     }
 
     get_file_handle(arg->arg_lookup3.what.dir);
 
-    LOG(MODULE_NAME, D_INFO, "The value of the arg_lookup obtained dir handle is '%s', and the length is '%d'",
+    LOG(MODULE_NAME, D_INFO,
+        "The value of the arg_lookup obtained dir handle is '%s', and the length is '%d'",
         arg->arg_lookup3.what.dir.data.data_val,
         arg->arg_lookup3.what.dir.data.data_len);
     out:
@@ -41,8 +41,7 @@ int nfs3_lookup(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
     return rc;
 }
 
-void nfs3_lookup_free(nfs_res_t *res)
-{
+void nfs3_lookup_free(nfs_res_t *res) {
 /*    if (res->res_lookup3.status == NFS3_OK) {
         free(
                 res->res_lookup3.LOOKUP3res_u.resok.object.data.data_val);
@@ -50,15 +49,13 @@ void nfs3_lookup_free(nfs_res_t *res)
 }
 
 
-bool xdr_LOOKUP3args(XDR *xdrs, LOOKUP3args *objp)
-{
+bool xdr_LOOKUP3args(XDR *xdrs, LOOKUP3args *objp) {
     if (!xdr_diropargs3(xdrs, &objp->what))
         return (false);
     return (true);
 }
 
-bool xdr_LOOKUP3resok(XDR *xdrs, LOOKUP3resok *objp)
-{
+bool xdr_LOOKUP3resok(XDR *xdrs, LOOKUP3resok *objp) {
     if (!xdr_nfs_fh3(xdrs, &objp->object))
         return (false);
     if (!xdr_post_op_attr(xdrs, &objp->obj_attributes))
@@ -68,15 +65,13 @@ bool xdr_LOOKUP3resok(XDR *xdrs, LOOKUP3resok *objp)
     return (true);
 }
 
-bool xdr_LOOKUP3resfail(XDR *xdrs, LOOKUP3resfail *objp)
-{
+bool xdr_LOOKUP3resfail(XDR *xdrs, LOOKUP3resfail *objp) {
     if (!xdr_post_op_attr(xdrs, &objp->dir_attributes))
         return (false);
     return (true);
 }
 
-bool xdr_LOOKUP3res(XDR *xdrs, LOOKUP3res *objp)
-{
+bool xdr_LOOKUP3res(XDR *xdrs, LOOKUP3res *objp) {
     if (!xdr_nfsstat3(xdrs, &objp->status))
         return (false);
     switch (objp->status) {

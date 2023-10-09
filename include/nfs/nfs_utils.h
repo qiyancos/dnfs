@@ -15,7 +15,9 @@
 
 #ifndef DNFSD_NFS_UTILS_H
 #define DNFSD_NFS_UTILS_H
+
 #include "dnfsd/dnfs_meta_data.h"
+
 typedef enum dupreq_status {
     DUPREQ_SUCCESS = 0,
     DUPREQ_BEING_PROCESSED,
@@ -24,8 +26,7 @@ typedef enum dupreq_status {
 } dupreq_status_t;
 
 /*释放请求内存*/
-static inline void free_nfs_res(nfs_res_t *res)
-{
+static inline void free_nfs_res(nfs_res_t *res) {
     free(res);
 }
 

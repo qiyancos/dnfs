@@ -52,6 +52,8 @@ typedef nfs3_uint32 count3;
 
 typedef char *filename3;
 
+typedef char *nfspath3;
+
 struct nfstime3 {
 
     nfs3_uint32 tv_sec;

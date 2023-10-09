@@ -20,15 +20,15 @@
 #define MODULE_NAME "MNT"
 
 int mnt_export(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
-    LOG(MODULE_NAME, D_INFO,"REQUEST PROCESSING: Calling MNT_EXPORT");
+    LOG(MODULE_NAME, D_INFO, "REQUEST PROCESSING: Calling MNT_EXPORT");
     struct proc_state proc_state{};
     memset(&proc_state, 0, sizeof(proc_state));
-    proc_state.head= (mnt3_exports)calloc(1,sizeof(exportnode));
-    proc_state.head->ex_dir=(char *)"/export_test";
-    proc_state.head->ex_next= nullptr;
-    proc_state.head->ex_groups= nullptr;
+    proc_state.head = (mnt3_exports) calloc(1, sizeof(exportnode));
+    proc_state.head->ex_dir = (char *) "/export_test";
+    proc_state.head->ex_next = nullptr;
+    proc_state.head->ex_groups = nullptr;
     memset(res, 0, sizeof(nfs_res_t));
-    res->res_mntexport=proc_state.head;
+    res->res_mntexport = proc_state.head;
     return NFS_REQ_OK;
 }
 

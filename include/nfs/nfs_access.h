@@ -14,6 +14,7 @@
  */
 #ifndef DNFSD_NFS_ACCESS_H
 #define DNFSD_NFS_ACCESS_H
+
 #include "nfs_args.h"
 
 struct ACCESS3args {
@@ -43,11 +44,15 @@ union nfs_arg_t;
 union nfs_res_t;
 
 int nfs3_access(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
+
 void nfs3_access_free(nfs_res_t *res);
 
 extern bool xdr_ACCESS3args(XDR *xdrs, ACCESS3args *objp);
+
 extern bool xdr_ACCESS3resok(XDR *xdrs, ACCESS3resok *objp);
+
 extern bool xdr_ACCESS3resfail(XDR *xdrs, ACCESS3resfail *objp);
+
 extern bool xdr_ACCESS3res(XDR *xdrs, ACCESS3res *objp);
 
 

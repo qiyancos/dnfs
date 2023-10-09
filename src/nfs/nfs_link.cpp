@@ -20,21 +20,20 @@
 
 #define MODULE_NAME "NFS"
 
-int nfs3_link(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
-{
+int nfs3_link(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     int rc = NFS_REQ_OK;
 
     if (arg->arg_link3.file.data.data_len == 0) {
-        rc=NFS_REQ_ERROR;
-        LOG(MODULE_NAME,L_ERROR,
+        rc = NFS_REQ_ERROR;
+        LOG(MODULE_NAME, L_ERROR,
             "arg_link get file handle len is 0");
         goto out;
     }
 
     if (arg->arg_link3.link.dir.data.data_len == 0) {
-        rc=NFS_REQ_ERROR;
-        LOG(MODULE_NAME,L_ERROR,
+        rc = NFS_REQ_ERROR;
+        LOG(MODULE_NAME, L_ERROR,
             "arg_link get dir handle len is 0");
         goto out;
     }
@@ -42,11 +41,13 @@ int nfs3_link(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
     get_file_handle(arg->arg_link3.link.dir);
     get_file_handle(arg->arg_link3.file);
 
-    LOG(MODULE_NAME, D_INFO, "The value of the arg_link obtained file handle is '%s', and the length is '%d'",
+    LOG(MODULE_NAME, D_INFO,
+        "The value of the arg_link obtained file handle is '%s', and the length is '%d'",
         arg->arg_link3.file.data.data_val,
         arg->arg_link3.file.data.data_len);
 
-    LOG(MODULE_NAME, D_INFO, "The value of the arg_link obtained dir handle is '%s', and the length is '%d'",
+    LOG(MODULE_NAME, D_INFO,
+        "The value of the arg_link obtained dir handle is '%s', and the length is '%d'",
         arg->arg_link3.link.dir.data.data_val,
         arg->arg_link3.link.dir.data.data_len);
     out:
@@ -54,14 +55,12 @@ int nfs3_link(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
     return rc;
 }
 
-void nfs3_link_free(nfs_res_t *resp)
-{
+void nfs3_link_free(nfs_res_t *resp) {
     /* Nothing to do here */
 }
 
 
-bool xdr_LINK3args(XDR *xdrs, LINK3args *objp)
-{
+bool xdr_LINK3args(XDR *xdrs, LINK3args *objp) {
     if (!xdr_nfs_fh3(xdrs, &objp->file))
         return (false);
     if (!xdr_diropargs3(xdrs, &objp->link))
@@ -69,8 +68,7 @@ bool xdr_LINK3args(XDR *xdrs, LINK3args *objp)
     return (true);
 }
 
-bool xdr_LINK3resok(XDR *xdrs, LINK3resok *objp)
-{
+bool xdr_LINK3resok(XDR *xdrs, LINK3resok *objp) {
     if (!xdr_post_op_attr(xdrs, &objp->file_attributes))
         return (false);
     if (!xdr_wcc_data(xdrs, &objp->linkdir_wcc))
@@ -78,8 +76,7 @@ bool xdr_LINK3resok(XDR *xdrs, LINK3resok *objp)
     return (true);
 }
 
-bool xdr_LINK3resfail(XDR *xdrs, LINK3resfail *objp)
-{
+bool xdr_LINK3resfail(XDR *xdrs, LINK3resfail *objp) {
     if (!xdr_post_op_attr(xdrs, &objp->file_attributes))
         return (false);
     if (!xdr_wcc_data(xdrs, &objp->linkdir_wcc))
@@ -87,8 +84,7 @@ bool xdr_LINK3resfail(XDR *xdrs, LINK3resfail *objp)
     return (true);
 }
 
-bool xdr_LINK3res(XDR *xdrs, LINK3res *objp)
-{
+bool xdr_LINK3res(XDR *xdrs, LINK3res *objp) {
     if (!xdr_nfsstat3(xdrs, &objp->status))
         return (false);
     switch (objp->status) {
