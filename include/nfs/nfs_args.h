@@ -35,6 +35,14 @@ extern "C"
 
 #define NFS_LOOKAHEAD_CREATE 0x0040
 
+#define FSF3_LINK 0x0001
+
+#define FSF3_SYMLINK 0x0002
+
+#define FSF3_HOMOGENEOUS 0x0008
+
+#define FSF3_CANSETTIME 0x0010
+
 typedef int32_t bool_t;
 
 typedef uint32_t nfs3_uint32;
@@ -258,10 +266,4 @@ static struct nfs_request_lookahead dummy_lookahead = {
         .read = 0,
         .write = 0
 };
-
-#define FSF3_LINK 0x0001
-#define FSF3_SYMLINK 0x0002
-#define FSF3_HOMOGENEOUS 0x0008
-#define FSF3_CANSETTIME 0x0010
-
 #endif // DNFSD_NFS_ARGS_H

@@ -37,6 +37,19 @@ int nfs3_access(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
         "The value of the nfs_access obtained file handle is '%s', and the length is '%d'",
         arg->arg_access3.object.data.data_val,
         arg->arg_access3.object.data.data_len);
+
+    res->res_access3.status = nfs_set_post_op_attr(arg->arg_access3.object.data.data_val,
+                                                   &res->res_access3.ACCESS3res_u.resok.obj_attributes);
+    if (res->res_access3.status != NFS3_OK) {
+        rc = NFS_REQ_ERROR;
+        LOG(MODULE_NAME, L_ERROR, "Interface nfs_access failed to obtain '%s' attributes",
+            arg->arg_access3.object.data.data_val);
+        goto out;
+    }
+
+    /*todo 先直接给与都能过*/
+    res->res_access3.ACCESS3res_u.resok.access=0xff;
+
     out:
 
     return rc;
