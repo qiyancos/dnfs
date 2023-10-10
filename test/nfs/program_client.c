@@ -21,7 +21,7 @@ void print_nfs_func()
 void print_fattr3(fattr3 *info)
 {
 	printf("type: %d\n", info->type);
-	printf("mode: %u\n", info->mode);
+	printf("mode: %#o\n", info->mode);
 	printf("nlink: %u\n", info->nlink);
 	printf("uid: %u\n", info->uid);
 	printf("gid: %u\n", info->gid);
@@ -41,14 +41,27 @@ void print_fattr3(fattr3 *info)
 
 void print_post_op_attr(post_op_attr *info)
 {
-	printf("attributes_follow: %d\n", info->attributes_follow);
+	printf("post_op_attr attributes_follow: %d\n", info->attributes_follow);
 	if (info->attributes_follow)
 		print_fattr3(&info->post_op_attr_u.attributes);
 }
 
+void print_pre_op_attr(pre_op_attr *info)
+{
+	printf("pre_op_attr attributes_follow: %d\n", info->attributes_follow);
+	if (info->attributes_follow)
+	{
+		printf("size: %lu\n", info->pre_op_attr_u.attributes.size);
+		printf("mtime.seconds: %u\n", info->pre_op_attr_u.attributes.mtime.seconds);
+		printf("mtime.nseconds: %u\n", info->pre_op_attr_u.attributes.mtime.nseconds);
+		printf("ctime.seconds: %u\n", info->pre_op_attr_u.attributes.ctime.seconds);
+		printf("ctime.nseconds: %u\n", info->pre_op_attr_u.attributes.ctime.nseconds);
+	}
+}
+
 void print_post_op_fh3(post_op_fh3 *info)
 {
-	printf("handle_follows: %d\n", info->handle_follows);
+	printf("post_op_fh3 handle_follows: %d\n", info->handle_follows);
 	if (info->handle_follows)
 	{
 		printf("handle.data_val: %s\n", info->post_op_fh3_u.handle.data.data_val);
@@ -139,11 +152,66 @@ void nfs_program_3(char *host)
 	else if (func_no == 2) // setattr
 	{
 		SETATTR3res *result_3;
-		SETATTR3args nfsproc3_setattr_3_arg;
+		// SETATTR3args nfsproc3_setattr_3_arg;;
+		char src[128];
+		char *src_ptr = src;
+		printf("input data: ");
+		scanf("%s", src_ptr);
+		u_int data_len = (u_int)strlen(src) + 1;
+		char *data_val = (char *)malloc(sizeof(char) * data_len);
+		char *dst_ptr = data_val;
+		u_int i = data_len;
+		while (i--)
+		{
+			*(dst_ptr++) = *(src_ptr++);
+		}
+		*(dst_ptr++) = '\0';
+		SETATTR3args nfsproc3_setattr_3_arg = {{{data_len, data_val}}, {}, {FALSE, {}}};
+		char set_it[1];
+		char *set_it_ptr = set_it;
+		printf("set mode: y/n? ");
+		scanf("%s", set_it_ptr);
+		if (strcmp(set_it, "y") == 0)
+		{
+			u_int mode;
+			printf("input new mode: ");
+			scanf("%o", &mode);
+			nfsproc3_setattr_3_arg.new_attributes.mode.set_it = TRUE;
+			nfsproc3_setattr_3_arg.new_attributes.mode.set_mode3_u.mode = mode;
+		}
+		printf("set uid: y/n? ");
+		scanf("%s", set_it_ptr);
+		if (strcmp(set_it, "y") == 0)
+		{
+			u_int uid;
+			printf("input new uid: ");
+			scanf("%u", &uid);
+			nfsproc3_setattr_3_arg.new_attributes.uid.set_it = TRUE;
+			nfsproc3_setattr_3_arg.new_attributes.uid.set_uid3_u.uid = uid;
+		}
+		printf("set gid: y/n? ");
+		scanf("%s", set_it_ptr);
+		if (strcmp(set_it, "y") == 0)
+		{
+			u_int gid;
+			printf("input new gid: ");
+			scanf("%u", &gid);
+			nfsproc3_setattr_3_arg.new_attributes.gid.set_it = TRUE;
+			nfsproc3_setattr_3_arg.new_attributes.gid.set_gid3_u.gid = gid;
+		}
 		result_3 = nfsproc3_setattr_3(&nfsproc3_setattr_3_arg, clnt);
 		if (result_3 == (SETATTR3res *)NULL)
 		{
 			clnt_perror(clnt, "call failed");
+		}
+		else
+		{
+			printf("-----response-----\n");
+			printf("status: %d\n", result_3->status);
+			if (result_3->status == 0)
+			{
+				print_post_op_attr(&result_3->SETATTR3res_u.resok.obj_wcc.after);
+			}
 		}
 	}
 	// else if (strcmp(func_name, "lookup") == 0)
@@ -339,48 +407,48 @@ void nfs_program_3(char *host)
 	else if (func_no == 18) // fsstat
 	{
 		FSSTAT3res *result_19;
-        char src[128];
-        char *src_ptr = src;
-        printf("input data: ");
-        scanf("%s", src_ptr);
-        // printf("sizeof: %lu\n", sizeof(data));
-        // printf("strlen: %ld\n", strlen(data));
-        u_int data_len = (u_int)strlen(src) + 1;
-        char *data_val = (char *)malloc(sizeof(char) * data_len);
-        char *dst_ptr = data_val;
-        u_int i = data_len;
-        while (i--)
-        {
-            *(dst_ptr++) = *(src_ptr++);
-        }
-        *(dst_ptr++) = '\0';
-		FSSTAT3args nfsproc3_fsstat_3_arg= {{{data_len, data_val}}};
+		char src[128];
+		char *src_ptr = src;
+		printf("input data: ");
+		scanf("%s", src_ptr);
+		// printf("sizeof: %lu\n", sizeof(data));
+		// printf("strlen: %ld\n", strlen(data));
+		u_int data_len = (u_int)strlen(src) + 1;
+		char *data_val = (char *)malloc(sizeof(char) * data_len);
+		char *dst_ptr = data_val;
+		u_int i = data_len;
+		while (i--)
+		{
+			*(dst_ptr++) = *(src_ptr++);
+		}
+		*(dst_ptr++) = '\0';
+		FSSTAT3args nfsproc3_fsstat_3_arg = {{{data_len, data_val}}};
 		result_19 = nfsproc3_fsstat_3(&nfsproc3_fsstat_3_arg, clnt);
 		if (result_19 == (FSSTAT3res *)NULL)
 		{
 			clnt_perror(clnt, "call failed");
 		}
-        else
-        {
-            printf("-----response-----\n");
-            printf("status: %d\n", result_19->status);
-            if (result_19->status == 0)
-            {
-                printf("resok\n");
-            }
-            else
-            {
-                printf("resfail\n");
-            }
-            print_post_op_attr(&result_19->FSSTAT3res_u.resok.obj_attributes);
-            printf("tbytes: %lu\n", result_19->FSSTAT3res_u.resok.tbytes);
-            printf("fbytes: %lu\n", result_19->FSSTAT3res_u.resok.fbytes);
-            printf("abytes: %lu\n", result_19->FSSTAT3res_u.resok.abytes);
-            printf("tfiles: %lu\n", result_19->FSSTAT3res_u.resok.tfiles);
-            printf("ffiles: %lu\n", result_19->FSSTAT3res_u.resok.ffiles);
-            printf("afiles: %lu\n", result_19->FSSTAT3res_u.resok.afiles);
-            printf("invarsec: %u\n", result_19->FSSTAT3res_u.resok.invarsec);
-        }
+		else
+		{
+			printf("-----response-----\n");
+			printf("status: %d\n", result_19->status);
+			if (result_19->status == 0)
+			{
+				printf("resok\n");
+			}
+			else
+			{
+				printf("resfail\n");
+			}
+			print_post_op_attr(&result_19->FSSTAT3res_u.resok.obj_attributes);
+			printf("tbytes: %lu\n", result_19->FSSTAT3res_u.resok.tbytes);
+			printf("fbytes: %lu\n", result_19->FSSTAT3res_u.resok.fbytes);
+			printf("abytes: %lu\n", result_19->FSSTAT3res_u.resok.abytes);
+			printf("tfiles: %lu\n", result_19->FSSTAT3res_u.resok.tfiles);
+			printf("ffiles: %lu\n", result_19->FSSTAT3res_u.resok.ffiles);
+			printf("afiles: %lu\n", result_19->FSSTAT3res_u.resok.afiles);
+			printf("invarsec: %u\n", result_19->FSSTAT3res_u.resok.invarsec);
+		}
 	}
 	// else if (strcmp(func_name, "fsinfo") == 0)
 	else if (func_no == 19) // fsinfo
