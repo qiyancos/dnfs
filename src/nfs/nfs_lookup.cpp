@@ -26,7 +26,10 @@ using namespace std;
 
 int nfs3_lookup(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     int rc = NFS_REQ_OK;
+    /*文件路径*/
     string filepath;
+    /*操作状态*/
+    nfsstat3 status;
 
     if (arg->arg_lookup3.what.dir.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
@@ -41,21 +44,32 @@ int nfs3_lookup(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
         "The value of the arg_lookup obtained dir handle is '%s', and the length is '%d'",
         arg->arg_lookup3.what.dir.data.data_val,
         arg->arg_lookup3.what.dir.data.data_len);
+    /*判断主目录存不存在*/
+    if (!judge_file_exit(arg->arg_lookup3.what.dir.data.data_val, S_IFDIR)) {
+        rc = NFS_REQ_ERROR;
+        res->res_lookup3.status=NFS3ERR_NOTDIR;
+        LOG(MODULE_NAME, D_ERROR,
+            "The value of the arg_lookup obtained file handle '%s' not exist",
+            arg->arg_lookup3.what.dir.data.data_val);
+        goto out;
+    }
 
     /*判断文件是否存在*/
     filepath = string(arg->arg_lookup3.what.dir.data.data_val) + "/" +
                arg->arg_lookup3.what.name;
 
-    /*如果查找的目录不存在*/
+    LOG(MODULE_NAME, L_INFO,
+        "Interface nfs_lookup lookup file path is '%s'",
+        filepath.c_str());
+
+    /*如果查找的目录不存在,跳转fail*/
     if (!judge_file_exit(filepath, S_IFDIR | S_IFREG | S_IFLNK)) {
         rc = NFS_REQ_ERROR;
+        /*文件不存在*/
+        res->res_rmdir3.status = NFS3ERR_NOENT;
         goto outfail;
-    } else {
-        rc = NFS_REQ_OK;
-        goto outok;
     }
-
-outok:
+    /*成功查找到文件*/
     /*获取文件句柄*/
     res->res_lookup3.LOOKUP3res_u.resok.object.data.data_val = (char *) filepath.c_str();
     res->res_lookup3.LOOKUP3res_u.resok.object.data.data_len = strlen(
@@ -87,16 +101,14 @@ outok:
 
 outfail:
     /*获取目录属性*/
-    res->res_lookup3.status = nfs_set_post_op_attr(
+    status = nfs_set_post_op_attr(
             arg->arg_lookup3.what.dir.data.data_val,
             &res->res_lookup3.LOOKUP3res_u.resfail.dir_attributes);
-    if (res->res_lookup3.status != NFS3_OK) {
+    if (status != NFS3_OK) {
         LOG(MODULE_NAME, L_ERROR,
             "Interface nfs_lookup resfail failed to obtain dir '%s' attributes",
             arg->arg_lookup3.what.dir.data.data_val);
     }
-    /*文件夹不存在*/
-    res->res_rmdir3.status = NFS3ERR_NOTDIR;
 
 out:
     return rc;

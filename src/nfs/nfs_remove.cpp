@@ -18,11 +18,21 @@
 #include "nfs/nfs_utils.h"
 #include "log/log.h"
 #include "dnfsd/dnfs_meta_data.h"
+#include "string"
 
+using namespace std;
 #define MODULE_NAME "NFS"
 
 int nfs3_remove(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     int rc = NFS_REQ_OK;
+
+    /*删除文件路径*/
+    string filepath;
+    /*操作状态*/
+    nfsstat3 status;
+
+    /*保存目录操作前属性信息*/
+    struct pre_op_attr pre{};
 
     if (arg->arg_remove3.object.dir.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
@@ -37,8 +47,78 @@ int nfs3_remove(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
         "The value of the arg_remove obtained file handle is '%s', and the length is '%d'",
         arg->arg_remove3.object.dir.data.data_val,
         arg->arg_remove3.object.dir.data.data_len);
-    out:
 
+    /*判断主目录存不存在*/
+    if (!judge_file_exit(arg->arg_remove3.object.dir.data.data_val, S_IFDIR)) {
+        rc = NFS_REQ_ERROR;
+        res->res_rmdir3.status=NFS3ERR_NOTDIR;
+        LOG(MODULE_NAME, D_ERROR,
+            "The value of the arg_remove obtained file handle '%s' not exist",
+            arg->arg_remove3.object.dir.data.data_val);
+        goto out;
+    }
+
+    /*获取之前的属性*/
+    res->res_remove3.status = get_pre_op_attr(arg->arg_remove3.object.dir.data.data_val,
+                                              pre);
+    if (res->res_remove3.status != NFS3_OK) {
+        rc = NFS_REQ_ERROR;
+        LOG(MODULE_NAME, L_ERROR,
+            "Interface nfs_remove failed to obtain '%s' pre_attributes",
+            arg->arg_remove3.object.dir.data.data_val);
+        goto out;
+    }
+
+    /*判断目录是否存在*/
+    filepath = string(arg->arg_remove3.object.dir.data.data_val) + "/" +
+               arg->arg_remove3.object.name;
+
+    LOG(MODULE_NAME, L_INFO,
+        "Interface nfs_remove remove file path is '%s'",
+        filepath.c_str());
+
+    /*如果删除的文件不存在*/
+    if (!judge_file_exit(filepath, S_IFREG | S_IFLNK)) {
+        rc = NFS_REQ_ERROR;
+        /*文件不存在*/
+        res->res_remove3.status = NFS3ERR_NOENT;
+        goto outfail;
+    }
+    /*删除文件*/
+    if (!remove_file(filepath)) {
+        rc = NFS_REQ_ERROR;
+        /*删除失败*/
+        res->res_remove3.status = NFS3ERR_IO;
+        goto outfail;
+    }
+
+    /*成功删除文件*/
+    /*获取成功的目录弱属性对比*/
+    res->res_remove3.status = get_wcc_data(arg->arg_remove3.object.dir.data.data_val,
+                                          pre,
+                                          res->res_remove3.REMOVE3res_u.resok.dir_wcc);
+    /*获取弱属性信息失败*/
+    if (res->res_remove3.status != NFS3_OK) {
+        rc = NFS_REQ_ERROR;
+        LOG(MODULE_NAME, L_ERROR,
+            "Interface nfs_remove failed to obtain '%s' resok wcc_data",
+            arg->arg_remove3.object.dir.data.data_val);
+    }
+
+    goto out;
+outfail:
+    /*获取失败的wccdata*/
+    status = get_wcc_data(arg->arg_remove3.object.dir.data.data_val,
+                                          pre,
+                                          res->res_remove3.REMOVE3res_u.resfail.dir_wcc);
+    /*获取弱属性信息失败*/
+    if (status != NFS3_OK) {
+        LOG(MODULE_NAME, L_ERROR,
+            "Interface nfs_remove failed to obtain '%s' resfail wcc_data",
+            arg->arg_remove3.object.dir.data.data_val);
+    }
+    
+out:
     return rc;
 }
 

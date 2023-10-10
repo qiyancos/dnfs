@@ -224,45 +224,25 @@ nfsstat3 get_wcc_data(char *file_path, pre_op_attr &pre_attr, wcc_data &wccData)
  * params path:删除的目录
  * return 是否删除成功
  * */
-bool remove_directory(const std::string& path) {
-    DIR *dir = opendir(path.c_str());
-    if (dir == nullptr) {
-        // 打开目录失败
-        return false;
-    }
-
-    dirent *entry;
-    while ((entry = readdir(dir)) != nullptr) {
-        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
-            // 跳过当前目录和父目录
-            continue;
-        }
-
-        // 构造文件/文件夹的完整路径
-        std::string fullPath = std::string(path) + "/" + entry->d_name;
-
-        if (entry->d_type == DT_DIR) {
-            // 如果是文件夹，递归删除
-            if (!remove_directory(fullPath)) {
-                closedir(dir);
-                return false;
-            }
-        } else {
-            // 如果是文件，直接删除
-            if (remove(fullPath.c_str()) != 0) {
-                closedir(dir);
-                return false;
-            }
-        }
-    }
-
-    // 关闭目录流
-    closedir(dir);
-
+bool remove_directory(const std::string &path) {
     // 删除当前目录
     if (rmdir(path.c_str()) != 0) {
         return false;
     }
 
     return true;
+}
+
+/*删除文件
+ * params path:删除的目录
+ * return 是否删除成功
+ * */
+bool remove_file(const std::string &path) {
+
+    // 如果是文件，直接删除
+    if (remove(path.c_str()) != 0) {
+        return false;
+    }
+    return true;
+
 }

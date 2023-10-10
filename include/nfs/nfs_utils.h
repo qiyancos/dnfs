@@ -78,4 +78,10 @@ nfsstat3 get_wcc_data(char *file_path, pre_op_attr &pre_attr, wcc_data &wccData)
  * */
 bool remove_directory(const std::string& path);
 
+/*删除文件
+ * params path:删除的目录
+ * return 是否删除成功
+ * */
+bool remove_file(const std::string &path);
+
 #endif //DNFSD_NFS_UTILS_H
