@@ -20,23 +20,28 @@
 
 #define MODULE_NAME "NFS"
 
-int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res){
+int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     int rc = NFS_REQ_OK;
 
-    if (arg->arg_write3.file.data.data_len == 0) {
+    /*数据指针*/
+    WRITE3args *write_args = &arg->arg_write3;
+    WRITE3resok *write_res_ok = &res->res_write3.WRITE3res_u.resok;
+    WRITE3resfail *write_res_fail = &res->res_write3.WRITE3res_u.resfail;
+
+    if (write_args->file.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "arg_write get file handle len is 0");
         goto out;
     }
 
 
-    get_file_handle(arg->arg_write3.file);
+    get_file_handle(write_args->file);
 
     LOG(MODULE_NAME, D_INFO,
         "The value of the arg_write obtained file handle is '%s', and the length is '%d'",
-        arg->arg_write3.file.data.data_val,
-        arg->arg_write3.file.data.data_len);
+        write_args->file.data.data_val,
+        write_args->file.data.data_len);
 
     out:
 
@@ -44,21 +49,19 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res){
 }
 
 
-void nfs3_write_free(nfs_res_t *res){
+void nfs3_write_free(nfs_res_t *res) {
 
 }
 
-bool xdr_stable_how(XDR *xdrs, stable_how *objp)
-{
+bool xdr_stable_how(XDR *xdrs, stable_how *objp) {
     if (!xdr_enum(xdrs, (enum_t *) objp))
         return (false);
     return (true);
 }
 
-bool xdr_WRITE3args(XDR *xdrs, WRITE3args *objp)
-{
+bool xdr_WRITE3args(XDR *xdrs, WRITE3args *objp) {
     struct nfs_request_lookahead *lkhd =
-            xdrs->x_public ? (struct nfs_request_lookahead *)xdrs->
+            xdrs->x_public ? (struct nfs_request_lookahead *) xdrs->
                     x_public : &dummy_lookahead;
 
     if (!xdr_nfs_fh3(xdrs, &objp->file))
@@ -70,7 +73,7 @@ bool xdr_WRITE3args(XDR *xdrs, WRITE3args *objp)
     if (!xdr_stable_how(xdrs, &objp->stable))
         return (false);
     if (!xdr_bytes
-            (xdrs, (char **)&objp->data.data_val,
+            (xdrs, (char **) &objp->data.data_val,
              &objp->data.data_len, XDR_BYTES_MAXLEN_IO))
         return (false);
     lkhd->flags |= NFS_LOOKAHEAD_WRITE;
@@ -78,8 +81,7 @@ bool xdr_WRITE3args(XDR *xdrs, WRITE3args *objp)
     return (true);
 }
 
-bool xdr_WRITE3resok(XDR *xdrs, WRITE3resok *objp)
-{
+bool xdr_WRITE3resok(XDR *xdrs, WRITE3resok *objp) {
     if (!xdr_wcc_data(xdrs, &objp->file_wcc))
         return (false);
     if (!xdr_count3(xdrs, &objp->count))
@@ -91,15 +93,13 @@ bool xdr_WRITE3resok(XDR *xdrs, WRITE3resok *objp)
     return (true);
 }
 
-bool xdr_WRITE3resfail(XDR *xdrs, WRITE3resfail *objp)
-{
+bool xdr_WRITE3resfail(XDR *xdrs, WRITE3resfail *objp) {
     if (!xdr_wcc_data(xdrs, &objp->file_wcc))
         return (false);
     return (true);
 }
 
-bool xdr_WRITE3res(XDR *xdrs, WRITE3res *objp)
-{
+bool xdr_WRITE3res(XDR *xdrs, WRITE3res *objp) {
     if (!xdr_nfsstat3(xdrs, &objp->status))
         return (false);
     switch (objp->status) {

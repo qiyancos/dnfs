@@ -26,34 +26,39 @@ int nfs3_fsstat(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     struct statvfs buffstatvfs{};
     int retval = 0;
 
-    if (arg->arg_fsstat3.fsroot.data.data_len == 0) {
+    /*数据指针*/
+    FSSTAT3args *fsstat_args = &arg->arg_fsstat3;
+    FSSTAT3resok *fsstat_res_ok = &res->res_fsstat3.FSSTAT3res_u.resok;
+    FSSTAT3resfail *fsstat_res_fail = &res->res_fsstat3.FSSTAT3res_u.resfail;
+
+    if (fsstat_args->fsroot.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "nfs_fsstat get file handle len is 0");
         goto out;
     }
 
-    get_file_handle(arg->arg_fsstat3.fsroot);
+    get_file_handle(fsstat_args->fsroot);
 
     LOG(MODULE_NAME, D_INFO,
         "The value of the nfs_fsstat obtained file handle is '%s', and the length is data_val is '%d'",
-        arg->arg_fsstat3.fsroot.data.data_val,
-        arg->arg_fsstat3.fsroot.data.data_len);
+        fsstat_args->fsroot.data.data_val,
+        fsstat_args->fsroot.data.data_len);
 
     /* to avoid setting it on each error case */
-    res->res_fsstat3.FSSTAT3res_u.resfail.obj_attributes.attributes_follow =
+    fsstat_res_fail->obj_attributes.attributes_follow =
             FALSE;
 
-    res->res_fsstat3.status = nfs_set_post_op_attr(arg->arg_fsstat3.fsroot.data.data_val,
-                                                   &res->res_fsstat3.FSSTAT3res_u.resok.obj_attributes);
+    res->res_fsstat3.status = nfs_set_post_op_attr(fsstat_args->fsroot.data.data_val,
+                                                   &fsstat_res_ok->obj_attributes);
     if (res->res_fsstat3.status != NFS3_OK) {
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR, "Interface nfs_fsstat failed to obtain '%s' attributes",
-            arg->arg_fsstat3.fsroot.data.data_val);
+        LOG(MODULE_NAME, D_ERROR, "Interface nfs_fsstat failed to obtain '%s' attributes",
+            fsstat_args->fsroot.data.data_val);
         goto out;
     }
 
-    retval = statvfs(arg->arg_fsstat3.fsroot.data.data_val, &buffstatvfs);
+    retval = statvfs(fsstat_args->fsroot.data.data_val, &buffstatvfs);
 
     if (retval < 0) {
         rc = NFS_REQ_ERROR;
@@ -61,44 +66,44 @@ int nfs3_fsstat(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     }
 
     /*文件系统总空间大小*/
-    res->res_fsstat3.FSSTAT3res_u.resok.tbytes =
+    fsstat_res_ok->tbytes =
             buffstatvfs.f_frsize * buffstatvfs.f_blocks;
 
     /*文件系统剩余空间大小*/
-    res->res_fsstat3.FSSTAT3res_u.resok.fbytes =
+    fsstat_res_ok->fbytes =
             buffstatvfs.f_frsize * buffstatvfs.f_bfree;
 
     /*使用bytes计算的剩余空间信息，供通过rpc身份认证的用户使用*/
-    res->res_fsstat3.FSSTAT3res_u.resok.abytes =
+    fsstat_res_ok->abytes =
             buffstatvfs.f_frsize * buffstatvfs.f_bavail;
 
     /*文件系统中文件插槽的总数，（在unix系统中通常对应配置的节点信息）*/
-    res->res_fsstat3.FSSTAT3res_u.resok.tfiles = buffstatvfs.f_files;
+    fsstat_res_ok->tfiles = buffstatvfs.f_files;
 
     /*文件系统中剩余文件插槽的数目*/
-    res->res_fsstat3.FSSTAT3res_u.resok.ffiles = buffstatvfs.f_ffree;
+    fsstat_res_ok->ffiles = buffstatvfs.f_ffree;
 
     /*共通过rpc验证的用户使用的空闲插槽数目*/
-    res->res_fsstat3.FSSTAT3res_u.resok.afiles = buffstatvfs.f_favail;
+    fsstat_res_ok->afiles = buffstatvfs.f_favail;
 
     /* volatile FS 文件系统更改的描述，用来设置文件系统在设置时间内不期望被更改，
      * 例如在不变系统下可以设置为最大的无符号整数，在变化频繁的系统下，设置为0，
      * 用户端可以使用它来进行缓存管理，是可变的并且可以在任何时候更改 */
-    res->res_fsstat3.FSSTAT3res_u.resok.invarsec = 0;
+    fsstat_res_ok->invarsec = 0;
 
     res->res_fsstat3.status = NFS3_OK;
 
     LOG(MODULE_NAME, D_INFO,
         "nfs_Fsstat --> tbytes=%u fbytes=%u abytes=%u",
-        res->res_fsstat3.FSSTAT3res_u.resok.tbytes,
-        res->res_fsstat3.FSSTAT3res_u.resok.fbytes,
-        res->res_fsstat3.FSSTAT3res_u.resok.abytes);
+        fsstat_res_ok->tbytes,
+        fsstat_res_ok->fbytes,
+        fsstat_res_ok->abytes);
 
     LOG(MODULE_NAME, D_INFO,
         "nfs_Fsstat --> tfiles=%u ffiles=%u afiles=%u",
-        res->res_fsstat3.FSSTAT3res_u.resok.tfiles,
-        res->res_fsstat3.FSSTAT3res_u.resok.ffiles,
-        res->res_fsstat3.FSSTAT3res_u.resok.afiles);
+        fsstat_res_ok->tfiles,
+        fsstat_res_ok->ffiles,
+        fsstat_res_ok->afiles);
 
     out:
 

@@ -17,25 +17,128 @@
 #include "nfs/nfs_utils.h"
 #include "log/log.h"
 #include "dnfsd/dnfs_meta_data.h"
+#include "string"
+
+using namespace std;
 
 #define MODULE_NAME "NFS"
 
 int nfs3_mkdir(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     int rc = NFS_REQ_OK;
 
-    if (arg->arg_mkdir3.where.dir.data.data_len == 0) {
+    /*创建目录名*/
+    string dir_path;
+
+    /*获取目录属性信息状态*/
+    nfsstat3 status;
+
+    /*保存目录操作前属性信息*/
+    struct pre_op_attr pre{};
+
+    /*数据指针*/
+    MKDIR3args *mkdir_args = &arg->arg_mkdir3;
+    MKDIR3resok *mkdir_res_ok = &res->res_mkdir3.MKDIR3res_u.resok;
+    MKDIR3resfail *mkdir_res_fail = &res->res_mkdir3.MKDIR3res_u.resfail;
+
+    if (mkdir_args->where.dir.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "arg_mkdir get dir handle len is 0");
         goto out;
     }
 
-    get_file_handle(arg->arg_mkdir3.where.dir);
+    get_file_handle(mkdir_args->where.dir);
 
     LOG(MODULE_NAME, D_INFO,
         "The value of the arg_mkdir obtained dir handle is '%s', and the length is '%d'",
-        arg->arg_mkdir3.where.dir.data.data_val,
-        arg->arg_mkdir3.where.dir.data.data_len);
+        mkdir_args->where.dir.data.data_val,
+        mkdir_args->where.dir.data.data_len);
+
+    /*判断主目录存不存在*/
+    if (!judge_file_exit(mkdir_args->where.dir.data.data_val, S_IFDIR)) {
+        rc = NFS_REQ_ERROR;
+        res->res_mkdir3.status = NFS3ERR_NOTDIR;
+        LOG(MODULE_NAME, D_ERROR,
+            "The value of the arg_mkdir obtained file handle '%s' not exist",
+            mkdir_args->where.dir.data.data_val);
+        goto out;
+    }
+
+    /*获取之前的属性*/
+    res->res_mkdir3.status = get_pre_op_attr(mkdir_args->where.dir.data.data_val,
+                                             pre);
+    if (res->res_mkdir3.status != NFS3_OK) {
+        rc = NFS_REQ_ERROR;
+        LOG(MODULE_NAME, D_ERROR,
+            "Interface nfs_mkdir failed to obtain '%s' pre_attributes",
+            mkdir_args->where.dir.data.data_val);
+        goto out;
+    }
+
+    /*获取目录路径*/
+    dir_path = string(mkdir_args->where.dir.data.data_val) + "/" +
+               mkdir_args->where.name;
+
+    LOG(MODULE_NAME, D_INFO,
+        "Interface nfs_mkdir make dir path is '%s'",
+        dir_path.c_str());
+
+    /*创建目录*/
+    if (mkdir((char *) dir_path.c_str(), mkdir_args->attributes.mode.set_mode3_u.mode) !=
+        0) {
+        rc = NFS_REQ_ERROR;
+        /*创建失败*/
+        res->res_mkdir3.status = NFS3ERR_NOTDIR;
+        LOG(MODULE_NAME, D_ERROR,
+            "The value of the arg_mkdir make dir '%s' failed",
+            dir_path.c_str());
+        goto outfail;
+    }
+
+    /*todo 看是否需要更改属主等信息*/
+
+    /*创建成功返回数据*/
+    /*获取文件句柄*/
+    mkdir_res_ok->obj.post_op_fh3_u.handle.data.data_val = (char *) dir_path.c_str();
+    mkdir_res_ok->obj.post_op_fh3_u.handle.data.data_len = strlen(
+            mkdir_res_ok->obj.post_op_fh3_u.handle.data.data_val);
+
+    /*获取创建目录属性*/
+    res->res_mkdir3.status = nfs_set_post_op_attr(
+            mkdir_res_ok->obj.post_op_fh3_u.handle.data.data_val,
+            &mkdir_res_ok->obj_attributes);
+    if (res->res_mkdir3.status != NFS3_OK) {
+        rc = NFS_REQ_ERROR;
+        LOG(MODULE_NAME, D_ERROR,
+            "Interface nfs_mkdir resok failed to obtain fir '%s' attributes",
+            mkdir_res_ok->obj.post_op_fh3_u.handle.data.data_val);
+    }
+
+    /*获取根目录弱属性信息*/
+    res->res_mkdir3.status = get_wcc_data(
+            mkdir_args->where.dir.data.data_val, pre,
+            mkdir_res_ok->dir_wcc);
+
+    if (res->res_mkdir3.status != NFS3_OK) {
+        rc = NFS_REQ_ERROR;
+        LOG(MODULE_NAME, D_ERROR,
+            "Interface nfs_mkdir resok failed to obtain '%s' wcc_data",
+            mkdir_args->where.dir.data.data_val);
+    }
+    goto out;
+
+    outfail:
+    /*获取失败的wccdata*/
+    status = get_wcc_data(mkdir_args->where.dir.data.data_val,
+                          pre,
+                          mkdir_res_fail->dir_wcc);
+    /*获取弱属性信息失败*/
+    if (status != NFS3_OK) {
+        LOG(MODULE_NAME, D_ERROR,
+            "Interface nfs_rmdir failed to obtain '%s' resfail wcc_data",
+            mkdir_args->where.dir.data.data_val);
+    }
+
     out:
 
     return rc;

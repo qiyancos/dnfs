@@ -27,88 +27,118 @@ using namespace std;
 int nfs3_rmdir(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     int rc = NFS_REQ_OK;
 
-    /*保存文件路径*/
-    string filepath;
+    /*保存目录路径*/
+    string dir_path;
 
-    /*保存文件操作前属性信息*/
+    /*保存目录操作前属性信息*/
     struct pre_op_attr pre{};
 
-    if (arg->arg_rmdir3.object.dir.data.data_len == 0) {
+    /*操作状态*/
+    nfsstat3 status;
+
+    /*数据指针*/
+    RMDIR3args *rmdir_args = &arg->arg_rmdir3;
+    RMDIR3resok *rmdir_res_ok = &res->res_rmdir3.RMDIR3res_u.resok;
+    RMDIR3resfail *rmdir_res_fail = &res->res_rmdir3.RMDIR3res_u.resfail;
+
+    if (rmdir_args->object.dir.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "arg_rmdir get dir handle len is 0");
         goto out;
     }
 
-    /*获取文件句柄*/
-    get_file_handle(arg->arg_rmdir3.object.dir);
+    /*获取目录句柄*/
+    get_file_handle(rmdir_args->object.dir);
 
     LOG(MODULE_NAME, D_INFO,
         "The value of the arg_rmdir obtained file handle is '%s', and the length is '%d'",
-        arg->arg_rmdir3.object.dir.data.data_val,
-        arg->arg_rmdir3.object.dir.data.data_len);
+        rmdir_args->object.dir.data.data_val,
+        rmdir_args->object.dir.data.data_len);
 
     LOG(MODULE_NAME, D_INFO,
         "The name of the arg_rmdir subdirectory to delete is '%s'",
-        arg->arg_rmdir3.object.name);
+        rmdir_args->object.name);
 
-    /*获取之前的属性*/
-    res->res_rmdir3.status = get_pre_op_attr(arg->arg_rmdir3.object.dir.data.data_val,
-                                             pre);
-    if (res->res_rmdir3.status != NFS3_OK) {
+    /*判断主目录存不存在*/
+    if (!judge_file_exit(rmdir_args->object.dir.data.data_val, S_IFDIR)) {
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR,
-            "Interface nfs_rmdir failed to obtain '%s' pre_attributes",
-            arg->arg_rmdir3.object.dir.data.data_val);
+        res->res_rmdir3.status = NFS3ERR_NOTDIR;
+        LOG(MODULE_NAME, D_ERROR,
+            "The value of the arg_rmdir obtained file handle '%s' not exist",
+            rmdir_args->object.dir.data.data_val);
         goto out;
     }
 
-    /*判断文件是否存在*/
-    filepath = string(arg->arg_readdirplus3.dir.data.data_val) + "/" +
-               arg->arg_rmdir3.object.name;
+    /*获取之前的属性*/
+    res->res_rmdir3.status = get_pre_op_attr(rmdir_args->object.dir.data.data_val,
+                                             pre);
+    if (res->res_rmdir3.status != NFS3_OK) {
+        rc = NFS_REQ_ERROR;
+        LOG(MODULE_NAME, D_ERROR,
+            "Interface nfs_rmdir failed to obtain '%s' pre_attributes",
+            rmdir_args->object.dir.data.data_val);
+        goto out;
+    }
+
+    /*判断目录是否存在*/
+    dir_path = string(rmdir_args->object.dir.data.data_val) + "/" +
+               rmdir_args->object.name;
+
+    LOG(MODULE_NAME, D_INFO,
+        "Interface nfs_rmdir remove dir path is '%s'",
+        dir_path.c_str());
+
 
     /*如果删除的目录不存在*/
-    if (!judge_file_exit(filepath, S_IFDIR)) {
+    if (!judge_file_exit(dir_path, S_IFDIR)) {
         rc = NFS_REQ_ERROR;
+        /*目录不存在*/
+        res->res_rmdir3.status = NFS3ERR_NOENT;
+        LOG(MODULE_NAME, D_ERROR,
+            "The value of the arg_rmdir rm dir '%s' not exist",
+            dir_path.c_str());
         goto outfail;
     }
 
     /*删除目录*/
-    if (remove_directory(filepath)) {
-        rc = NFS_REQ_OK;
-        goto outok;
+    if (!remove_directory(dir_path)) {
+        rc = NFS_REQ_ERROR;
+        /*删除失败*/
+        res->res_remove3.status = NFS3ERR_IO;
+        LOG(MODULE_NAME, D_ERROR,
+            "The value of the arg_rmdir rm dir '%s' failed",
+            dir_path.c_str());
+        goto outfail;
     }
 
-outok:
-    /*获取成功的文件弱属性对比*/
-    res->res_rmdir3.status = get_wcc_data(arg->arg_rmdir3.object.dir.data.data_val,
+    /*成功删除文件*/
+    /*获取成功的目录弱属性对比*/
+    res->res_rmdir3.status = get_wcc_data(rmdir_args->object.dir.data.data_val,
                                           pre,
-                                          res->res_rmdir3.RMDIR3res_u.resok.dir_wcc);
+                                          rmdir_res_ok->dir_wcc);
     /*获取弱属性信息失败*/
     if (res->res_rmdir3.status != NFS3_OK) {
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "Interface nfs_rmdir failed to obtain '%s' resok wcc_data",
-            arg->arg_rmdir3.object.dir.data.data_val);
+            rmdir_args->object.dir.data.data_val);
     }
     goto out;
 
-outfail:
+    outfail:
     /*获取失败的wccdata*/
-    res->res_rmdir3.status = get_wcc_data(arg->arg_rmdir3.object.dir.data.data_val,
-                                          pre,
-                                          res->res_rmdir3.RMDIR3res_u.resfail.dir_wcc);
+    status = get_wcc_data(rmdir_args->object.dir.data.data_val,
+                          pre,
+                          rmdir_res_fail->dir_wcc);
     /*获取弱属性信息失败*/
-    if (res->res_rmdir3.status != NFS3_OK) {
-        LOG(MODULE_NAME, L_ERROR,
+    if (status != NFS3_OK) {
+        LOG(MODULE_NAME, D_ERROR,
             "Interface nfs_rmdir failed to obtain '%s' resfail wcc_data",
-            arg->arg_rmdir3.object.dir.data.data_val);
-        goto out;
+            rmdir_args->object.dir.data.data_val);
     }
-    /*文件夹不存在*/
-    res->res_rmdir3.status = NFS3ERR_NOTDIR;
 
-out:
+    out:
     return rc;
 }
 

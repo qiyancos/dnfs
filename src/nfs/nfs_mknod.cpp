@@ -20,28 +20,33 @@
 
 #define MODULE_NAME "NFS"
 
-int nfs3_mknod(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res){
+int nfs3_mknod(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     int rc = NFS_REQ_OK;
 
-    if (arg->arg_mknod3.where.dir.data.data_len == 0) {
+    /*数据指针*/
+    MKNOD3args *mknod_args = &arg->arg_mknod3;
+    MKNOD3resok *mknod_res_ok = &res->res_mknod3.MKNOD3res_u.resok;
+    MKNOD3resfail *mknod_res_fail = &res->res_mknod3.MKNOD3res_u.resfail;
+
+    if (mknod_args->where.dir.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "arg_mknod get dir handle len is 0");
         goto out;
     }
 
-    get_file_handle(arg->arg_mknod3.where.dir);
+    get_file_handle(mknod_args->where.dir);
 
     LOG(MODULE_NAME, D_INFO,
         "The value of the arg_mknod obtained dir handle is '%s', and the length is '%d'",
-        arg->arg_mknod3.where.dir.data.data_val,
-        arg->arg_mknod3.where.dir.data.data_len);
+        mknod_args->where.dir.data.data_val,
+        mknod_args->where.dir.data.data_len);
     out:
 
     return rc;
 }
 
-void nfs3_mknod_free(nfs_res_t *res){
+void nfs3_mknod_free(nfs_res_t *res) {
 /*    nfs_fh3 *handle =
             &res->res_mknod3.MKNOD3res_u.resok.obj.post_op_fh3_u.handle;
 
@@ -51,8 +56,7 @@ void nfs3_mknod_free(nfs_res_t *res){
     }*/
 }
 
-bool xdr_devicedata3(XDR *xdrs, devicedata3 *objp)
-{
+bool xdr_devicedata3(XDR *xdrs, devicedata3 *objp) {
     if (!xdr_sattr3(xdrs, &objp->dev_attributes))
         return (false);
     if (!xdr_specdata3(xdrs, &objp->spec))
@@ -60,8 +64,7 @@ bool xdr_devicedata3(XDR *xdrs, devicedata3 *objp)
     return (true);
 }
 
-bool xdr_mknoddata3(XDR *xdrs, mknoddata3 *objp)
-{
+bool xdr_mknoddata3(XDR *xdrs, mknoddata3 *objp) {
     if (!xdr_ftype3(xdrs, &objp->type))
         return (false);
     switch (objp->type) {
@@ -82,8 +85,7 @@ bool xdr_mknoddata3(XDR *xdrs, mknoddata3 *objp)
     return (true);
 }
 
-bool xdr_MKNOD3args(XDR *xdrs, MKNOD3args *objp)
-{
+bool xdr_MKNOD3args(XDR *xdrs, MKNOD3args *objp) {
     if (!xdr_diropargs3(xdrs, &objp->where))
         return (false);
     if (!xdr_mknoddata3(xdrs, &objp->what))
@@ -91,8 +93,7 @@ bool xdr_MKNOD3args(XDR *xdrs, MKNOD3args *objp)
     return (true);
 }
 
-bool xdr_MKNOD3resok(XDR *xdrs, MKNOD3resok *objp)
-{
+bool xdr_MKNOD3resok(XDR *xdrs, MKNOD3resok *objp) {
     if (!xdr_post_op_fh3(xdrs, &objp->obj))
         return (false);
     if (!xdr_post_op_attr(xdrs, &objp->obj_attributes))
@@ -102,15 +103,13 @@ bool xdr_MKNOD3resok(XDR *xdrs, MKNOD3resok *objp)
     return (true);
 }
 
-bool xdr_MKNOD3resfail(XDR *xdrs, MKNOD3resfail *objp)
-{
+bool xdr_MKNOD3resfail(XDR *xdrs, MKNOD3resfail *objp) {
     if (!xdr_wcc_data(xdrs, &objp->dir_wcc))
         return (false);
     return (true);
 }
 
-bool xdr_MKNOD3res(XDR *xdrs, MKNOD3res *objp)
-{
+bool xdr_MKNOD3res(XDR *xdrs, MKNOD3res *objp) {
     if (!xdr_nfsstat3(xdrs, &objp->status))
         return (false);
     switch (objp->status) {

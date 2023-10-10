@@ -22,44 +22,47 @@
 
 int nfs3_pathconf(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     int rc = NFS_REQ_OK;
-    PATHCONF3resfail *resfail = &res->res_pathconf3.PATHCONF3res_u.resfail;
-    PATHCONF3resok *resok = &res->res_pathconf3.PATHCONF3res_u.resok;
 
-    if (arg->arg_pathconf3.object.data.data_len == 0) {
+    /*数据指针*/
+    PATHCONF3args *pathconf_args = &arg->arg_pathconf3;
+    PATHCONF3resok *pathconf_res_ok = &res->res_pathconf3.PATHCONF3res_u.resok;
+    PATHCONF3resfail *pathconf_res_fail = &res->res_pathconf3.PATHCONF3res_u.resfail;
+
+    if (pathconf_args->object.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "nfs_pathconf get file handle len is 0");
         goto out;
     }
 
-    get_file_handle(arg->arg_pathconf3.object);
+    get_file_handle(pathconf_args->object);
 
     LOG(MODULE_NAME, D_INFO,
         "The value of the nfs_pathconf obtained file handle is '%s', and the length is '%d'",
-        arg->arg_pathconf3.object.data.data_val,
-        arg->arg_pathconf3.object.data.data_len);
+        pathconf_args->object.data.data_val,
+        pathconf_args->object.data.data_len);
 
     /* to avoid setting it on each error case */
-    resfail->obj_attributes.attributes_follow = FALSE;
+    pathconf_res_fail->obj_attributes.attributes_follow = FALSE;
 
     res->res_pathconf3.status = nfs_set_post_op_attr(
-            arg->arg_pathconf3.object.data.data_val,
-            &res->res_pathconf3.PATHCONF3res_u.resok.obj_attributes);
+            pathconf_args->object.data.data_val,
+            &pathconf_res_ok->obj_attributes);
 
     if (res->res_pathconf3.status != NFS3_OK) {
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "Interface nfs_pathconf failed to obtain '%s' attributes",
-            arg->arg_pathconf3.object.data.data_val);
+            pathconf_args->object.data.data_val);
         goto out;
     }
 
-    resok->linkmax = 1024;
-    resok->name_max = NAME_MAX;
-    resok->no_trunc = true;
-    resok->chown_restricted = true;
-    resok->case_insensitive = true;
-    resok->case_preserving = true;
+    pathconf_res_ok->linkmax = 1024;
+    pathconf_res_ok->name_max = NAME_MAX;
+    pathconf_res_ok->no_trunc = true;
+    pathconf_res_ok->chown_restricted = true;
+    pathconf_res_ok->case_insensitive = true;
+    pathconf_res_ok->case_preserving = true;
 
     res->res_pathconf3.status = NFS3_OK;
 

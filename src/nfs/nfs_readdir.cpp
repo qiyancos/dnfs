@@ -26,19 +26,24 @@
 int nfs3_readdir(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     int rc = NFS_REQ_OK;
 
-    if (arg->arg_readdir3.dir.data.data_len == 0) {
+    /*数据指针*/
+    READDIR3args *readdir_args = &arg->arg_readdir3;
+    READDIR3resok *readdir_res_ok = &res->res_readdir3.READDIR3res_u.resok;
+    READDIR3resfail *readdir_res_fail = &res->res_readdir3.READDIR3res_u.resfail;
+
+    if (readdir_args->dir.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "arg_readdir get dir handle len is 0");
         goto out;
     }
 
-    get_file_handle(arg->arg_readdir3.dir);
+    get_file_handle(readdir_args->dir);
 
     LOG(MODULE_NAME, D_INFO,
         "The value of the arg_readdir obtained dir handle is '%s', and the length is '%d'",
-        arg->arg_readdir3.dir.data.data_val,
-        arg->arg_readdir3.dir.data.data_len);
+        readdir_args->dir.data.data_val,
+        readdir_args->dir.data.data_len);
     out:
 
     return rc;

@@ -23,19 +23,24 @@
 int nfs3_readlink(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     int rc = NFS_REQ_OK;
 
-    if (arg->arg_readlink3.symlink.data.data_len == 0) {
+    /*数据指针*/
+    READLINK3args *readlink_args = &arg->arg_readlink3;
+    READLINK3resok *readlink_res_ok = &res->res_readlink3.READLINK3res_u.resok;
+    READLINK3resfail *readlink_res_fail = &res->res_readlink3.READLINK3res_u.resfail;
+
+    if (readlink_args->symlink.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "nfs_readlink get file handle len is 0");
         goto out;
     }
 
-    get_file_handle(arg->arg_readlink3.symlink);
+    get_file_handle(readlink_args->symlink);
 
     LOG(MODULE_NAME, D_INFO,
         "The value of the nfs_readlink obtained file handle is '%s', and the length is '%d'",
-        arg->arg_readlink3.symlink.data.data_val,
-        arg->arg_readlink3.symlink.data.data_len);
+        readlink_args->symlink.data.data_val,
+        readlink_args->symlink.data.data_len);
     out:
 
     return rc;
