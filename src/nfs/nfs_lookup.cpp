@@ -31,32 +31,38 @@ int nfs3_lookup(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     /*操作状态*/
     nfsstat3 status;
 
-    if (arg->arg_lookup3.what.dir.data.data_len == 0) {
+    /*数据指针*/
+    LOOKUP3args *lookup_args = &arg->arg_lookup3;
+    LOOKUP3resok *lookup_res_ok = &res->res_lookup3.LOOKUP3res_u.resok;
+    LOOKUP3resfail *lookup_res_fail = &res->res_lookup3.LOOKUP3res_u.resfail;
+
+    if (lookup_args->what.dir.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
         LOG(MODULE_NAME, L_ERROR,
             "arg_link get dir handle len is 0");
         goto out;
     }
 
-    get_file_handle(arg->arg_lookup3.what.dir);
+    get_file_handle(lookup_args->what.dir);
 
     LOG(MODULE_NAME, D_INFO,
         "The value of the arg_lookup obtained dir handle is '%s', and the length is '%d'",
-        arg->arg_lookup3.what.dir.data.data_val,
-        arg->arg_lookup3.what.dir.data.data_len);
+        lookup_args->what.dir.data.data_val,
+        lookup_args->what.dir.data.data_len);
+
     /*判断主目录存不存在*/
-    if (!judge_file_exit(arg->arg_lookup3.what.dir.data.data_val, S_IFDIR)) {
+    if (!judge_file_exit(lookup_args->what.dir.data.data_val, S_IFDIR)) {
         rc = NFS_REQ_ERROR;
-        res->res_lookup3.status=NFS3ERR_NOTDIR;
+        res->res_lookup3.status = NFS3ERR_NOTDIR;
         LOG(MODULE_NAME, D_ERROR,
             "The value of the arg_lookup obtained file handle '%s' not exist",
-            arg->arg_lookup3.what.dir.data.data_val);
+            lookup_args->what.dir.data.data_val);
         goto out;
     }
 
     /*判断文件是否存在*/
-    filepath = string(arg->arg_lookup3.what.dir.data.data_val) + "/" +
-               arg->arg_lookup3.what.name;
+    filepath = string(lookup_args->what.dir.data.data_val) + "/" +
+               lookup_args->what.name;
 
     LOG(MODULE_NAME, L_INFO,
         "Interface nfs_lookup lookup file path is '%s'",
@@ -71,25 +77,25 @@ int nfs3_lookup(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     }
     /*成功查找到文件*/
     /*获取文件句柄*/
-    res->res_lookup3.LOOKUP3res_u.resok.object.data.data_val = (char *) filepath.c_str();
-    res->res_lookup3.LOOKUP3res_u.resok.object.data.data_len = strlen(
-            res->res_lookup3.LOOKUP3res_u.resok.object.data.data_val);
+    lookup_res_ok->object.data.data_val = (char *) filepath.c_str();
+    lookup_res_ok->object.data.data_len = strlen(
+            lookup_res_ok->object.data.data_val);
 
     /*获取目录属性*/
     res->res_lookup3.status = nfs_set_post_op_attr(
-            arg->arg_lookup3.what.dir.data.data_val,
-            &res->res_lookup3.LOOKUP3res_u.resok.dir_attributes);
+            lookup_args->what.dir.data.data_val,
+            &lookup_res_ok->dir_attributes);
     if (res->res_lookup3.status != NFS3_OK) {
         rc = NFS_REQ_ERROR;
         LOG(MODULE_NAME, L_ERROR,
             "Interface nfs_lookup resok failed to obtain fir '%s' attributes",
-            arg->arg_lookup3.what.dir.data.data_val);
+            lookup_args->what.dir.data.data_val);
     }
 
     /*获取文件属性*/
     res->res_lookup3.status = nfs_set_post_op_attr(
-            res->res_lookup3.LOOKUP3res_u.resok.object.data.data_val,
-            &res->res_lookup3.LOOKUP3res_u.resok.obj_attributes);
+            lookup_res_ok->object.data.data_val,
+            &lookup_res_ok->obj_attributes);
     if (res->res_lookup3.status != NFS3_OK) {
         rc = NFS_REQ_ERROR;
         LOG(MODULE_NAME, L_ERROR,
@@ -99,18 +105,18 @@ int nfs3_lookup(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     goto out;
 
-outfail:
+    outfail:
     /*获取目录属性*/
     status = nfs_set_post_op_attr(
-            arg->arg_lookup3.what.dir.data.data_val,
-            &res->res_lookup3.LOOKUP3res_u.resfail.dir_attributes);
+            lookup_args->what.dir.data.data_val,
+            &lookup_res_fail->dir_attributes);
     if (status != NFS3_OK) {
         LOG(MODULE_NAME, L_ERROR,
             "Interface nfs_lookup resfail failed to obtain dir '%s' attributes",
-            arg->arg_lookup3.what.dir.data.data_val);
+            lookup_args->what.dir.data.data_val);
     }
 
-out:
+    out:
     return rc;
 }
 

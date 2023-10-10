@@ -23,7 +23,6 @@
 #define MODULE_NAME "NFS"
 
 int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
-    uint64_t begin_cookie = arg->arg_readdirplus3.cookie;
     uint64_t mem_avail = 0;
     // response size
     uint32_t maxcount;
@@ -34,11 +33,16 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     uint32_t entry_size = sizeof(entryplus3);
     uint32_t cfg_readdir_count = nfs_param.core_param.readdir_max_count;
     int rc = NFS_REQ_OK;
-    READDIRPLUS3resfail *resfail =
+    /*数据指针*/
+    READDIRPLUS3args *readdirplus_args = &arg->arg_readdirplus3;
+    READDIRPLUS3resfail *readdirplus_res_fail =
             &res->res_readdirplus3.READDIRPLUS3res_u.resfail;
-    READDIRPLUS3resok *resok =
+    READDIRPLUS3resok *readdirplus_res_ok =
             &res->res_readdirplus3.READDIRPLUS3res_u.resok;
-    resok->reply.entries = nullptr;
+
+    readdirplus_res_ok->reply.entries = nullptr;
+
+    uint64_t begin_cookie = readdirplus_args->cookie;
     entryplus3 *head;
     entryplus3 *current;
     entryplus3 *node;
@@ -49,59 +53,59 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     char *filepath;
     u_long filepath_len;
 
-    if (arg->arg_readdirplus3.dir.data.data_len == 0) {
+    if (readdirplus_args->dir.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
         LOG(MODULE_NAME, L_ERROR,
             "nfs_readdirplus get file handle len is 0");
         goto out;
     }
 
-    get_file_handle(arg->arg_readdirplus3.dir);
+    get_file_handle(readdirplus_args->dir);
 
     LOG(MODULE_NAME, D_INFO,
         "The value of the nfs_readdirplus obtained dir handle is '%s', and the length is '%d'",
-        arg->arg_readdirplus3.dir.data.data_val,
-        arg->arg_readdirplus3.dir.data.data_len);
+        readdirplus_args->dir.data.data_val,
+        readdirplus_args->dir.data.data_len);
 
     // arg_readdirplus3.maxcount 返回结构体READDIRPLUS3resok最大大小
-    if (cfg_readdir_size < arg->arg_readdirplus3.maxcount)
+    if (cfg_readdir_size < readdirplus_args->maxcount)
         maxcount = cfg_readdir_size;
     else
-        maxcount = arg->arg_readdirplus3.maxcount;
+        maxcount = readdirplus_args->maxcount;
     mem_avail = maxcount - BYTES_PER_XDR_UNIT - BYTES_PER_XDR_UNIT - sizeof(fattr3) -
                 sizeof(cookieverf3);
 
     // arg_readdirplus3.dircount 返回的目录信息的最大大小
-    if (arg->arg_readdirplus3.dircount < cfg_readdir_count)
-        dircount = arg->arg_readdirplus3.dircount;
+    if (readdirplus_args->dircount < cfg_readdir_count)
+        dircount = readdirplus_args->dircount;
     else
         dircount = cfg_readdir_count;
 
     /* to avoid setting it on each error case */
-    resfail->dir_attributes.attributes_follow = FALSE;
+    readdirplus_res_fail->dir_attributes.attributes_follow = FALSE;
 
 
     res->res_readdirplus3.status = nfs_set_post_op_attr(
-            arg->arg_readdirplus3.dir.data.data_val,
+            readdirplus_args->dir.data.data_val,
             &res->res_readdirplus3.READDIRPLUS3res_u.resok.dir_attributes);
     if (res->res_readdirplus3.status != NFS3_OK) {
         LOG(MODULE_NAME, L_ERROR, "stat '%s' failed",
-            arg->arg_readdirplus3.dir.data.data_val);
+            readdirplus_args->dir.data.data_val);
         rc = NFS_REQ_ERROR;
         goto out;
     }
-    if (resok->dir_attributes.post_op_attr_u.attributes.type != NF3DIR) {
+    if (readdirplus_res_ok->dir_attributes.post_op_attr_u.attributes.type != NF3DIR) {
         LOG(MODULE_NAME, L_ERROR, "handle type is '%s', not dir",
-            resok->dir_attributes.post_op_attr_u.attributes.type);
+            readdirplus_res_ok->dir_attributes.post_op_attr_u.attributes.type);
         res->res_readdirplus3.status = NFS3ERR_NOTDIR;
         rc = NFS_REQ_OK;
         goto out;
     }
 
-    n = scandir(arg->arg_readdirplus3.dir.data.data_val, &namelist, nullptr, alphasort);
+    n = scandir(readdirplus_args->dir.data.data_val, &namelist, nullptr, alphasort);
     if (n < 0) {
         LOG(MODULE_NAME, L_ERROR, "scandir '%s' failed",
-            arg->arg_readdirplus3.dir.data.data_val);
+            readdirplus_args->dir.data.data_val);
         res->res_readdirplus3.status = NFS3ERR_BADHANDLE;
         rc = NFS_REQ_ERROR;
         goto out;
@@ -121,9 +125,9 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
                 node->name_handle.handle_follows = FALSE;
             } else {
                 filepath_len =
-                        arg->arg_readdirplus3.dir.data.data_len + sizeof(node->name) + 1;
+                        readdirplus_args->dir.data.data_len + sizeof(node->name) + 1;
                 filepath = new char[filepath_len];
-                strcpy(filepath, arg->arg_readdirplus3.dir.data.data_val);
+                strcpy(filepath, readdirplus_args->dir.data.data_val);
                 strcat(filepath, "/");
                 strcat(filepath, node->name);
                 node->name_handle.handle_follows = TRUE;
@@ -140,9 +144,9 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
             current->nextentry = node;
             current = current->nextentry;
         }
-        resok->reply.entries = head->nextentry;
+        readdirplus_res_ok->reply.entries = head->nextentry;
     }
-    resok->reply.eof = TRUE;
+    readdirplus_res_ok->reply.eof = TRUE;
 
     out:
     return rc;

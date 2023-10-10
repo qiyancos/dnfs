@@ -23,57 +23,61 @@
 
 int nfs3_fsinfo(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     int rc = NFS_REQ_OK;
-    FSINFO3resok *const FSINFO_FIELD = &res->res_fsinfo3.FSINFO3res_u.resok;
+    /*构造参数指针*/
+    FSINFO3args *fsinfo_args = &arg->arg_fsinfo3;
+    FSINFO3resok *fsinfo_res_ok = &res->res_fsinfo3.FSINFO3res_u.resok;
+    FSINFO3resfail *fsinfo_res_fail = &res->res_fsinfo3.FSINFO3res_u.resfail;
 
-    if (arg->arg_fsinfo3.fsroot.data.data_len == 0) {
+
+    if (fsinfo_args->fsroot.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
         LOG(MODULE_NAME, L_ERROR,
             "nfs_fsinfo get file handle len is 0");
         goto out;
     }
 
-    get_file_handle(arg->arg_fsinfo3.fsroot);
+    get_file_handle(fsinfo_args->fsroot);
 
     LOG(MODULE_NAME, D_INFO,
         "The value of the nfs_fsinfo obtained file handle is '%s', and the length is '%d'",
-        arg->arg_fsinfo3.fsroot.data.data_val,
-        arg->arg_fsinfo3.fsroot.data.data_len);
+        fsinfo_args->fsroot.data.data_val,
+        fsinfo_args->fsroot.data.data_len);
 
     /* To avoid setting it on each error case */
-    res->res_fsinfo3.FSINFO3res_u.resfail.obj_attributes.attributes_follow = FALSE;
+    fsinfo_res_fail->obj_attributes.attributes_follow = FALSE;
 
-    res->res_fsinfo3.status = nfs_set_post_op_attr(arg->arg_fsinfo3.fsroot.data.data_val,
-                                                   &res->res_fsinfo3.FSINFO3res_u.resok.obj_attributes);
+    res->res_fsinfo3.status = nfs_set_post_op_attr(fsinfo_args->fsroot.data.data_val,
+                                                   &fsinfo_res_ok->obj_attributes);
     if (res->res_fsinfo3.status != NFS3_OK) {
         rc = NFS_REQ_ERROR;
         LOG(MODULE_NAME, L_ERROR, "Interface nfs_fsinfo failed to obtain '%s' attributes",
-            arg->arg_fsinfo3.fsroot.data.data_val);
+            fsinfo_args->fsroot.data.data_val);
         goto out;
     }
 
     // 文件系统支持的属性
-    FSINFO_FIELD->properties =
+    fsinfo_res_ok->properties =
             FSF3_LINK | FSF3_SYMLINK | FSF3_HOMOGENEOUS | FSF3_CANSETTIME;
     // todo 从配置文件读取，暂时给固定值
     // read请求支持的最大大小
-    FSINFO_FIELD->rtmax = 512 * 1024;
+    fsinfo_res_ok->rtmax = 512 * 1024;
     // read请求首选大小
-    FSINFO_FIELD->rtpref = 512 * 1024;
+    fsinfo_res_ok->rtpref = 512 * 1024;
     // read请求大小的建议倍数 This field is generally unused, it will be removed in V4
-    FSINFO_FIELD->rtmult = DEV_BSIZE;
+    fsinfo_res_ok->rtmult = DEV_BSIZE;
     // write请求支持的最大大小
-    FSINFO_FIELD->wtmax = 512 * 1024;
+    fsinfo_res_ok->wtmax = 512 * 1024;
     // write请求首选大小
-    FSINFO_FIELD->wtpref = 512 * 1024;
+    fsinfo_res_ok->wtpref = 512 * 1024;
     // write请求大小的建议倍数 This field is generally unused, it will be removed in V4
-    FSINFO_FIELD->wtmult = DEV_BSIZE;
+    fsinfo_res_ok->wtmult = DEV_BSIZE;
     // readdir请求建议大小
-    FSINFO_FIELD->dtpref = 512 * 1024;
+    fsinfo_res_ok->dtpref = 512 * 1024;
     // 文件系统上文件的最大大小
-    FSINFO_FIELD->maxfilesize = (uint64_t) 1024 * 1024 * 1024 * 1024 * 16;
+    fsinfo_res_ok->maxfilesize = (uint64_t) 1024 * 1024 * 1024 * 1024 * 16;
     // 服务器保证的时间精确度 (0,1)纳秒 (0,1000000)毫秒 (1,0)秒
-    FSINFO_FIELD->time_delta.tv_sec = 1;
-    FSINFO_FIELD->time_delta.tv_nsec = 0;
+    fsinfo_res_ok->time_delta.tv_sec = 1;
+    fsinfo_res_ok->time_delta.tv_nsec = 0;
 
     res->res_fsinfo3.status = NFS3_OK;
 

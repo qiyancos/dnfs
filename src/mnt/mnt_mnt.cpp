@@ -23,13 +23,16 @@
 int mnt_mnt(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     int index_auth = 1;
     int retval = NFS_REQ_OK;
-    auto *fh3 = (nfs_fh3 *) &res->res_mnt3.mountres3_u.mountinfo.fhandle;
-    mountres3_ok *const RES_MOUNTINFO =
+
+    /*数据指针*/
+    mnt3_dirpath *mount_dir = &arg->arg_mnt;
+    mountres3_ok *mount_res =
             &res->res_mnt3.mountres3_u.mountinfo;
+    auto *fh3 = (nfs_fh3 *) &mount_res->fhandle;
 
 
     LOG(MODULE_NAME, D_INFO,
-        "REQUEST PROCESSING: Calling MNT_MNT path=%s", arg->arg_mnt);
+        "REQUEST PROCESSING: Calling MNT_MNT path=%s", mount_dir);
 
     /* Quick escape if an unsupported MOUNT version */
     if (req->rq_msg.cb_vers != MOUNT_V3) {
@@ -38,7 +41,7 @@ int mnt_mnt(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
         goto out;
     }
 
-    if (arg->arg_mnt == nullptr) {
+    if (mount_dir == nullptr) {
         LOG(MODULE_NAME, L_ERROR,
             "NULL path passed as Mount argument !!!");
         retval = NFS_REQ_DROP;
@@ -48,13 +51,14 @@ int mnt_mnt(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     /* Paranoid command to clean the result struct. */
     memset(res, 0, sizeof(nfs_res_t));
 
-    fh3->data.data_val = arg->arg_mnt;
-    fh3->data.data_len = strlen(arg->arg_mnt);
+    fh3->data.data_val = *mount_dir;
+    fh3->data.data_len = strlen(*mount_dir);
 
-    RES_MOUNTINFO->auth_flavors.auth_flavors_val = (int *) calloc(index_auth,
-                                                                  sizeof(int));
-    RES_MOUNTINFO->auth_flavors.auth_flavors_val[0] = AUTH_NONE;
-    RES_MOUNTINFO->auth_flavors.auth_flavors_len = index_auth;
+    /*添加权限*/
+    mount_res->auth_flavors.auth_flavors_val = (int *) calloc(index_auth,
+                                                              sizeof(int));
+    mount_res->auth_flavors.auth_flavors_val[0] = AUTH_NONE;
+    mount_res->auth_flavors.auth_flavors_len = index_auth;
 
     LOG(MODULE_NAME, D_INFO,
         "REQUEST PROCESSING: Request MNT_MNT file_handle=%s,len is %d",

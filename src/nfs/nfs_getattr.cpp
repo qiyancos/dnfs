@@ -24,32 +24,36 @@ int nfs3_getattr(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     int rc = NFS_REQ_OK;
     struct post_op_attr get_a{};
 
-    if (arg->arg_getattr3.object.data.data_len == 0) {
+    /*数据指针*/
+    GETATTR3args *getattr_args = &arg->arg_getattr3;
+    GETATTR3resok *getattr_res_ok = &res->res_getattr3.GETATTR3res_u.resok;
+
+    if (getattr_args->object.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
         LOG(MODULE_NAME, L_ERROR,
             "nfs_getattr get file handle len is 0");
         goto out;
     }
 
-    get_file_handle(arg->arg_getattr3.object);
+    get_file_handle(getattr_args->object);
 
     LOG(MODULE_NAME, D_INFO,
         "The value of the nfs_getattr obtained file handle is '%s', and the length is '%d'",
-        arg->arg_getattr3.object.data.data_val,
-        arg->arg_getattr3.object.data.data_len);
+        getattr_args->object.data.data_val,
+        getattr_args->object.data.data_len);
 
 
     res->res_getattr3.status = nfs_set_post_op_attr(
-            arg->arg_getattr3.object.data.data_val, &get_a);
+            getattr_args->object.data.data_val, &get_a);
     if (res->res_getattr3.status != NFS3_OK) {
         rc = NFS_REQ_ERROR;
         LOG(MODULE_NAME, L_ERROR,
             "Interface nfs_getattr failed to obtain '%s' attributes",
-            arg->arg_getattr3.object.data.data_val);
+            getattr_args->object.data.data_val);
         goto out;
     }
 
-    memcpy(&res->res_getattr3.GETATTR3res_u.resok.obj_attributes, &get_a.post_op_attr_u,
+    memcpy(&getattr_res_ok->obj_attributes, &get_a.post_op_attr_u,
            sizeof(get_a.post_op_attr_u));
 
     out:

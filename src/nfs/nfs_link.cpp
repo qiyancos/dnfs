@@ -24,32 +24,37 @@ int nfs3_link(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     int rc = NFS_REQ_OK;
 
-    if (arg->arg_link3.file.data.data_len == 0) {
+    /*数据指针*/
+    LINK3args *link_args = &arg->arg_link3;
+    LINK3resok *link_res_ok = &res->res_link3.LINK3res_u.resok;
+    LINK3resfail *link_res_fail = &res->res_link3.LINK3res_u.resfail;
+
+    if (link_args->file.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
         LOG(MODULE_NAME, L_ERROR,
             "arg_link get file handle len is 0");
         goto out;
     }
 
-    if (arg->arg_link3.link.dir.data.data_len == 0) {
+    if (link_args->link.dir.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
         LOG(MODULE_NAME, L_ERROR,
             "arg_link get dir handle len is 0");
         goto out;
     }
 
-    get_file_handle(arg->arg_link3.link.dir);
-    get_file_handle(arg->arg_link3.file);
+    get_file_handle(link_args->link.dir);
+    get_file_handle(link_args->file);
 
     LOG(MODULE_NAME, D_INFO,
         "The value of the arg_link obtained file handle is '%s', and the length is '%d'",
-        arg->arg_link3.file.data.data_val,
-        arg->arg_link3.file.data.data_len);
+        link_args->file.data.data_val,
+        link_args->file.data.data_len);
 
     LOG(MODULE_NAME, D_INFO,
         "The value of the arg_link obtained dir handle is '%s', and the length is '%d'",
-        arg->arg_link3.link.dir.data.data_val,
-        arg->arg_link3.link.dir.data.data_len);
+        link_args->link.dir.data.data_val,
+        link_args->link.dir.data.data_len);
     out:
 
     return rc;

@@ -25,19 +25,24 @@
 int nfs3_rename(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     int rc = NFS_REQ_OK;
 
-    if (arg->arg_rename3.from.dir.data.data_len == 0) {
+    /*数据指针*/
+    RENAME3args *rename_args = &arg->arg_rename3;
+    RENAME3resok *rename_res_ok = &res->res_rename3.RENAME3res_u.resok;
+    RENAME3resfail *rename_res_fail = &res->res_rename3.RENAME3res_u.resfail;
+
+    if (rename_args->from.dir.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
         LOG(MODULE_NAME, L_ERROR,
             "arg_rename get dir handle len is 0");
         goto out;
     }
 
-    get_file_handle(arg->arg_rename3.from.dir);
+    get_file_handle(rename_args->from.dir);
 
     LOG(MODULE_NAME, D_INFO,
         "The value of the arg_rename obtained dir handle is '%s', and the length is '%d'",
-        arg->arg_rename3.from.dir.data.data_val,
-        arg->arg_rename3.from.dir.data.data_len);
+        rename_args->from.dir.data.data_val,
+        rename_args->from.dir.data.data_len);
     out:
 
     return rc;

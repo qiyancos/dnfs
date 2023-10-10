@@ -23,19 +23,24 @@
 int nfs3_create(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res){
     int rc = NFS_REQ_OK;
 
-    if (arg->arg_create3.where.dir.data.data_len == 0) {
+    /*数据指针*/
+    CREATE3args *create_args=&arg->arg_create3;
+    CREATE3resok *create_res_ok=&res->res_create3.CREATE3res_u.resok;
+    CREATE3resfail *create_res_fail=&res->res_create3.CREATE3res_u.resfail;
+
+    if (create_args->where.dir.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
         LOG(MODULE_NAME, L_ERROR,
             "arg_create get dir handle len is 0");
         goto out;
     }
 
-    get_file_handle(arg->arg_create3.where.dir);
+    get_file_handle(create_args->where.dir);
 
     LOG(MODULE_NAME, D_INFO,
         "The value of the arg_create obtained dir handle is '%s', and the length is '%d'",
-        arg->arg_create3.where.dir.data.data_val,
-        arg->arg_create3.where.dir.data.data_len);
+        create_args->where.dir.data.data_val,
+        create_args->where.dir.data.data_len);
     out:
 
     return rc;
