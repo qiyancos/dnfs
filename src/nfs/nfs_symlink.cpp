@@ -129,11 +129,11 @@ int nfs3_symlink(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     outfail:
     /*获取失败目录wcc信息*/
-    res->res_symlink3.status = get_wcc_data(symllink_args->where.dir.data.data_val,
+    status= get_wcc_data(symllink_args->where.dir.data.data_val,
                                             pre,
                                             symllink_res_fail->dir_wcc);
     /*获取弱属性信息失败*/
-    if (res->res_symlink3.status != NFS3_OK) {
+    if (status!= NFS3_OK) {
         LOG(MODULE_NAME, D_ERROR,
             "Interface nfs_symlink failed to obtain '%s' resfail wcc_data",
             symllink_args->where.dir.data.data_val);
