@@ -73,6 +73,9 @@ int nfs3_lookup(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
         rc = NFS_REQ_ERROR;
         /*文件不存在*/
         res->res_rmdir3.status = NFS3ERR_NOENT;
+        LOG(MODULE_NAME, D_ERROR,
+            "The value of the arg_lookup lookup file '%s' not exist",
+            filepath.c_str());
         goto outfail;
     }
     /*成功查找到文件*/

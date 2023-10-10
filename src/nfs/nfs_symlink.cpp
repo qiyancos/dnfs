@@ -17,11 +17,23 @@
 #include "nfs/nfs_utils.h"
 #include "log/log.h"
 #include "dnfsd/dnfs_meta_data.h"
+#include "string"
+
+using namespace std;
 
 #define MODULE_NAME "NFS"
 
 int nfs3_symlink(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     int rc = NFS_REQ_OK;
+
+    /*创建链接路径*/
+    string file_path;
+
+    /*操作状态*/
+    nfsstat3 status;
+
+    /*保存目录操作前属性信息*/
+    struct pre_op_attr pre{};
 
     /*数据指针*/
     SYMLINK3args *symllink_args = &arg->arg_symlink3;
@@ -41,8 +53,93 @@ int nfs3_symlink(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
         "The value of the arg_symlink obtained dir handle is '%s', and the length is '%d'",
         symllink_args->where.dir.data.data_val,
         symllink_args->where.dir.data.data_len);
-    out:
 
+    LOG(MODULE_NAME, D_INFO,
+        "The value of the arg_symlink obtained link path is '%s'",
+        symllink_args->symlink.symlink_data);
+
+    /*判断创建目录存不存在*/
+    if (!judge_file_exit(symllink_args->where.dir.data.data_val, S_IFDIR)) {
+        rc = NFS_REQ_ERROR;
+        res->res_symlink3.status = NFS3ERR_NOTDIR;
+        LOG(MODULE_NAME, D_ERROR,
+            "The value of the arg_symllink obtained link dir handle '%s' not exist",
+            symllink_args->where.dir.data.data_val);
+        goto out;
+    }
+
+    /*获取之前的属性*/
+    res->res_symlink3.status = get_pre_op_attr(symllink_args->where.dir.data.data_val,
+                                               pre);
+    if (res->res_symlink3.status != NFS3_OK) {
+        rc = NFS_REQ_ERROR;
+        LOG(MODULE_NAME, D_ERROR,
+            "Interface nfs_symlink failed to obtain '%s' pre_attributes",
+            symllink_args->where.dir.data.data_val);
+        goto out;
+    }
+
+    /*获取链接路径*/
+    file_path = string(symllink_args->where.dir.data.data_val) + "/" +
+                symllink_args->where.name;
+
+    LOG(MODULE_NAME, D_INFO,
+        "The value of the arg_symlink link file path is '%s'", file_path.c_str());
+
+    /*创建链接*/
+    if (symlink(symllink_args->symlink.symlink_data, file_path.c_str()) != 0) {
+        rc = NFS_REQ_ERROR;
+        res->res_symlink3.status = NFS3ERR_NOENT;
+        LOG(MODULE_NAME, D_ERROR,
+            "Interface nfs_symlink failed to create symlink file '%s'",
+            file_path.c_str());
+        goto outfail;
+    }
+
+    /*创建成功*/
+    /*获取链接文件句柄*/
+    symllink_res_ok->obj.post_op_fh3_u.handle.data.data_val = (char *) file_path.c_str();
+    symllink_res_ok->obj.post_op_fh3_u.handle.data.data_len = strlen(
+            symllink_res_ok->obj.post_op_fh3_u.handle.data.data_val);
+
+    /*获取链接文件属性*/
+    res->res_symlink3.status = nfs_set_post_op_attr(
+            symllink_res_ok->obj.post_op_fh3_u.handle.data.data_val,
+            &symllink_res_ok->obj_attributes);
+
+    if (res->res_symlink3.status != NFS3_OK) {
+        rc = NFS_REQ_ERROR;
+        LOG(MODULE_NAME, D_ERROR,
+            "Interface nfs_symlink failed to obtain '%s' resok attributes",
+            symllink_res_ok->obj.post_op_fh3_u.handle.data.data_val);
+    }
+
+    /*获取目录wcc信息*/
+    res->res_symlink3.status = get_wcc_data(symllink_args->where.dir.data.data_val,
+                                            pre,
+                                            symllink_res_ok->dir_wcc);
+    /*获取弱属性信息失败*/
+    if (res->res_symlink3.status != NFS3_OK) {
+        LOG(MODULE_NAME, D_ERROR,
+            "Interface nfs_symlink failed to obtain '%s' resok wcc_data",
+            symllink_args->where.dir.data.data_val);
+    }
+
+    goto out;
+
+    outfail:
+    /*获取失败目录wcc信息*/
+    res->res_symlink3.status = get_wcc_data(symllink_args->where.dir.data.data_val,
+                                            pre,
+                                            symllink_res_fail->dir_wcc);
+    /*获取弱属性信息失败*/
+    if (res->res_symlink3.status != NFS3_OK) {
+        LOG(MODULE_NAME, D_ERROR,
+            "Interface nfs_symlink failed to obtain '%s' resfail wcc_data",
+            symllink_args->where.dir.data.data_val);
+    }
+
+    out:
     return rc;
 }
 

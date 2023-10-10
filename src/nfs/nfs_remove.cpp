@@ -94,6 +94,9 @@ int nfs3_remove(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
         rc = NFS_REQ_ERROR;
         /*删除失败*/
         res->res_remove3.status = NFS3ERR_IO;
+        LOG(MODULE_NAME, D_ERROR,
+            "The value of the arg_remove remove file '%s' failed",
+            filepath.c_str());
         goto outfail;
     }
 

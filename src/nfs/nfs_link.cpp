@@ -79,19 +79,33 @@ int nfs3_link(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
         goto out;
     }
 
+    /*获取之前的属性*/
+    res->res_link3.status = get_pre_op_attr(link_args->link.dir.data.data_val,
+                                            pre);
+    if (res->res_link3.status != NFS3_OK) {
+        rc = NFS_REQ_ERROR;
+        LOG(MODULE_NAME, D_ERROR,
+            "Interface nfs_link failed to obtain '%s' pre_attributes",
+            link_args->link.dir.data.data_val);
+        goto out;
+    }
+
     /*获取链接路径*/
     file_path = string(link_args->link.dir.data.data_val) + "/" +
                 link_args->link.name;
+
+    LOG(MODULE_NAME, D_INFO,
+        "The value of the arg_link link file path is '%s'", file_path.c_str());
 
     /*创建链接*/
     if (link(link_args->file.data.data_val, file_path.c_str()) != 0) {
         rc = NFS_REQ_ERROR;
         res->res_link3.status = NFS3ERR_NOENT;
+        LOG(MODULE_NAME, D_ERROR,
+            "Interface nfs_link failed to create link file '%s'",
+            file_path.c_str());
         goto outfail;
     }
-
-    LOG(MODULE_NAME, D_INFO,
-        "The value of the arg_link link file path is '%s'", file_path.c_str());
 
     /*建立成功*/
     /*获取文件属性*/
@@ -104,7 +118,7 @@ int nfs3_link(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
             link_args->file.data.data_val);
     }
 
-    /*获取失败的wccdata*/
+    /*获取wccdata信息*/
     res->res_link3.status = get_wcc_data(link_args->link.dir.data.data_val,
                                          pre,
                                          link_res_ok->linkdir_wcc);
