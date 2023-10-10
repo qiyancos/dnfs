@@ -17,12 +17,25 @@
 #include "nfs/nfs_utils.h"
 #include "log/log.h"
 #include "dnfsd/dnfs_meta_data.h"
+#include "string"
+
+using namespace std;
 
 #define MODULE_NAME "NFS"
 
 int nfs3_link(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     int rc = NFS_REQ_OK;
+
+    /*创建链接路径*/
+    string file_path;
+
+    /*操作状态*/
+    nfsstat3 status;
+
+    /*保存目录操作前属性信息*/
+    struct pre_op_attr pre{};
+
 
     /*数据指针*/
     LINK3args *link_args = &arg->arg_link3;
@@ -31,14 +44,14 @@ int nfs3_link(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     if (link_args->file.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "arg_link get file handle len is 0");
         goto out;
     }
 
     if (link_args->link.dir.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "arg_link get dir handle len is 0");
         goto out;
     }
@@ -55,6 +68,77 @@ int nfs3_link(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
         "The value of the arg_link obtained dir handle is '%s', and the length is '%d'",
         link_args->link.dir.data.data_val,
         link_args->link.dir.data.data_len);
+
+    /*判断创建目录存不存在*/
+    if (!judge_file_exit(link_args->link.dir.data.data_val, S_IFDIR)) {
+        rc = NFS_REQ_ERROR;
+        res->res_link3.status = NFS3ERR_NOTDIR;
+        LOG(MODULE_NAME, D_ERROR,
+            "The value of the arg_link obtained link dir handle '%s' not exist",
+            link_args->link.dir.data.data_val);
+        goto out;
+    }
+
+    /*获取链接路径*/
+    file_path = string(link_args->link.dir.data.data_val) + "/" +
+                link_args->link.name;
+
+    /*创建链接*/
+    if (link(link_args->file.data.data_val, file_path.c_str()) != 0) {
+        rc = NFS_REQ_ERROR;
+        res->res_link3.status = NFS3ERR_NOENT;
+        goto outfail;
+    }
+
+    LOG(MODULE_NAME, D_INFO,
+        "The value of the arg_link link file path is '%s'", file_path.c_str());
+
+    /*建立成功*/
+    /*获取文件属性*/
+    res->res_link3.status = nfs_set_post_op_attr(link_args->file.data.data_val,
+                                                 &link_res_ok->file_attributes);
+    if (res->res_link3.status != NFS3_OK) {
+        rc = NFS_REQ_ERROR;
+        LOG(MODULE_NAME, D_ERROR,
+            "Interface nfs_link failed to obtain '%s' resok attributes",
+            link_args->file.data.data_val);
+    }
+
+    /*获取失败的wccdata*/
+    res->res_link3.status = get_wcc_data(link_args->link.dir.data.data_val,
+                                         pre,
+                                         link_res_ok->linkdir_wcc);
+    /*获取弱属性信息失败*/
+    if (res->res_link3.status != NFS3_OK) {
+        LOG(MODULE_NAME, D_ERROR,
+            "Interface nfs_link failed to obtain '%s' resok wcc_data",
+            link_args->link.dir.data.data_val);
+    }
+
+    goto out;
+
+    outfail:
+    /*获取文件属性*/
+    status = nfs_set_post_op_attr(link_args->file.data.data_val,
+                                  &link_res_fail->file_attributes);
+    if (status != NFS3_OK) {
+        rc = NFS_REQ_ERROR;
+        LOG(MODULE_NAME, D_ERROR,
+            "Interface nfs_link failed to obtain '%s' resfail attributes",
+            link_args->file.data.data_val);
+    }
+
+    /*获取失败的wccdata*/
+    status = get_wcc_data(link_args->link.dir.data.data_val,
+                          pre,
+                          link_res_fail->linkdir_wcc);
+    /*获取弱属性信息失败*/
+    if (status != NFS3_OK) {
+        LOG(MODULE_NAME, D_ERROR,
+            "Interface nfs_link failed to obtain '%s' resfail wcc_data",
+            link_args->link.dir.data.data_val);
+    }
+
     out:
 
     return rc;

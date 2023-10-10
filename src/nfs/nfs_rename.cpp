@@ -32,7 +32,7 @@ int nfs3_rename(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     if (rename_args->from.dir.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "arg_rename get dir handle len is 0");
         goto out;
     }

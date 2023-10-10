@@ -36,13 +36,13 @@ int mnt_mnt(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     /* Quick escape if an unsupported MOUNT version */
     if (req->rq_msg.cb_vers != MOUNT_V3) {
-        LOG(MODULE_NAME, L_WARN, "Only supports mount 3 protocol");
+        LOG(MODULE_NAME, D_WARN, "Only supports mount 3 protocol");
         retval = NFS_REQ_ERROR;
         goto out;
     }
 
     if (mount_dir == nullptr) {
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "NULL path passed as Mount argument !!!");
         retval = NFS_REQ_DROP;
         goto out;

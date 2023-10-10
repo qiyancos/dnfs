@@ -41,7 +41,7 @@ int nfs3_remove(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     if (remove_args->object.dir.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "arg_remove get dir handle len is 0");
         goto out;
     }
@@ -68,7 +68,7 @@ int nfs3_remove(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
                                               pre);
     if (res->res_remove3.status != NFS3_OK) {
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "Interface nfs_remove failed to obtain '%s' pre_attributes",
             remove_args->object.dir.data.data_val);
         goto out;
@@ -78,7 +78,7 @@ int nfs3_remove(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     filepath = string(remove_args->object.dir.data.data_val) + "/" +
                remove_args->object.name;
 
-    LOG(MODULE_NAME, L_INFO,
+    LOG(MODULE_NAME, D_INFO,
         "Interface nfs_remove remove file path is '%s'",
         filepath.c_str());
 
@@ -105,7 +105,7 @@ int nfs3_remove(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     /*获取弱属性信息失败*/
     if (res->res_remove3.status != NFS3_OK) {
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "Interface nfs_remove failed to obtain '%s' resok wcc_data",
             remove_args->object.dir.data.data_val);
     }
@@ -118,7 +118,7 @@ int nfs3_remove(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
                           remove_res_fail->dir_wcc);
     /*获取弱属性信息失败*/
     if (status != NFS3_OK) {
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "Interface nfs_remove failed to obtain '%s' resfail wcc_data",
             remove_args->object.dir.data.data_val);
     }

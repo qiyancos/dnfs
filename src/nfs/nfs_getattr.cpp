@@ -30,7 +30,7 @@ int nfs3_getattr(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     if (getattr_args->object.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "nfs_getattr get file handle len is 0");
         goto out;
     }
@@ -47,7 +47,7 @@ int nfs3_getattr(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
             getattr_args->object.data.data_val, &get_a);
     if (res->res_getattr3.status != NFS3_OK) {
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "Interface nfs_getattr failed to obtain '%s' attributes",
             getattr_args->object.data.data_val);
         goto out;

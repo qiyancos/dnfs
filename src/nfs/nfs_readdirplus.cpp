@@ -55,7 +55,7 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     if (readdirplus_args->dir.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "nfs_readdirplus get file handle len is 0");
         goto out;
     }
@@ -89,13 +89,13 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
             readdirplus_args->dir.data.data_val,
             &res->res_readdirplus3.READDIRPLUS3res_u.resok.dir_attributes);
     if (res->res_readdirplus3.status != NFS3_OK) {
-        LOG(MODULE_NAME, L_ERROR, "stat '%s' failed",
+        LOG(MODULE_NAME, D_ERROR, "stat '%s' failed",
             readdirplus_args->dir.data.data_val);
         rc = NFS_REQ_ERROR;
         goto out;
     }
     if (readdirplus_res_ok->dir_attributes.post_op_attr_u.attributes.type != NF3DIR) {
-        LOG(MODULE_NAME, L_ERROR, "handle type is '%s', not dir",
+        LOG(MODULE_NAME, D_ERROR, "handle type is '%s', not dir",
             readdirplus_res_ok->dir_attributes.post_op_attr_u.attributes.type);
         res->res_readdirplus3.status = NFS3ERR_NOTDIR;
         rc = NFS_REQ_OK;
@@ -104,7 +104,7 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     n = scandir(readdirplus_args->dir.data.data_val, &namelist, nullptr, alphasort);
     if (n < 0) {
-        LOG(MODULE_NAME, L_ERROR, "scandir '%s' failed",
+        LOG(MODULE_NAME, D_ERROR, "scandir '%s' failed",
             readdirplus_args->dir.data.data_val);
         res->res_readdirplus3.status = NFS3ERR_BADHANDLE;
         rc = NFS_REQ_ERROR;
@@ -115,7 +115,7 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
         // todo 分页
         // while (usecount + entry_size < dircount)
         while (index < n) {
-            LOG(MODULE_NAME, L_INFO, "d_name: %s", namelist[index]->d_name);
+            LOG(MODULE_NAME, D_INFO, "d_name: %s", namelist[index]->d_name);
             node = new entryplus3;
             node->name = namelist[index]->d_name;
             node->fileid = namelist[index]->d_ino;
@@ -135,7 +135,7 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
                 node->name_handle.post_op_fh3_u.handle.data.data_len = filepath_len;
                 if (nfs_set_post_op_attr(filepath, &node->name_attributes) != NFS3_OK) {
                     rc = NFS_REQ_ERROR;
-                    LOG(MODULE_NAME, L_ERROR, "'stat %s' failed", node->name);
+                    LOG(MODULE_NAME, D_ERROR, "'stat %s' failed", node->name);
                     goto out;
                 }
             }

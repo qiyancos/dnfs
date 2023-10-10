@@ -43,7 +43,7 @@ int nfs3_rmdir(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     if (rmdir_args->object.dir.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "arg_rmdir get dir handle len is 0");
         goto out;
     }
@@ -66,7 +66,7 @@ int nfs3_rmdir(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
         res->res_rmdir3.status = NFS3ERR_NOTDIR;
         LOG(MODULE_NAME, D_ERROR,
             "The value of the arg_rmdir obtained file handle '%s' not exist",
-            arg->arg_remove3.object.dir.data.data_val);
+            rmdir_args->object.dir.data.data_val);
         goto out;
     }
 
@@ -75,7 +75,7 @@ int nfs3_rmdir(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
                                              pre);
     if (res->res_rmdir3.status != NFS3_OK) {
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "Interface nfs_rmdir failed to obtain '%s' pre_attributes",
             rmdir_args->object.dir.data.data_val);
         goto out;
@@ -85,7 +85,7 @@ int nfs3_rmdir(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     dir_path = string(rmdir_args->object.dir.data.data_val) + "/" +
                rmdir_args->object.name;
 
-    LOG(MODULE_NAME, L_INFO,
+    LOG(MODULE_NAME, D_INFO,
         "Interface nfs_rmdir remove dir path is '%s'",
         dir_path.c_str());
 
@@ -94,7 +94,10 @@ int nfs3_rmdir(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     if (!judge_file_exit(dir_path, S_IFDIR)) {
         rc = NFS_REQ_ERROR;
         /*目录不存在*/
-        res->res_rmdir3.status = NFS3ERR_NOTDIR;
+        res->res_rmdir3.status = NFS3ERR_NOENT;
+        LOG(MODULE_NAME, D_ERROR,
+            "The value of the arg_rmdir rm dir '%s' not exist",
+            dir_path.c_str());
         goto outfail;
     }
 
@@ -114,7 +117,7 @@ int nfs3_rmdir(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     /*获取弱属性信息失败*/
     if (res->res_rmdir3.status != NFS3_OK) {
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "Interface nfs_rmdir failed to obtain '%s' resok wcc_data",
             rmdir_args->object.dir.data.data_val);
     }
@@ -127,7 +130,7 @@ int nfs3_rmdir(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
                           rmdir_res_fail->dir_wcc);
     /*获取弱属性信息失败*/
     if (status != NFS3_OK) {
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "Interface nfs_rmdir failed to obtain '%s' resfail wcc_data",
             rmdir_args->object.dir.data.data_val);
     }

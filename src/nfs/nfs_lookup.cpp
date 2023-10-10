@@ -38,7 +38,7 @@ int nfs3_lookup(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     if (lookup_args->what.dir.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "arg_link get dir handle len is 0");
         goto out;
     }
@@ -64,7 +64,7 @@ int nfs3_lookup(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     filepath = string(lookup_args->what.dir.data.data_val) + "/" +
                lookup_args->what.name;
 
-    LOG(MODULE_NAME, L_INFO,
+    LOG(MODULE_NAME, D_INFO,
         "Interface nfs_lookup lookup file path is '%s'",
         filepath.c_str());
 
@@ -87,7 +87,7 @@ int nfs3_lookup(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
             &lookup_res_ok->dir_attributes);
     if (res->res_lookup3.status != NFS3_OK) {
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "Interface nfs_lookup resok failed to obtain fir '%s' attributes",
             lookup_args->what.dir.data.data_val);
     }
@@ -98,7 +98,7 @@ int nfs3_lookup(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
             &lookup_res_ok->obj_attributes);
     if (res->res_lookup3.status != NFS3_OK) {
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "Interface nfs_lookup resok failed to obtain '%s' attributes",
             filepath.c_str());
     }
@@ -111,7 +111,7 @@ int nfs3_lookup(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
             lookup_args->what.dir.data.data_val,
             &lookup_res_fail->dir_attributes);
     if (status != NFS3_OK) {
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "Interface nfs_lookup resfail failed to obtain dir '%s' attributes",
             lookup_args->what.dir.data.data_val);
     }

@@ -33,7 +33,7 @@ int nfs3_fsstat(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     if (fsstat_args->fsroot.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR,
+        LOG(MODULE_NAME, D_ERROR,
             "nfs_fsstat get file handle len is 0");
         goto out;
     }
@@ -53,7 +53,7 @@ int nfs3_fsstat(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
                                                    &fsstat_res_ok->obj_attributes);
     if (res->res_fsstat3.status != NFS3_OK) {
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, L_ERROR, "Interface nfs_fsstat failed to obtain '%s' attributes",
+        LOG(MODULE_NAME, D_ERROR, "Interface nfs_fsstat failed to obtain '%s' attributes",
             fsstat_args->fsroot.data.data_val);
         goto out;
     }
