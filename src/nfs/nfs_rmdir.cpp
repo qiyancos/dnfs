@@ -103,7 +103,6 @@ outfail:
         LOG(MODULE_NAME, L_ERROR,
             "Interface nfs_rmdir failed to obtain '%s' resfail wcc_data",
             arg->arg_rmdir3.object.dir.data.data_val);
-        goto out;
     }
     /*文件夹不存在*/
     res->res_rmdir3.status = NFS3ERR_NOTDIR;
