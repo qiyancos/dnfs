@@ -54,10 +54,6 @@ int nfs3_symlink(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
         symllink_args->where.dir.data.data_val,
         symllink_args->where.dir.data.data_len);
 
-    LOG(MODULE_NAME, D_INFO,
-        "The value of the arg_symlink obtained link path is '%s'",
-        symllink_args->symlink.symlink_data);
-
     /*判断创建目录存不存在*/
     if (!judge_file_exit(symllink_args->where.dir.data.data_val, S_IFDIR)) {
         rc = NFS_REQ_ERROR;
@@ -84,7 +80,11 @@ int nfs3_symlink(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
                 symllink_args->where.name;
 
     LOG(MODULE_NAME, D_INFO,
-        "The value of the arg_symlink link file path is '%s'", file_path.c_str());
+        "The value of the arg_symlink source file path is '%s'",
+        symllink_args->symlink.symlink_data);
+
+    LOG(MODULE_NAME, D_INFO,
+        "The value of the arg_symlink target link file path is '%s'", file_path.c_str());
 
     /*创建链接*/
     if (symlink(symllink_args->symlink.symlink_data, file_path.c_str()) != 0) {
@@ -98,8 +98,8 @@ int nfs3_symlink(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     /*创建成功*/
     /*获取链接文件句柄*/
-    set_file_handle(&symlink_res_ok->obj.post_op_fh3_u.handle,file_path);
-    symlink_res_ok->obj.handle_follows=true;
+    set_file_handle(&symlink_res_ok->obj.post_op_fh3_u.handle, file_path);
+    symlink_res_ok->obj.handle_follows = true;
 
     LOG(MODULE_NAME, D_INFO,
         "The value of the arg_symlink symlink file handle is '%s', and the length is '%d'",
@@ -149,7 +149,8 @@ int nfs3_symlink(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
 void nfs3_symlink_free(nfs_res_t *res) {
     /*释放句柄内存*/
-    if (res->res_symlink3.status == NFS3_OK && res->res_symlink3.SYMLINK3res_u.resok.obj.handle_follows)
+    if (res->res_symlink3.status == NFS3_OK &&
+        res->res_symlink3.SYMLINK3res_u.resok.obj.handle_follows)
         free(res->res_symlink3.SYMLINK3res_u.resok.obj.post_op_fh3_u.handle.data.data_val);
 }
 

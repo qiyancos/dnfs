@@ -60,12 +60,12 @@ int nfs3_link(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     get_file_handle(link_args->file);
 
     LOG(MODULE_NAME, D_INFO,
-        "The value of the arg_link obtained file handle is '%s', and the length is '%d'",
+        "The value of the arg_link obtained source file handle is '%s', and the length is '%d'",
         link_args->file.data.data_val,
         link_args->file.data.data_len);
 
     LOG(MODULE_NAME, D_INFO,
-        "The value of the arg_link obtained dir handle is '%s', and the length is '%d'",
+        "The value of the arg_link obtained to dir file is '%s', and the length is '%d'",
         link_args->link.dir.data.data_val,
         link_args->link.dir.data.data_len);
 
@@ -95,7 +95,7 @@ int nfs3_link(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
                 link_args->link.name;
 
     LOG(MODULE_NAME, D_INFO,
-        "The value of the arg_link link file path is '%s'", file_path.c_str());
+        "The value of the arg_link link to file path is '%s'", file_path.c_str());
 
     /*创建链接*/
     if (link(link_args->file.data.data_val, file_path.c_str()) != 0) {
