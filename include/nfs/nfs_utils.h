@@ -84,4 +84,10 @@ bool remove_directory(const std::string& path);
  * */
 bool remove_file(const std::string &path);
 
+/*建立文件句柄
+ * params fh:建立的句柄
+ * params file_path:构造参数
+ * */
+void set_file_handle(nfs_fh3 *fh,const std::string &file_path);
+
 #endif //DNFSD_NFS_UTILS_H

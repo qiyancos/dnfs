@@ -80,9 +80,12 @@ int nfs3_lookup(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     }
     /*成功查找到文件*/
     /*获取文件句柄*/
-    lookup_res_ok->object.data.data_val = (char *) filepath.c_str();
-    lookup_res_ok->object.data.data_len = strlen(
-            lookup_res_ok->object.data.data_val);
+    set_file_handle(&lookup_res_ok->object,filepath);
+
+    LOG(MODULE_NAME, D_INFO,
+        "The value of the arg_lookup lookup file handle is '%s', and the length is '%d'",
+        lookup_res_ok->object.data.data_val,
+        lookup_res_ok->object.data.data_len);
 
     /*获取目录属性*/
     res->res_lookup3.status = nfs_set_post_op_attr(
@@ -124,6 +127,10 @@ int nfs3_lookup(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 }
 
 void nfs3_lookup_free(nfs_res_t *res) {
+    /*释放句柄内存*/
+    if(res->res_lookup3.status==NFS3_OK){
+        free(res->res_lookup3.LOOKUP3res_u.resok.object.data.data_val);
+    }
 }
 
 bool xdr_LOOKUP3args(XDR *xdrs, LOOKUP3args *objp) {

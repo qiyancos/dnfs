@@ -101,10 +101,14 @@ int nfs3_create(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     /*创建成功*/
     /*获取文件句柄*/
-    create_res_ok->obj.post_op_fh3_u.handle.data.data_val = (char *) file_path.c_str();
-    create_res_ok->obj.post_op_fh3_u.handle.data.data_len = strlen(
-            create_res_ok->obj.post_op_fh3_u.handle.data.data_val);
+    set_file_handle(&create_res_ok->obj.post_op_fh3_u.handle,file_path);
+
     create_res_ok->obj.handle_follows= true;
+
+    LOG(MODULE_NAME, D_INFO,
+        "The value of the arg_create create file handle is '%s', and the length is '%d'",
+        create_res_ok->obj.post_op_fh3_u.handle.data.data_val,
+        create_res_ok->obj.post_op_fh3_u.handle.data.data_len);
 
     /*获取文件属性*/
     res->res_create3.status = nfs_set_post_op_attr(
@@ -148,13 +152,11 @@ int nfs3_create(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 }
 
 void nfs3_create_free(nfs_res_t *res) {
-/*    nfs_fh3 *handle =
-            &res->res_create3.CREATE3res_u.resok.obj.post_op_fh3_u.handle;
-
+    /*释放句柄内存*/
     if ((res->res_create3.status == NFS3_OK)
         && (res->res_create3.CREATE3res_u.resok.obj.handle_follows)) {
-        free(handle->data.data_val);
-    }*/
+        free(res->res_create3.CREATE3res_u.resok.obj.post_op_fh3_u.handle.data.data_val);
+    }
 }
 
 bool xdr_createmode3(XDR *xdrs, createmode3 *objp) {

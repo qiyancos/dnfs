@@ -37,8 +37,8 @@ int nfs3_symlink(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     /*数据指针*/
     SYMLINK3args *symllink_args = &arg->arg_symlink3;
-    SYMLINK3resok *symllink_res_ok = &res->res_symlink3.SYMLINK3res_u.resok;
-    SYMLINK3resfail *symllink_res_fail = &res->res_symlink3.SYMLINK3res_u.resfail;
+    SYMLINK3resok *symlink_res_ok = &res->res_symlink3.SYMLINK3res_u.resok;
+    SYMLINK3resfail *symlink_res_fail = &res->res_symlink3.SYMLINK3res_u.resfail;
 
     if (symllink_args->where.dir.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
@@ -98,26 +98,30 @@ int nfs3_symlink(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     /*创建成功*/
     /*获取链接文件句柄*/
-    symllink_res_ok->obj.post_op_fh3_u.handle.data.data_val = (char *) file_path.c_str();
-    symllink_res_ok->obj.post_op_fh3_u.handle.data.data_len = strlen(
-            symllink_res_ok->obj.post_op_fh3_u.handle.data.data_val);
+    set_file_handle(&symlink_res_ok->obj.post_op_fh3_u.handle,file_path);
+    symlink_res_ok->obj.handle_follows=true;
+
+    LOG(MODULE_NAME, D_INFO,
+        "The value of the arg_symlink symlink file handle is '%s', and the length is '%d'",
+        symlink_res_ok->obj.post_op_fh3_u.handle.data.data_val,
+        symlink_res_ok->obj.post_op_fh3_u.handle.data.data_len);
 
     /*获取链接文件属性*/
     res->res_symlink3.status = nfs_set_post_op_attr(
-            symllink_res_ok->obj.post_op_fh3_u.handle.data.data_val,
-            &symllink_res_ok->obj_attributes);
+            symlink_res_ok->obj.post_op_fh3_u.handle.data.data_val,
+            &symlink_res_ok->obj_attributes);
 
     if (res->res_symlink3.status != NFS3_OK) {
         rc = NFS_REQ_ERROR;
         LOG(MODULE_NAME, D_ERROR,
             "Interface nfs_symlink failed to obtain '%s' resok attributes",
-            symllink_res_ok->obj.post_op_fh3_u.handle.data.data_val);
+            symlink_res_ok->obj.post_op_fh3_u.handle.data.data_val);
     }
 
     /*获取目录wcc信息*/
     res->res_symlink3.status = get_wcc_data(symllink_args->where.dir.data.data_val,
                                             pre,
-                                            symllink_res_ok->dir_wcc);
+                                            symlink_res_ok->dir_wcc);
     /*获取弱属性信息失败*/
     if (res->res_symlink3.status != NFS3_OK) {
         LOG(MODULE_NAME, D_ERROR,
@@ -129,11 +133,11 @@ int nfs3_symlink(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     outfail:
     /*获取失败目录wcc信息*/
-    status= get_wcc_data(symllink_args->where.dir.data.data_val,
-                                            pre,
-                                            symllink_res_fail->dir_wcc);
+    status = get_wcc_data(symllink_args->where.dir.data.data_val,
+                          pre,
+                          symlink_res_fail->dir_wcc);
     /*获取弱属性信息失败*/
-    if (status!= NFS3_OK) {
+    if (status != NFS3_OK) {
         LOG(MODULE_NAME, D_ERROR,
             "Interface nfs_symlink failed to obtain '%s' resfail wcc_data",
             symllink_args->where.dir.data.data_val);
@@ -144,10 +148,9 @@ int nfs3_symlink(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 }
 
 void nfs3_symlink_free(nfs_res_t *res) {
-/*    symlink3resok *resok = &res->res_symlink3.symlink3res_u.resok;
-
-    if (res->res_symlink3.status == NFS3_OK && resok->obj.handle_follows)
-        free(resok->obj.post_op_fh3_u.handle.data.data_val);*/
+    /*释放句柄内存*/
+    if (res->res_symlink3.status == NFS3_OK && res->res_symlink3.SYMLINK3res_u.resok.obj.handle_follows)
+        free(res->res_symlink3.SYMLINK3res_u.resok.obj.post_op_fh3_u.handle.data.data_val);
 }
 
 bool xdr_symlinkdata3(XDR *xdrs, symlinkdata3 *objp) {
