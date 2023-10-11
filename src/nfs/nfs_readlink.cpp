@@ -23,6 +23,12 @@
 int nfs3_readlink(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     int rc = NFS_REQ_OK;
 
+    /*链接文件属性*/
+    post_op_attr pos_a = {};
+
+    /*读取数据大小*/
+    size_t data_len;
+
     /*数据指针*/
     READLINK3args *readlink_args = &arg->arg_readlink3;
     READLINK3resok *readlink_res_ok = &res->res_readlink3.READLINK3res_u.resok;
@@ -41,14 +47,65 @@ int nfs3_readlink(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
         "The value of the nfs_readlink obtained file handle is '%s', and the length is '%d'",
         readlink_args->symlink.data.data_val,
         readlink_args->symlink.data.data_len);
+
+    /*判文件存不存在*/
+    if (!judge_file_exit(readlink_args->symlink.data.data_val, S_IFLNK)) {
+        rc = NFS_REQ_ERROR;
+        res->res_readlink3.status = NFS3ERR_NOENT;
+        LOG(MODULE_NAME, D_ERROR,
+            "The value of the arg_readlink file '%s' not exist",
+            readlink_args->symlink.data.data_val);
+        goto out;
+    }
+
+    /*获取文件属性*/
+    res->res_readlink3.status = nfs_set_post_op_attr(readlink_args->symlink.data.data_val,
+                                                     &pos_a);
+    if (res->res_readlink3.status != NFS3_OK) {
+        rc = NFS_REQ_ERROR;
+        LOG(MODULE_NAME, D_ERROR,
+            "Interface nfs_readlink failed to obtain '%s' attributes",
+            readlink_args->symlink.data.data_val);
+        goto out;
+    }
+
+    /*为文件内容分配空间*/
+    data_len = pos_a.post_op_attr_u.attributes.size;
+    readlink_res_ok->data = (char *) calloc(0,data_len);
+
+    /*读取文件内容*/
+    if (readlink(readlink_args->symlink.data.data_val, readlink_res_ok->data, data_len) ==
+        -1) {
+        rc = NFS_REQ_ERROR;
+        /*创建失败*/
+        res->res_readlink3.status = NFS3ERR_IO;
+        LOG(MODULE_NAME, D_ERROR,
+            "The value of the arg_readlink read '%s' content failed",
+            readlink_args->symlink.data.data_val);
+        goto outfail;
+    }
+
+    LOG(MODULE_NAME, D_INFO,
+        "The value of the nfs_readlink link '%s' content is '%s'",
+        readlink_args->symlink.data.data_val,
+        readlink_res_ok->data);
+
+    /*读取成功*/
+    readlink_res_ok->symlink_attributes = pos_a;
+    goto out;
+
+    outfail:
+    /*读取失败，返回*/
+    readlink_res_fail->symlink_attributes = pos_a;
+
     out:
 
     return rc;
 }
 
 void nfs3_readlink_free(nfs_res_t *res) {
-/*    if (res->res_readlink3.status == NFS3_OK)
-        free(res->res_readlink3.READLINK3res_u.resok.data);*/
+    if (res->res_readlink3.status == NFS3_OK)
+        free(res->res_readlink3.READLINK3res_u.resok.data);
 }
 
 bool xdr_READLINK3args(XDR *xdrs, READLINK3args *objp) {
