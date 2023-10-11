@@ -26,7 +26,7 @@ using namespace std;
 int nfs3_create(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     int rc = NFS_REQ_OK;
 
-    /*创建链接路径*/
+    /*创建文件路径*/
     string file_path;
 
     /*操作状态*/
