@@ -99,9 +99,8 @@ int nfs3_mkdir(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     /*创建成功返回数据*/
     /*获取文件句柄*/
-    mkdir_res_ok->obj.post_op_fh3_u.handle.data.data_val = (char *) dir_path.c_str();
-    mkdir_res_ok->obj.post_op_fh3_u.handle.data.data_len = strlen(
-            mkdir_res_ok->obj.post_op_fh3_u.handle.data.data_val);
+    set_file_handle(&mkdir_res_ok->obj.post_op_fh3_u.handle,dir_path);
+    mkdir_res_ok->obj.handle_follows= true;
 
     /*获取创建目录属性*/
     res->res_mkdir3.status = nfs_set_post_op_attr(
@@ -145,13 +144,11 @@ int nfs3_mkdir(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 }
 
 void nfs3_mkdir_free(nfs_res_t *res) {
-/*    nfs_fh3 *handle =
-            &res->res_mkdir3.MKDIR3res_u.resok.obj.post_op_fh3_u.handle;
-
+    /*删除句柄*/
     if ((res->res_mkdir3.status == NFS3_OK)
         && (res->res_mkdir3.MKDIR3res_u.resok.obj.handle_follows)) {
-        free(handle->data.data_val);
-    }*/
+        free(res->res_mkdir3.MKDIR3res_u.resok.obj.post_op_fh3_u.handle.data.data_val);
+    }
 }
 
 bool xdr_MKDIR3args(XDR *xdrs, MKDIR3args *objp) {

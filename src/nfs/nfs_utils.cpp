@@ -246,3 +246,18 @@ bool remove_file(const std::string &path) {
     return true;
 
 }
+
+/*建立文件句柄
+ * params fh:建立的句柄
+ * params file_path:构造参数
+ * */
+void set_file_handle(nfs_fh3 *fh,const std::string &file_path){
+    /*获取句柄长度*/
+    fh->data.data_len=file_path.length();
+
+    /*为句柄申请内存*/
+    fh->data.data_val= (char *)malloc(fh->data.data_len);
+
+    /*获取句柄内容*/
+    memcpy(fh->data.data_val,file_path.c_str(),fh->data.data_len);
+}
