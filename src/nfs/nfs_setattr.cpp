@@ -13,6 +13,8 @@
  * along with this project.
  *
  */
+#include <sys/time.h>
+
 #include "nfs/nfs_setattr.h"
 #include "nfs/nfs_xdr.h"
 #include "nfs/nfs_utils.h"
@@ -24,12 +26,16 @@
 int nfs3_setattr(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
 {
     u_int fh_data_len = arg->arg_setattr3.object.data.data_len;
-    char *fh_data_val = arg->arg_setattr3.object.data.data_val;
+    char **fh_data_val = &arg->arg_setattr3.object.data.data_val;
     sattr3 *new_attr = &arg->arg_setattr3.new_attributes;
     SETATTR3resfail *resfail = &res->res_setattr3.SETATTR3res_u.resfail;
     SETATTR3resok *resok = &res->res_setattr3.SETATTR3res_u.resok;
     int rc = NFS_REQ_OK;
     pre_op_attr pre_attr = {};
+    struct timespec ts[2];
+    struct timeval tv[2];
+    bool set_time_flag = false;
+    int utimes_res = -1;
 
     /* to avoid setting it on each error case */
     resfail->obj_wcc.before.attributes_follow = FALSE;
@@ -50,7 +56,7 @@ int nfs3_setattr(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
         fh_data_val, fh_data_len);
 
     /*获取之前的属性*/
-    res->res_setattr3.status = get_pre_op_attr(fh_data_val, pre_attr);
+    res->res_setattr3.status = get_pre_op_attr(*fh_data_val, pre_attr);
     if (res->res_setattr3.status != NFS3_OK)
     {
         rc = NFS_REQ_ERROR;
@@ -85,7 +91,7 @@ int nfs3_setattr(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
     /*chmod*/
     if (new_attr->mode.set_it)
     {
-        int chmod_res = chmod(fh_data_val, new_attr->mode.set_mode3_u.mode);
+        int chmod_res = chmod(*fh_data_val, new_attr->mode.set_mode3_u.mode);
         if (chmod_res != 0)
         {
             rc = NFS_REQ_ERROR;
@@ -100,7 +106,7 @@ int nfs3_setattr(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
     {
         gid3 new_gid = new_attr->gid.set_it ? new_attr->gid.set_gid3_u.gid : -1;
         uid3 new_uid = new_attr->uid.set_it ? new_attr->uid.set_uid3_u.uid : -1;
-        int chown_res = chown(fh_data_val, new_uid, new_gid);
+        int chown_res = chown(*fh_data_val, new_uid, new_gid);
         if (chown_res != 0)
         {
             rc = NFS_REQ_ERROR;
@@ -111,8 +117,86 @@ int nfs3_setattr(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
         }
     }
 
+    /*utimes*/
+    if (new_attr->atime.set_it != DONT_CHANGE)
+    {
+        set_time_flag = true;
+        LOG(MODULE_NAME, D_INFO, "set=%d atime = %d,%d",
+            new_attr->atime.set_it,
+            new_attr->atime.set_atime_u.atime.tv_sec,
+            new_attr->atime.set_atime_u.atime.tv_nsec);
+        if (new_attr->atime.set_it == SET_TO_CLIENT_TIME)
+        {
+            ts[0].tv_sec = new_attr->atime.set_atime_u.atime.tv_sec;
+            ts[0].tv_nsec = new_attr->atime.set_atime_u.atime.tv_nsec;
+        }
+        else if (new_attr->atime.set_it == SET_TO_SERVER_TIME)
+        {
+            /* Use the server's current time */
+            LOG(MODULE_NAME, D_INFO, "SET_TO_SERVER_TIME atime");
+            ts[0].tv_sec = 0;
+            ts[0].tv_nsec = UTIME_NOW;
+        }
+        else
+        {
+            LOG(MODULE_NAME, D_ERROR,
+                "Unexpected value for sattr->atime.set_it = %d",
+                new_attr->atime.set_it);
+            rc = NFS_REQ_ERROR;
+            goto outfail;
+        }
+    }
+
+    if (new_attr->mtime.set_it != DONT_CHANGE)
+    {
+        set_time_flag = true;
+        LOG(MODULE_NAME, D_INFO, "set=%d mtime = %d",
+            new_attr->atime.set_it,
+            new_attr->mtime.set_mtime_u.mtime.tv_sec);
+        if (new_attr->mtime.set_it == SET_TO_CLIENT_TIME)
+        {
+            ts[1].tv_sec = new_attr->mtime.set_mtime_u.mtime.tv_sec;
+            ts[1].tv_nsec = new_attr->mtime.set_mtime_u.mtime.tv_nsec;
+        }
+        else if (new_attr->mtime.set_it == SET_TO_SERVER_TIME)
+        {
+            /* Use the server's current time */
+            LOG(MODULE_NAME, D_INFO, "SET_TO_SERVER_TIME Mtime");
+            ts[1].tv_sec = 0;
+            ts[1].tv_nsec = UTIME_NOW;
+        }
+        else
+        {
+            LOG(MODULE_NAME, D_ERROR,
+                "Unexpected value for sattr->mtime.set_it = %d",
+                new_attr->mtime.set_it);
+            rc = NFS_REQ_ERROR;
+            goto outfail;
+        }
+    }
+    if (set_time_flag)
+    {
+        if (ts[0].tv_nsec == UTIME_NOW || ts[1].tv_nsec == UTIME_NOW)
+        {
+            /* set to the current timestamp. achieve this by passing NULL timeval to kernel */
+            utimes_res = utimes(*fh_data_val, NULL);
+        }
+        else
+        {
+            TIMESPEC_TO_TIMEVAL(&tv[0], &ts[0]);
+            TIMESPEC_TO_TIMEVAL(&tv[1], &ts[1]);
+            utimes_res = utimes(*fh_data_val, tv);
+        }
+        if (utimes_res != 0)
+        {
+            LOG(MODULE_NAME, D_ERROR, "modify times failed");
+            rc = NFS_REQ_ERROR;
+            goto outfail;
+        }
+    }
+
     /*获取成功的文件弱属性对比*/
-    res->res_setattr3.status = get_wcc_data(fh_data_val, pre_attr, resok->obj_wcc);
+    res->res_setattr3.status = get_wcc_data(*fh_data_val, pre_attr, resok->obj_wcc);
     /*获取弱属性信息失败*/
     if (res->res_setattr3.status != NFS3_OK)
     {
@@ -125,7 +209,7 @@ int nfs3_setattr(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
 
 outfail:
     /*获取失败的wccdata*/
-    res->res_setattr3.status = get_wcc_data(fh_data_val, pre_attr, resfail->obj_wcc);
+    res->res_setattr3.status = get_wcc_data(*fh_data_val, pre_attr, resfail->obj_wcc);
     /*获取弱属性信息失败*/
     if (res->res_setattr3.status != NFS3_OK)
     {

@@ -75,9 +75,20 @@ void print_entryplus3(entryplus3 *entry)
 	u_int i = 0;
 	while (node != NULL)
 	{
-		printf("[index: %d] name: %s\n", i++, node->name);
+		printf("[index: %u] name: %s fileid: %ld\n", i++, node->name, node->fileid);
 		print_post_op_attr(&node->name_attributes);
 		print_post_op_fh3(&node->name_handle);
+		node = node->nextentry;
+	}
+}
+
+void print_entry3(entry3 *entry)
+{
+	entry3 *node = entry;
+	u_int i = 0;
+	while (node != NULL)
+	{
+		printf("[index: %u] name: %s fileid: %ld\n", i++, node->name, node->fileid);
 		node = node->nextentry;
 	}
 }
@@ -199,6 +210,23 @@ void nfs_program_3(char *host)
 			nfsproc3_setattr_3_arg.new_attributes.gid.set_it = TRUE;
 			nfsproc3_setattr_3_arg.new_attributes.gid.set_gid3_u.gid = gid;
 		}
+		printf("set time: y/n? ");
+		scanf("%s", set_it_ptr);
+		if (strcmp(set_it, "y") == 0)
+		{
+			int time_how;
+			printf("input time_how(1.SET_TO_SERVER_TIME 2.SET_TO_CLIENT_TIME): ");
+			scanf("%d", &time_how);
+			nfsproc3_setattr_3_arg.new_attributes.atime.set_it = time_how;
+			// nfsproc3_setattr_3_arg.new_attributes.mtime.set_it = time_how;
+			if (time_how == SET_TO_CLIENT_TIME)
+			{
+				nfsproc3_setattr_3_arg.new_attributes.atime.set_atime_u.atime.seconds = 2 * 24*60*60 + 26 * 60;
+				nfsproc3_setattr_3_arg.new_attributes.atime.set_atime_u.atime.nseconds = 0;
+				// nfsproc3_setattr_3_arg.new_attributes.mtime.set_mtime_u.mtime.seconds = 3 * 24*60*60 + 44 * 60;
+				// nfsproc3_setattr_3_arg.new_attributes.mtime.set_mtime_u.mtime.nseconds = 0;
+			}
+		}
 		result_3 = nfsproc3_setattr_3(&nfsproc3_setattr_3_arg, clnt);
 		if (result_3 == (SETATTR3res *)NULL)
 		{
@@ -213,6 +241,7 @@ void nfs_program_3(char *host)
 				print_post_op_attr(&result_3->SETATTR3res_u.resok.obj_wcc.after);
 			}
 		}
+		free(data_val);
 	}
 	// else if (strcmp(func_name, "lookup") == 0)
 	else if (func_no == 3) // lookup
@@ -361,12 +390,35 @@ void nfs_program_3(char *host)
 	else if (func_no == 16) // readdir
 	{
 		READDIR3res *result_17;
-		READDIR3args nfsproc3_readdir_3_arg;
+		// READDIR3args nfsproc3_readdir_3_arg;
+		char src[128];
+		char *src_ptr = src;
+		printf("input data: ");
+		scanf("%s", src_ptr);
+		// printf("sizeof: %lu\n", sizeof(data));
+		// printf("strlen: %ld\n", strlen(data));
+		u_int data_len = (u_int)strlen(src) + 1;
+		char *data_val = (char *)malloc(sizeof(char) * data_len);
+		char *dst_ptr = data_val;
+		u_int i = data_len;
+		while (i--)
+		{
+			*(dst_ptr++) = *(src_ptr++);
+		}
+		*(dst_ptr++) = '\0';
+		READDIR3args nfsproc3_readdir_3_arg = {{{data_len, data_val}}, 0, 0, 0};
+		nfsproc3_readdir_3_arg.count = 524288;
 		result_17 = nfsproc3_readdir_3(&nfsproc3_readdir_3_arg, clnt);
 		if (result_17 == (READDIR3res *)NULL)
 		{
 			clnt_perror(clnt, "call failed");
 		}
+		else
+		{
+			print_post_op_attr(&result_17->READDIR3res_u.resok.dir_attributes);
+			print_entry3(result_17->READDIR3res_u.resok.reply.entries);
+		}
+		free(data_val);
 	}
 	// else if (strcmp(func_name, "readdirplus") == 0)
 	else if (func_no == 17) // readdirplus
