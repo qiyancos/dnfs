@@ -59,13 +59,18 @@ void print_pre_op_attr(pre_op_attr *info)
 	}
 }
 
+void print_nfs_fh3(nfs_fh3 *info)
+{
+	printf("handle.data.data_len: %d\n", info->data.data_len);
+	printf("handle.data.data_val: %s\n", info->data.data_val);
+}
+
 void print_post_op_fh3(post_op_fh3 *info)
 {
 	printf("post_op_fh3 handle_follows: %d\n", info->handle_follows);
 	if (info->handle_follows)
 	{
-		printf("handle.data_val: %s\n", info->post_op_fh3_u.handle.data.data_val);
-		printf("handle.data_len: %d\n", info->post_op_fh3_u.handle.data.data_len);
+		print_nfs_fh3(&info->post_op_fh3_u.handle);
 	}
 }
 
@@ -91,6 +96,14 @@ void print_entry3(entry3 *entry)
 		printf("[index: %u] name: %s fileid: %ld\n", i++, node->name, node->fileid);
 		node = node->nextentry;
 	}
+}
+
+void print_wcc_data(wcc_data *info)
+{
+	printf("wcc_data.before: \n");
+	print_pre_op_attr(&info->before);
+	printf("wcc_data.after: \n");
+	print_post_op_attr(&info->after);
 }
 
 void nfs_program_3(char *host)
@@ -163,7 +176,7 @@ void nfs_program_3(char *host)
 	else if (func_no == 2) // setattr
 	{
 		SETATTR3res *result_3;
-		// SETATTR3args nfsproc3_setattr_3_arg;;
+		// SETATTR3args nfsproc3_setattr_3_arg;
 		char src[128];
 		char *src_ptr = src;
 		printf("input data: ");
@@ -218,13 +231,13 @@ void nfs_program_3(char *host)
 			printf("input time_how(1.SET_TO_SERVER_TIME 2.SET_TO_CLIENT_TIME): ");
 			scanf("%d", &time_how);
 			nfsproc3_setattr_3_arg.new_attributes.atime.set_it = time_how;
-			// nfsproc3_setattr_3_arg.new_attributes.mtime.set_it = time_how;
+			nfsproc3_setattr_3_arg.new_attributes.mtime.set_it = time_how;
 			if (time_how == SET_TO_CLIENT_TIME)
 			{
-				nfsproc3_setattr_3_arg.new_attributes.atime.set_atime_u.atime.seconds = 2 * 24*60*60 + 26 * 60;
+				nfsproc3_setattr_3_arg.new_attributes.atime.set_atime_u.atime.seconds = 2 * 24 * 60 * 60 + 26 * 60;
 				nfsproc3_setattr_3_arg.new_attributes.atime.set_atime_u.atime.nseconds = 0;
-				// nfsproc3_setattr_3_arg.new_attributes.mtime.set_mtime_u.mtime.seconds = 3 * 24*60*60 + 44 * 60;
-				// nfsproc3_setattr_3_arg.new_attributes.mtime.set_mtime_u.mtime.nseconds = 0;
+				nfsproc3_setattr_3_arg.new_attributes.mtime.set_mtime_u.mtime.seconds = 3 * 24 * 60 * 60 + 44 * 60;
+				nfsproc3_setattr_3_arg.new_attributes.mtime.set_mtime_u.mtime.nseconds = 0;
 			}
 		}
 		result_3 = nfsproc3_setattr_3(&nfsproc3_setattr_3_arg, clnt);
@@ -335,12 +348,81 @@ void nfs_program_3(char *host)
 	else if (func_no == 11) // mknod
 	{
 		MKNOD3res *result_12;
-		MKNOD3args nfsproc3_mknod_3_arg;
+		// MKNOD3args nfsproc3_mknod_3_arg;
+		char src_dir[128];
+		char *src_dir_ptr = src_dir;
+		printf("input dir: ");
+		scanf("%s", src_dir_ptr);
+		u_int dir_len = (u_int)strlen(src_dir) + 1;
+		char *dir_val = (char *)malloc(sizeof(char) * dir_len);
+		char *dst_dir_ptr = dir_val;
+		u_int i = dir_len;
+		while (i--)
+		{
+			*(dst_dir_ptr++) = *(src_dir_ptr++);
+		}
+		*(dst_dir_ptr++) = '\0';
+
+		char src_name[128];
+		char *src_name_ptr = src_name;
+		printf("input name: ");
+		scanf("%s", src_name_ptr);
+		u_int name_len = (u_int)strlen(src_name) + 1;
+		char *name_val = (char *)malloc(sizeof(char) * name_len);
+		char *dst_name_ptr = name_val;
+		u_int j = name_len;
+		while (j--)
+		{
+			*(dst_name_ptr++) = *(src_name_ptr++);
+		}
+		*(dst_name_ptr++) = '\0';
+
+		int file_type;
+		printf("input file type:(3.BK, 4.CHR, 6.SOCK, 7.FIFO) ");
+		scanf("%d", &file_type);
+		mknoddata3 nodedata = {};
+		nodedata.type = file_type;
+		if (file_type == 3 || file_type == 4)
+		{
+			devicedata3 device = {};
+			nodedata.mknoddata3_u.device = device;
+		}
+		else if (file_type == 6 || file_type == 7)
+		{
+			sattr3 pipe_attribute = {};
+			pipe_attribute.mode.set_it = 1;
+			pipe_attribute.mode.set_mode3_u.mode = 0644;
+			nodedata.mknoddata3_u.pipe_attributes = pipe_attribute;
+		}
+		else
+		{
+			printf("error file type");
+			return;
+		}
+
+		MKNOD3args nfsproc3_mknod_3_arg = {{{{dir_len, dir_val}}, name_val}, nodedata};
 		result_12 = nfsproc3_mknod_3(&nfsproc3_mknod_3_arg, clnt);
 		if (result_12 == (MKNOD3res *)NULL)
 		{
 			clnt_perror(clnt, "call failed");
 		}
+		else
+		{
+			printf("-----response-----\n");
+			printf("status: %d\n", result_12->status);
+			if (result_12->status == 0)
+			{
+				print_post_op_fh3(&result_12->MKNOD3res_u.resok.obj);
+				print_post_op_attr(&result_12->MKNOD3res_u.resok.obj_attributes);
+				print_wcc_data(&result_12->MKNOD3res_u.resok.dir_wcc);
+			}
+			else
+			{
+				print_wcc_data(&result_12->MKNOD3res_u.resfail.dir_wcc);
+			}
+		}
+		free(dir_val);
+		free(name_val);
 	}
 	// else if (strcmp(func_name, "remove") == 0)
 	else if (func_no == 12) // remove
