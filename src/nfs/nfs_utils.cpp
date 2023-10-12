@@ -268,7 +268,7 @@ void set_file_handle(nfs_fh3 *fh,const std::string &file_path){
  * params new_attr:文件新属性
  * return 是否修改成功
  * */
-nfs_req_result nfs_setattr(const char *file_path, sattr3 &new_attr)
+nfsstat3 nfs_set_sattr3(const char *file_path, sattr3 &new_attr)
 {
     struct timespec ts[2];
     struct timeval tv[2];
@@ -283,7 +283,7 @@ nfs_req_result nfs_setattr(const char *file_path, sattr3 &new_attr)
             LOG(MODULE_NAME, D_ERROR,
                 "Interface nfs_setattr failed to chmod '%s'",
                 file_path);
-            return NFS_REQ_ERROR;
+            return NFS3ERR_INVAL;
         }
     }
     /*chown*/
@@ -297,7 +297,7 @@ nfs_req_result nfs_setattr(const char *file_path, sattr3 &new_attr)
             LOG(MODULE_NAME, D_ERROR,
                 "Interface nfs_setattr failed to chown '%s'",
                 file_path);
-            return NFS_REQ_ERROR;
+            return NFS3ERR_INVAL;
         }
     }
 
@@ -326,7 +326,7 @@ nfs_req_result nfs_setattr(const char *file_path, sattr3 &new_attr)
             LOG(MODULE_NAME, D_ERROR,
                 "Unexpected value for sattr->atime.set_it = %d",
                 new_attr.atime.set_it);
-            return NFS_REQ_ERROR;
+            return NFS3ERR_INVAL;
         }
     }
 
@@ -353,7 +353,7 @@ nfs_req_result nfs_setattr(const char *file_path, sattr3 &new_attr)
             LOG(MODULE_NAME, D_ERROR,
                 "Unexpected value for sattr->mtime.set_it = %d",
                 new_attr.mtime.set_it);
-            return NFS_REQ_ERROR;
+            return NFS3ERR_INVAL;
         }
     }
     if (set_time_flag)
@@ -372,8 +372,8 @@ nfs_req_result nfs_setattr(const char *file_path, sattr3 &new_attr)
         if (utimes_res != 0)
         {
             LOG(MODULE_NAME, D_ERROR, "modify times failed");
-            return NFS_REQ_ERROR;
+            return NFS3ERR_INVAL;
         }
     }
-    return NFS_REQ_OK;
+    return NFS3_OK;
 }

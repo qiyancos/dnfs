@@ -96,6 +96,6 @@ void set_file_handle(nfs_fh3 *fh,const std::string &file_path);
  * params new_attr:文件新属性
  * return 是否修改成功
  * */
-nfs_req_result nfs_setattr(const char *file_path, sattr3 &new_attr);
+nfsstat3 nfs_set_sattr3(const char *file_path, sattr3 &new_attr);
 
 #endif //DNFSD_NFS_UTILS_H
