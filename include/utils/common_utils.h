@@ -38,7 +38,7 @@
     if(error_info != nullptr) *error_info = error_content;
 
 /*设置格式化缓存区默认大小*/
-#define ONE_KB 1024
+#define INIT_MESSAGE_BUFFER 512
 
 extern bool _beauty;
 extern int _indent;

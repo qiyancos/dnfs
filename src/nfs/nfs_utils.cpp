@@ -194,7 +194,7 @@ nfsstat3 get_pre_op_attr(char *file_path, pre_op_attr &pre_attr) {
 bool judge_file_exit(const std::string &file_path, int judge_mode) {
     struct stat info{};
     /*不存在直接返回*/
-    if (stat(file_path.c_str(), &info) != 0) {
+    if (lstat(file_path.c_str(), &info) != 0) {
         return false;
     } else if (!(info.st_mode & judge_mode)) {
         /*存在但不是需要的文件格式*/
@@ -252,15 +252,19 @@ bool remove_file(const std::string &path) {
  * params fh:建立的句柄
  * params file_path:构造参数
  * */
-void set_file_handle(nfs_fh3 *fh,const std::string &file_path){
+void set_file_handle(nfs_fh3 *fh, const std::string &file_path) {
     /*获取句柄长度*/
-    fh->data.data_len=file_path.length();
+    fh->data.data_len = file_path.length();
 
     /*为句柄申请内存*/
-    fh->data.data_val= (char *)malloc(fh->data.data_len);
+    fh->data.data_val = (char *) calloc(fh->data.data_len+1, sizeof(char));
+
+    if(fh->data.data_val== nullptr){
+        abort();
+    }
 
     /*获取句柄内容*/
-    memcpy(fh->data.data_val,file_path.c_str(),fh->data.data_len);
+    memcpy(fh->data.data_val, file_path.c_str(), fh->data.data_len+1);
 }
 
 /*设置文件属性

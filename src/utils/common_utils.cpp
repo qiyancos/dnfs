@@ -253,11 +253,11 @@ string format(const thread::id &t) {
  * return:格式完成的数据
  * */
 string format_message(const char *format, ...) {
-    char buffer[ONE_KB];
+    char buffer[INIT_MESSAGE_BUFFER];
     va_list va;
     va_start(va, format);
     /*格式化字符串*/
-    vsnprintf(buffer, ONE_KB, format, va);
+    vsnprintf(buffer, INIT_MESSAGE_BUFFER, format, va);
     va_end(va);
     return buffer;
 }
@@ -268,9 +268,9 @@ string format_message(const char *format, ...) {
  * return:格式完成的数据
  * */
 std::string format_message(const char *format, va_list args) {
-    char buffer[ONE_KB];
+    char buffer[INIT_MESSAGE_BUFFER];
     /*格式化字符串*/
-    vsnprintf(buffer, ONE_KB, format, args);
+    vsnprintf(buffer, INIT_MESSAGE_BUFFER, format, args);
     return buffer;
 }
 

@@ -40,14 +40,14 @@ LogMessage::LogMessage(const string &module_name,
                        va_list args) {
 
     /*建立临时缓存存储数据*/
-    char *buffer_message = (char *) malloc(ONE_KB);
+    char *buffer_message = (char *) malloc(INIT_MESSAGE_BUFFER);
 
     /*复制参数,超出范围重新格式化做准备*/
     va_list buffer;
     va_copy(buffer, args);
 
     /*格式化字符串*/
-    int message_len = vsnprintf(buffer_message, ONE_KB, format, args);
+    int message_len = vsnprintf(buffer_message, INIT_MESSAGE_BUFFER, format, args);
 
     /*如果添加失败*/
     if (message_len < 0) {
@@ -56,7 +56,7 @@ LogMessage::LogMessage(const string &module_name,
     }
 
     /*判断数据大小*/
-    if (message_len >= ONE_KB) {
+    if (message_len >= INIT_MESSAGE_BUFFER) {
         /*设置新的指针*/
         char *buffer_message_new;
 

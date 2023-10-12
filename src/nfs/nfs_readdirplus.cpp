@@ -19,6 +19,9 @@
 #include "log/log.h"
 #include "dnfsd/dnfs_meta_data.h"
 #include "dnfsd/dnfs_config.h"
+#include "string"
+
+using namespace std;
 
 #define MODULE_NAME "NFS"
 
@@ -50,8 +53,8 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     struct dirent **namelist;
     int n;
     int index = 0;
-    char *filepath;
-    u_long filepath_len;
+
+    string file_path;
 
     if (readdirplus_args->dir.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
@@ -89,13 +92,13 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
             readdirplus_args->dir.data.data_val,
             &res->res_readdirplus3.READDIRPLUS3res_u.resok.dir_attributes);
     if (res->res_readdirplus3.status != NFS3_OK) {
-        LOG(MODULE_NAME, D_ERROR, "stat '%s' failed",
+        LOG(MODULE_NAME, D_ERROR, "nfs_readdirplus stat '%s' failed",
             readdirplus_args->dir.data.data_val);
         rc = NFS_REQ_ERROR;
         goto out;
     }
     if (readdirplus_res_ok->dir_attributes.post_op_attr_u.attributes.type != NF3DIR) {
-        LOG(MODULE_NAME, D_ERROR, "handle type is '%s', not dir",
+        LOG(MODULE_NAME, D_ERROR, "nfs_readdirplus get handle type is '%s', not dir",
             readdirplus_res_ok->dir_attributes.post_op_attr_u.attributes.type);
         res->res_readdirplus3.status = NFS3ERR_NOTDIR;
         rc = NFS_REQ_OK;
@@ -104,7 +107,7 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     n = scandir(readdirplus_args->dir.data.data_val, &namelist, nullptr, alphasort);
     if (n < 0) {
-        LOG(MODULE_NAME, D_ERROR, "scandir '%s' failed",
+        LOG(MODULE_NAME, D_ERROR, "nfs_readdirplus scandir '%s' failed",
             readdirplus_args->dir.data.data_val);
         res->res_readdirplus3.status = NFS3ERR_BADHANDLE;
         rc = NFS_REQ_ERROR;
@@ -115,7 +118,8 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
         // todo 分页
         // while (usecount + entry_size < dircount)
         while (index < n) {
-            LOG(MODULE_NAME, D_INFO, "d_name: %s", namelist[index]->d_name);
+            LOG(MODULE_NAME, D_INFO, "nfs_readdirplus get '%s' entry: %s",
+                readdirplus_args->dir.data.data_val, namelist[index]->d_name);
             node = new entryplus3;
             node->name = namelist[index]->d_name;
             node->fileid = namelist[index]->d_ino;
@@ -124,18 +128,16 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
                 node->name_attributes.attributes_follow = FALSE;
                 node->name_handle.handle_follows = FALSE;
             } else {
-                filepath_len =
-                        readdirplus_args->dir.data.data_len + sizeof(node->name) + 1;
-                filepath = new char[filepath_len];
-                strcpy(filepath, readdirplus_args->dir.data.data_val);
-                strcat(filepath, "/");
-                strcat(filepath, node->name);
+                file_path =
+                        string(readdirplus_args->dir.data.data_val) + "/" + node->name;
+                set_file_handle(&node->name_handle.post_op_fh3_u.handle, file_path);
                 node->name_handle.handle_follows = TRUE;
-                node->name_handle.post_op_fh3_u.handle.data.data_val = filepath;
-                node->name_handle.post_op_fh3_u.handle.data.data_len = filepath_len;
-                if (nfs_set_post_op_attr(filepath, &node->name_attributes) != NFS3_OK) {
+                if (nfs_set_post_op_attr(
+                        node->name_handle.post_op_fh3_u.handle.data.data_val,
+                        &node->name_attributes) != NFS3_OK) {
                     rc = NFS_REQ_ERROR;
-                    LOG(MODULE_NAME, D_ERROR, "'stat %s' failed", node->name);
+                    LOG(MODULE_NAME, D_ERROR, "nfs_readdirplus 'stat %s' failed",
+                        node->name_handle.post_op_fh3_u.handle.data.data_val);
                     goto out;
                 }
             }
@@ -159,7 +161,9 @@ void nfs3_readdirplus_free(nfs_res_t *res) {
     entryplus3 *nxt;
     while (cur != nullptr and cur->nextentry != nullptr) {
         nxt = cur->nextentry;
-        // delete[] (cur->name_handle.post_op_fh3_u.handle.data.data_val);
+        if (cur->name_handle.handle_follows) {
+            free(cur->name_handle.post_op_fh3_u.handle.data.data_val);
+        }
         delete (cur);
         cur = nxt;
     }
