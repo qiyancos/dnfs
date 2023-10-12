@@ -90,4 +90,12 @@ bool remove_file(const std::string &path);
  * */
 void set_file_handle(nfs_fh3 *fh,const std::string &file_path);
 
+
+/*设置文件属性
+ * params file_path:获取属性文件路径
+ * params new_attr:文件新属性
+ * return 是否修改成功
+ * */
+nfs_req_result nfs_setattr(const char *file_path, sattr3 &new_attr);
+
 #endif //DNFSD_NFS_UTILS_H
