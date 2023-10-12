@@ -69,7 +69,7 @@ dupreq_status_t nfs_dupreq_start(nfs_request_t *reqnfs) {
 nfsstat3 nfs_set_post_op_attr(char *file_path, post_op_attr *fattr) {
 
     struct stat buf{};
-    int stat_res = stat(file_path, &buf);
+    int stat_res = lstat(file_path, &buf);
     if (stat_res != 0) {
         switch (errno) {
             case ENOENT:
@@ -85,20 +85,21 @@ nfsstat3 nfs_set_post_op_attr(char *file_path, post_op_attr *fattr) {
 
     // type 类型
     switch (buf.st_mode & S_IFMT) {
-        case S_IFDIR:
-            fattr->post_op_attr_u.attributes.type = NF3DIR;
+        case S_IFIFO:
+            fattr->post_op_attr_u.attributes.type = NF3FIFO;
             break;
         case S_IFCHR:
             fattr->post_op_attr_u.attributes.type = NF3CHR;
+            break;
+        case S_IFDIR:
+            fattr->post_op_attr_u.attributes.type = NF3DIR;
             break;
         case S_IFBLK:
             fattr->post_op_attr_u.attributes.type = NF3BLK;
             break;
         case S_IFREG:
+        case S_IFMT:
             fattr->post_op_attr_u.attributes.type = NF3REG;
-            break;
-        case S_IFIFO:
-            fattr->post_op_attr_u.attributes.type = NF3FIFO;
             break;
         case S_IFLNK:
             fattr->post_op_attr_u.attributes.type = NF3LNK;
