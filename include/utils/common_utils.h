@@ -39,6 +39,7 @@
 
 /*设置格式化缓存区默认大小*/
 #define INIT_MESSAGE_BUFFER 512
+#define FILE_MODEL_644 (S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)
 
 extern bool _beauty;
 extern int _indent;
@@ -67,7 +68,7 @@ inline std::string format(const std::string &out_data) {
     return out_data;
 }
 
-std::string format(sockaddr_storage* out_data);
+std::string format(sockaddr_storage *out_data);
 
 /*将pid转为字符串
  * params t:任意类型字符串
@@ -270,28 +271,30 @@ void creat_directory(const std::string &judge_dir);
  * params format:转化的日期格式
  * return: 转化完成的日期字符串
  * */
-std::string format(const time_t &time_stamp,const uint64_t &dis_millseconds, const std::string &format);
+std::string format(const time_t &time_stamp, const uint64_t &dis_millseconds,
+                   const std::string &format);
 
 /* 从一个结构体成员变量指针推断出结构体本身的地址 */
-#define get_parent_struct_addr(addr, type, member) ({			\
-	const typeof(((type *) 0)->member) * __mptr = (addr);	\
-	(type *)((char *) __mptr - offsetof(type, member)); })
+#define get_parent_struct_addr(addr, type, member) ({            \
+    const typeof(((type *) 0)->member) * __mptr = (addr);    \
+    (type *)((char *) __mptr - offsetof(type, member)); })
 
 /*按照格式格式化字符串
  * params format:格式化字符串
  * params ... :参数
  * return:格式完成的数据
  * */
-std::string format_message(const char *format,...);
+std::string format_message(const char *format, ...);
 
 /*按照格式格式化字符串
  * params format:格式化字符串
  * params args :参数列表
  * return:格式完成的数据
  * */
-std::string format_message(const char *format,va_list args);
+std::string format_message(const char *format, va_list args);
 
 /*获取调用错误调用堆栈*/
 std::string get_taceback();
+
 #endif //UTILS_COMMON_UTILS_H
 

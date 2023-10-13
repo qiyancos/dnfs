@@ -36,58 +36,58 @@ int nfs3_symlink(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     struct pre_op_attr pre{};
 
     /*数据指针*/
-    SYMLINK3args *symllink_args = &arg->arg_symlink3;
+    SYMLINK3args *symlink_args = &arg->arg_symlink3;
     SYMLINK3resok *symlink_res_ok = &res->res_symlink3.SYMLINK3res_u.resok;
     SYMLINK3resfail *symlink_res_fail = &res->res_symlink3.SYMLINK3res_u.resfail;
 
-    if (symllink_args->where.dir.data.data_len == 0) {
+    if (symlink_args->where.dir.data.data_len == 0) {
         rc = NFS_REQ_ERROR;
         LOG(MODULE_NAME, D_ERROR,
             "arg_symlink get dir handle len is 0");
         goto out;
     }
 
-    get_file_handle(symllink_args->where.dir);
+    get_file_handle(symlink_args->where.dir);
 
     LOG(MODULE_NAME, D_INFO,
         "The value of the arg_symlink obtained dir handle is '%s', and the length is '%d'",
-        symllink_args->where.dir.data.data_val,
-        symllink_args->where.dir.data.data_len);
+        symlink_args->where.dir.data.data_val,
+        symlink_args->where.dir.data.data_len);
 
     /*判断创建目录存不存在*/
-    if (!judge_file_exit(symllink_args->where.dir.data.data_val, S_IFDIR)) {
+    if (!judge_file_exit(symlink_args->where.dir.data.data_val, S_IFDIR)) {
         rc = NFS_REQ_ERROR;
         res->res_symlink3.status = NFS3ERR_NOTDIR;
         LOG(MODULE_NAME, D_ERROR,
-            "The value of the arg_symllink obtained link dir handle '%s' not exist",
-            symllink_args->where.dir.data.data_val);
+            "The value of the arg_symlink obtained link dir handle '%s' not exist",
+            symlink_args->where.dir.data.data_val);
         goto out;
     }
 
     /*获取之前的属性*/
-    res->res_symlink3.status = get_pre_op_attr(symllink_args->where.dir.data.data_val,
+    res->res_symlink3.status = get_pre_op_attr(symlink_args->where.dir.data.data_val,
                                                pre);
     if (res->res_symlink3.status != NFS3_OK) {
         rc = NFS_REQ_ERROR;
         LOG(MODULE_NAME, D_ERROR,
             "Interface nfs_symlink failed to obtain '%s' pre_attributes",
-            symllink_args->where.dir.data.data_val);
+            symlink_args->where.dir.data.data_val);
         goto out;
     }
 
     /*获取链接路径*/
-    file_path = string(symllink_args->where.dir.data.data_val) + "/" +
-                symllink_args->where.name;
+    file_path = string(symlink_args->where.dir.data.data_val) + "/" +
+                symlink_args->where.name;
 
     LOG(MODULE_NAME, D_INFO,
         "The value of the arg_symlink source file path is '%s'",
-        symllink_args->symlink.symlink_data);
+        symlink_args->symlink.symlink_data);
 
     LOG(MODULE_NAME, D_INFO,
         "The value of the arg_symlink target link file path is '%s'", file_path.c_str());
 
     /*创建链接*/
-    if (symlink(symllink_args->symlink.symlink_data, file_path.c_str()) != 0) {
+    if (symlink(symlink_args->symlink.symlink_data, file_path.c_str()) != 0) {
         rc = NFS_REQ_ERROR;
         res->res_symlink3.status = NFS3ERR_NOENT;
         LOG(MODULE_NAME, D_ERROR,
@@ -119,28 +119,28 @@ int nfs3_symlink(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     }
 
     /*获取目录wcc信息*/
-    res->res_symlink3.status = get_wcc_data(symllink_args->where.dir.data.data_val,
+    res->res_symlink3.status = get_wcc_data(symlink_args->where.dir.data.data_val,
                                             pre,
                                             symlink_res_ok->dir_wcc);
     /*获取弱属性信息失败*/
     if (res->res_symlink3.status != NFS3_OK) {
         LOG(MODULE_NAME, D_ERROR,
             "Interface nfs_symlink failed to obtain '%s' resok wcc_data",
-            symllink_args->where.dir.data.data_val);
+            symlink_args->where.dir.data.data_val);
     }
 
     goto out;
 
     outfail:
     /*获取失败目录wcc信息*/
-    status = get_wcc_data(symllink_args->where.dir.data.data_val,
+    status = get_wcc_data(symlink_args->where.dir.data.data_val,
                           pre,
                           symlink_res_fail->dir_wcc);
     /*获取弱属性信息失败*/
     if (status != NFS3_OK) {
         LOG(MODULE_NAME, D_ERROR,
             "Interface nfs_symlink failed to obtain '%s' resfail wcc_data",
-            symllink_args->where.dir.data.data_val);
+            symlink_args->where.dir.data.data_val);
     }
 
     out:

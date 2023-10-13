@@ -266,4 +266,6 @@ static struct nfs_request_lookahead dummy_lookahead = {
         .read = 0,
         .write = 0
 };
+
+static writeverf3 NFS3_write_verifier;
 #endif // DNFSD_NFS_ARGS_H

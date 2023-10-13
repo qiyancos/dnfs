@@ -22,7 +22,6 @@
 #include "log/log_exception.h"
 #include "utils/time_utils.h"
 
-#define FILE_MODEL_644 (S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)
 using namespace std;
 
 /*默认构造函数*/
