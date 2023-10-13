@@ -350,7 +350,7 @@ void free_args(nfs_request_t *reqdata) {
 /* RPC处理主程序入口 */
 enum xprt_stat nfs_rpc_process_request(nfs_request_t *reqdata, bool retry) {
     LOG(MODULE_NAME, D_INFO,
-        "=======================Service call interface %s=======================",
+        "=============================Service call interface %s=============================",
         reqdata->funcdesc->funcname);
     const nfs_function_desc_t *reqdesc = reqdata->funcdesc;
     nfs_arg_t *arg_nfs = &reqdata->arg_nfs;
@@ -472,7 +472,7 @@ enum xprt_stat nfs_rpc_process_request(nfs_request_t *reqdata, bool retry) {
     free_args(reqdata);
 
     LOG(MODULE_NAME, D_INFO,
-        "=======================Service reply interface %s=======================",
+        "=============================Service already reply interface %s=============================",
         reqdata->funcdesc->funcname);
     return SVC_STAT(xprt);
 }
