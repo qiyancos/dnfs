@@ -159,6 +159,7 @@ void nfs3_readdirplus_free(nfs_res_t *res) {
     // delete entry
     entryplus3 *cur = res->res_readdirplus3.READDIRPLUS3res_u.resok.reply.entries;
     entryplus3 *nxt;
+    LOG(MODULE_NAME,L_INFO,"readdirplus free");
     while (cur != nullptr and cur->nextentry != nullptr) {
         nxt = cur->nextentry;
         if (cur->name_handle.handle_follows) {

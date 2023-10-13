@@ -37,10 +37,11 @@ using namespace std;
 /*释放结果存储空间*/
 void nfs_dupreq_rele(nfs_request_t *reqnfs) {
 
-    LOG(MODULE_NAME, L_INFO, "releasing res %p",
-        reqnfs->svc.rq_u2);
     reqnfs->funcdesc->free_function(
             static_cast<nfs_res_t *>(reqnfs->svc.rq_u2));
+
+    LOG(MODULE_NAME, L_INFO, "releasing res %p",
+        reqnfs->svc.rq_u2);
     free_nfs_res((nfs_res_t *) reqnfs->svc.rq_u2);
 
 
@@ -257,14 +258,14 @@ void set_file_handle(nfs_fh3 *fh, const std::string &file_path) {
     fh->data.data_len = file_path.length();
 
     /*为句柄申请内存*/
-    fh->data.data_val = (char *) calloc(fh->data.data_len+1, sizeof(char));
+    fh->data.data_val = (char *) calloc(fh->data.data_len, sizeof(char));
 
     if(fh->data.data_val== nullptr){
         abort();
     }
 
     /*获取句柄内容*/
-    memcpy(fh->data.data_val, file_path.c_str(), fh->data.data_len+1);
+    memcpy(fh->data.data_val, file_path.c_str(), fh->data.data_len);
 }
 
 /*设置文件属性
