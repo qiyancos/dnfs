@@ -153,6 +153,7 @@ int nfs3_rename(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
                                            rename_res_ok->fromdir_wcc);
     /*获取弱属性信息失败*/
     if (res->res_rename3.status != NFS3_OK) {
+        rc = NFS_REQ_ERROR;
         LOG(MODULE_NAME, D_ERROR,
             "Interface nfs_rename failed to obtain from '%s' resok wcc_data",
             rename_args->from.dir.data.data_val);
@@ -164,6 +165,7 @@ int nfs3_rename(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
                                            rename_res_ok->todir_wcc);
     /*获取弱属性信息失败*/
     if (res->res_rename3.status != NFS3_OK) {
+        rc = NFS_REQ_ERROR;
         LOG(MODULE_NAME, D_ERROR,
             "Interface nfs_rename failed to obtain to '%s' resok wcc_data",
             rename_args->to.dir.data.data_val);

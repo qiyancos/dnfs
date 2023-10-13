@@ -55,7 +55,7 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     /*判断文件存不存在*/
     if (!judge_file_exit(write_args->file.data.data_val, S_IFREG)) {
         rc = NFS_REQ_ERROR;
-        res->res_write3.status = NFS3ERR_NOTDIR;
+        res->res_write3.status = NFS3ERR_NOENT;
         LOG(MODULE_NAME, D_ERROR,
             "The value of the arg_write obtained file handle '%s' not exist",
             write_args->file.data.data_val);
@@ -103,7 +103,7 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
         rc = NFS_REQ_ERROR;
         LOG(MODULE_NAME, D_ERROR, "open file '%s' failed",
             write_args->file.data.data_val);
-        goto out;
+        goto outfail;
     }
 
     /*构造写入数据*/
@@ -138,6 +138,7 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
                                           write_res_ok->file_wcc);
     /*获取弱属性信息失败*/
     if (res->res_write3.status != NFS3_OK) {
+        rc = NFS_REQ_ERROR;
         LOG(MODULE_NAME, D_ERROR,
             "Interface write failed to obtain '%s' resok wcc_data",
             write_args->file.data.data_val);
@@ -152,6 +153,7 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
                                           write_res_fail->file_wcc);
     /*获取弱属性信息失败*/
     if (res->res_write3.status != NFS3_OK) {
+        rc = NFS_REQ_ERROR;
         LOG(MODULE_NAME, D_ERROR,
             "Interface write failed to obtain '%s' resfail wcc_data",
             write_args->file.data.data_val);

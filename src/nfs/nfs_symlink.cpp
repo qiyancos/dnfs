@@ -124,6 +124,7 @@ int nfs3_symlink(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
                                             symlink_res_ok->dir_wcc);
     /*获取弱属性信息失败*/
     if (res->res_symlink3.status != NFS3_OK) {
+        rc = NFS_REQ_ERROR;
         LOG(MODULE_NAME, D_ERROR,
             "Interface nfs_symlink failed to obtain '%s' resok wcc_data",
             symlink_args->where.dir.data.data_val);

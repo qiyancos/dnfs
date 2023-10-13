@@ -24,6 +24,9 @@
 int nfs3_commit(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     int rc = NFS_REQ_OK;
 
+    /*保存操作前的文件信息*/
+    struct pre_op_attr pre{};
+
     /*数据指针*/
     COMMIT3args *commit_args = &arg->arg_commit3;
     COMMIT3resok *commit_res_ok = &res->res_commit3.COMMIT3res_u.resok;
@@ -42,7 +45,41 @@ int nfs3_commit(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
         "The value of the arg_commit obtained file handle is '%s', and the length is '%d'",
         commit_args->file.data.data_val,
         commit_args->file.data.data_len);
-    out:
+
+    /*判断文件存不存在*/
+    if (!judge_file_exit(commit_args->file.data.data_val, S_IFREG)) {
+        rc = NFS_REQ_ERROR;
+        res->res_commit3.status = NFS3ERR_NOENT;
+        LOG(MODULE_NAME, D_ERROR,
+            "The value of the arg_commit obtained file handle '%s' not exist",
+            commit_args->file.data.data_val);
+        goto out;
+    }
+
+    /*获取文件属性信息*/
+    res->res_commit3.status = get_pre_op_attr(commit_args->file.data.data_val,
+                                              pre);
+    if (res->res_commit3.status != NFS3_OK) {
+        rc = NFS_REQ_ERROR;
+        LOG(MODULE_NAME, D_ERROR,
+            "Interface nfs_commit failed to obtain '%s' pre_attributes",
+            commit_args->file.data.data_val);
+        goto out;
+    }
+
+    /*获取目录wcc信息*/
+    res->res_commit3.status = get_wcc_data(commit_args->file.data.data_val,
+                                          pre,
+                                          commit_res_ok->file_wcc);
+    /*获取弱属性信息失败*/
+    if (res->res_commit3.status != NFS3_OK) {
+        rc = NFS_REQ_ERROR;
+        LOG(MODULE_NAME, D_ERROR,
+            "Interface commit failed to obtain '%s' resok wcc_data",
+            commit_args->file.data.data_val);
+    }
+
+out:
 
     return rc;
 }

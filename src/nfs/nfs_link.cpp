@@ -124,6 +124,7 @@ int nfs3_link(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
                                          link_res_ok->linkdir_wcc);
     /*获取弱属性信息失败*/
     if (res->res_link3.status != NFS3_OK) {
+        rc = NFS_REQ_ERROR;
         LOG(MODULE_NAME, D_ERROR,
             "Interface nfs_link failed to obtain '%s' resok wcc_data",
             link_args->link.dir.data.data_val);

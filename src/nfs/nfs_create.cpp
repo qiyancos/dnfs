@@ -128,6 +128,7 @@ int nfs3_create(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
                                            create_res_ok->dir_wcc);
     /*获取弱属性信息失败*/
     if (res->res_create3.status != NFS3_OK) {
+        rc = NFS_REQ_ERROR;
         LOG(MODULE_NAME, D_ERROR,
             "Interface nfs_create failed to obtain '%s' resok wcc_data",
             create_args->where.dir.data.data_val);
