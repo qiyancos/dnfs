@@ -276,90 +276,112 @@ void set_file_handle(nfs_fh3 *fh, const std::string &file_path) {
  * params new_attr:文件新属性
  * return 是否修改成功
  * */
-nfs_req_result nfs_setattr(const char *file_path, sattr3 &new_attr) {
+nfsstat3 nfs_set_sattr3(const char *file_path, sattr3 &new_attr)
+{
     struct timespec ts[2];
     struct timeval tv[2];
     bool set_time_flag = false;
     int utimes_res = -1;
     /*chmod*/
-    if (new_attr.mode.set_it) {
+    if (new_attr.mode.set_it)
+    {
         int chmod_res = chmod(file_path, new_attr.mode.set_mode3_u.mode);
-        if (chmod_res != 0) {
+        if (chmod_res != 0)
+        {
             LOG(MODULE_NAME, D_ERROR,
                 "Interface nfs_setattr failed to chmod '%s'",
                 file_path);
-            return NFS_REQ_ERROR;
+            return NFS3ERR_INVAL;
         }
     }
     /*chown*/
-    if (new_attr.gid.set_it || new_attr.uid.set_it) {
+    if (new_attr.gid.set_it || new_attr.uid.set_it)
+    {
         gid3 new_gid = new_attr.gid.set_it ? new_attr.gid.set_gid3_u.gid : -1;
         uid3 new_uid = new_attr.uid.set_it ? new_attr.uid.set_uid3_u.uid : -1;
         int chown_res = chown(file_path, new_uid, new_gid);
-        if (chown_res != 0) {
+        if (chown_res != 0)
+        {
             LOG(MODULE_NAME, D_ERROR,
                 "Interface nfs_setattr failed to chown '%s'",
                 file_path);
-            return NFS_REQ_ERROR;
+            return NFS3ERR_INVAL;
         }
     }
 
     /*utimes*/
-    if (new_attr.atime.set_it != DONT_CHANGE) {
+    if (new_attr.atime.set_it != DONT_CHANGE)
+    {
         set_time_flag = true;
         LOG(MODULE_NAME, D_INFO, "set=%d atime = %d,%d",
             new_attr.atime.set_it,
             new_attr.atime.set_atime_u.atime.tv_sec,
             new_attr.atime.set_atime_u.atime.tv_nsec);
-        if (new_attr.atime.set_it == SET_TO_CLIENT_TIME) {
+        if (new_attr.atime.set_it == SET_TO_CLIENT_TIME)
+        {
             ts[0].tv_sec = new_attr.atime.set_atime_u.atime.tv_sec;
             ts[0].tv_nsec = new_attr.atime.set_atime_u.atime.tv_nsec;
-        } else if (new_attr.atime.set_it == SET_TO_SERVER_TIME) {
+        }
+        else if (new_attr.atime.set_it == SET_TO_SERVER_TIME)
+        {
             /* Use the server's current time */
             LOG(MODULE_NAME, D_INFO, "SET_TO_SERVER_TIME atime");
             ts[0].tv_sec = 0;
             ts[0].tv_nsec = UTIME_NOW;
-        } else {
+        }
+        else
+        {
             LOG(MODULE_NAME, D_ERROR,
                 "Unexpected value for sattr->atime.set_it = %d",
                 new_attr.atime.set_it);
-            return NFS_REQ_ERROR;
+            return NFS3ERR_INVAL;
         }
     }
 
-    if (new_attr.mtime.set_it != DONT_CHANGE) {
+    if (new_attr.mtime.set_it != DONT_CHANGE)
+    {
         set_time_flag = true;
         LOG(MODULE_NAME, D_INFO, "set=%d mtime = %d",
             new_attr.atime.set_it,
             new_attr.mtime.set_mtime_u.mtime.tv_sec);
-        if (new_attr.mtime.set_it == SET_TO_CLIENT_TIME) {
+        if (new_attr.mtime.set_it == SET_TO_CLIENT_TIME)
+        {
             ts[1].tv_sec = new_attr.mtime.set_mtime_u.mtime.tv_sec;
             ts[1].tv_nsec = new_attr.mtime.set_mtime_u.mtime.tv_nsec;
-        } else if (new_attr.mtime.set_it == SET_TO_SERVER_TIME) {
+        }
+        else if (new_attr.mtime.set_it == SET_TO_SERVER_TIME)
+        {
             /* Use the server's current time */
             LOG(MODULE_NAME, D_INFO, "SET_TO_SERVER_TIME Mtime");
             ts[1].tv_sec = 0;
             ts[1].tv_nsec = UTIME_NOW;
-        } else {
+        }
+        else
+        {
             LOG(MODULE_NAME, D_ERROR,
                 "Unexpected value for sattr->mtime.set_it = %d",
                 new_attr.mtime.set_it);
-            return NFS_REQ_ERROR;
+            return NFS3ERR_INVAL;
         }
     }
-    if (set_time_flag) {
-        if (ts[0].tv_nsec == UTIME_NOW || ts[1].tv_nsec == UTIME_NOW) {
+    if (set_time_flag)
+    {
+        if (ts[0].tv_nsec == UTIME_NOW || ts[1].tv_nsec == UTIME_NOW)
+        {
             /* set to the current timestamp. achieve this by passing NULL timeval to kernel */
-            utimes_res = utimes(file_path, nullptr);
-        } else {
+            utimes_res = utimes(file_path, NULL);
+        }
+        else
+        {
             TIMESPEC_TO_TIMEVAL(&tv[0], &ts[0]);
             TIMESPEC_TO_TIMEVAL(&tv[1], &ts[1]);
             utimes_res = utimes(file_path, tv);
         }
-        if (utimes_res != 0) {
+        if (utimes_res != 0)
+        {
             LOG(MODULE_NAME, D_ERROR, "modify times failed");
-            return NFS_REQ_ERROR;
+            return NFS3ERR_INVAL;
         }
     }
-    return NFS_REQ_OK;
+    return NFS3_OK;
 }

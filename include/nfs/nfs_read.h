@@ -51,12 +51,6 @@ void nfs3_read_free(nfs_res_t *res);
 
 extern bool xdr_READ3args(XDR *xdrs, READ3args *objp);
 
-extern void xdr_READ3res_uio_release(struct xdr_uio *uio, u_int flags);
-
-extern xdr_uio *xdr_READ3res_uio_setup(struct READ3resok *objp);
-
-extern inline bool xdr_READ3resok_encode(XDR *xdrs, READ3resok *objp);
-
 extern bool xdr_READ3resok(XDR *xdrs, READ3resok *objp);
 
 extern bool xdr_READ3resfail(XDR *xdrs, READ3resfail *objp);

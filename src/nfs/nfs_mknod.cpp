@@ -143,7 +143,8 @@ int nfs3_mknod(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
         goto outfail;
     }
 
-    if (nfs_setattr(file_path.c_str(), *new_attr) != NFS_REQ_OK)
+    res->res_mknod3.status = nfs_set_sattr3(file_path.c_str(), *new_attr);
+    if (res->res_mknod3.status != NFS_REQ_OK)
     {
         LOG(MODULE_NAME, D_ERROR, "setattr(in nfs3_mknod) failed");
         rc = NFS_REQ_ERROR;
@@ -157,7 +158,6 @@ int nfs3_mknod(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
     res->res_mknod3.status = nfs_set_post_op_attr(
         mknod_res_ok->obj.post_op_fh3_u.handle.data.data_val,
         &mknod_res_ok->obj_attributes);
-
     if (res->res_mknod3.status != NFS3_OK)
     {
         rc = NFS_REQ_ERROR;
@@ -195,7 +195,6 @@ outfail:
             mknod_args->where.dir.data.data_val);
     }
     goto out;
-
 }
 
 void nfs3_mknod_free(nfs_res_t *res)

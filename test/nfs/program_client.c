@@ -293,12 +293,51 @@ void nfs_program_3(char *host)
 	else if (func_no == 6) // read
 	{
 		READ3res *result_7;
-		READ3args nfsproc3_read_3_arg;
+		// READ3args nfsproc3_read_3_arg;
+		char src[128];
+		char *src_ptr = src;
+		printf("input data: ");
+		scanf("%s", src_ptr);
+		// printf("sizeof: %lu\n", sizeof(data));
+		// printf("strlen: %ld\n", strlen(data));
+		u_int data_len = (u_int)strlen(src) + 1;
+		char *data_val = (char *)malloc(sizeof(char) * data_len);
+		char *dst_ptr = data_val;
+		u_int i = data_len;
+		while (i--)
+		{
+			*(dst_ptr++) = *(src_ptr++);
+		}
+		*(dst_ptr++) = '\0';
+		u_long offset;
+		u_int count;
+		printf("input offset: ");
+		scanf("%lu", &offset);
+		printf("input count: ");
+		scanf("%u", &count);
+		READ3args nfsproc3_read_3_arg = {{{data_len, data_val}}, offset, count};
 		result_7 = nfsproc3_read_3(&nfsproc3_read_3_arg, clnt);
 		if (result_7 == (READ3res *)NULL)
 		{
 			clnt_perror(clnt, "call failed");
 		}
+		else
+		{
+			printf("status: %d\n", result_7->status);
+			if (result_7->status == 0){
+				printf("ok\n");
+				print_post_op_attr(&result_7->READ3res_u.resok.file_attributes);
+				printf("count: %u\n", result_7->READ3res_u.resok.count);
+				printf("eof: %d\n", result_7->READ3res_u.resok.eof);
+				printf("data: %s\n", result_7->READ3res_u.resok.data.data_val);
+			}
+			else
+			{
+				printf("failed\n");
+				print_post_op_attr(&result_7->READ3res_u.resfail.file_attributes);
+			}
+		}
+		free(data_val);
 	}
 	// else if (strcmp(func_name, "write") == 0)
 	else if (func_no == 7) // write
