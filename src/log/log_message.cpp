@@ -40,7 +40,7 @@ LogMessage::LogMessage(const string &module_name,
                        va_list args) {
 
     /*建立临时缓存存储数据*/
-    char *buffer_message = (char *) malloc(INIT_MESSAGE_BUFFER);
+    char *buffer_message = (char *) calloc(INIT_MESSAGE_BUFFER, sizeof(char));
 
     /*复制参数,超出范围重新格式化做准备*/
     va_list buffer;

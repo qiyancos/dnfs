@@ -26,10 +26,10 @@
 static void nfs_read_ok(nfs_res_t *res, char *data, uint32_t read_size,
                         char *file_path, int eof)
 {
-    if ((read_size == 0) && (data != NULL))
+    if ((read_size == 0) && (data != nullptr))
     {
         free(data);
-        data = NULL;
+        data = nullptr;
     }
 
     /* Build Post Op Attributes */
@@ -45,7 +45,7 @@ int nfs3_read(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
 {
     /*数据指针*/
     READ3args *read_args = &arg->arg_read3;
-    uint64_t offset = read_args->offset;
+    auto offset = (__off_t)read_args->offset;
     size_t size = read_args->count;
     READ3resok *read_res_ok = &res->res_read3.READ3res_u.resok;
     READ3resfail *read_res_fail = &res->res_read3.READ3res_u.resfail;
@@ -67,7 +67,7 @@ int nfs3_read(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
     /* initialize for read of size 0 */
     read_res_ok->eof = FALSE;
     read_res_ok->count = 0;
-    read_res_ok->data.data_val = NULL;
+    read_res_ok->data.data_val = nullptr;
     read_res_ok->data.data_len = 0;
     res->res_read3.status = NFS3_OK;
 
@@ -110,7 +110,7 @@ int nfs3_read(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
     if (MaxOffsetRead < UINT64_MAX)
     {
         LOG(MODULE_NAME, D_INFO,
-            "Read offset=%u count=%zd MaxOffSet=%",
+            "Read offset=%u count=%zd MaxOffSet=%u",
             offset, size, MaxOffsetRead);
         if ((offset + size) > MaxOffsetRead)
         {
@@ -134,7 +134,7 @@ int nfs3_read(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
 
     if (size == 0)
     {
-        nfs_read_ok(res, NULL, 0, read_args->file.data.data_val, 0);
+        nfs_read_ok(res, nullptr, 0, read_args->file.data.data_val, 0);
         goto out;
     }
 
@@ -186,7 +186,7 @@ outfail:
 
 void nfs3_read_free(nfs_res_t *res)
 {
-    if (res->res_read3.status == NFS3_OK)
+    if (res->res_read3.status == NFS3_OK && res->res_read3.READ3res_u.resok.data.data_len != 0)
         free(res->res_read3.READ3res_u.resok.data.data_val);
 }
 

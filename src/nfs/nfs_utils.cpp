@@ -313,7 +313,7 @@ nfsstat3 nfs_set_sattr3(const char *file_path, sattr3 &new_attr)
     if (new_attr.atime.set_it != DONT_CHANGE)
     {
         set_time_flag = true;
-        LOG(MODULE_NAME, D_INFO, "set=%d atime = %d,%d",
+        LOG(MODULE_NAME, D_INFO, "Interface nfs_setattr atime set=%d atime = %d,%d",
             new_attr.atime.set_it,
             new_attr.atime.set_atime_u.atime.tv_sec,
             new_attr.atime.set_atime_u.atime.tv_nsec);
@@ -341,7 +341,7 @@ nfsstat3 nfs_set_sattr3(const char *file_path, sattr3 &new_attr)
     if (new_attr.mtime.set_it != DONT_CHANGE)
     {
         set_time_flag = true;
-        LOG(MODULE_NAME, D_INFO, "set=%d mtime = %d",
+        LOG(MODULE_NAME, D_INFO, "Interface nfs_setattr mtime set=%d mtime = %d",
             new_attr.atime.set_it,
             new_attr.mtime.set_mtime_u.mtime.tv_sec);
         if (new_attr.mtime.set_it == SET_TO_CLIENT_TIME)
@@ -369,7 +369,7 @@ nfsstat3 nfs_set_sattr3(const char *file_path, sattr3 &new_attr)
         if (ts[0].tv_nsec == UTIME_NOW || ts[1].tv_nsec == UTIME_NOW)
         {
             /* set to the current timestamp. achieve this by passing NULL timeval to kernel */
-            utimes_res = utimes(file_path, NULL);
+            utimes_res = utimes(file_path, nullptr);
         }
         else
         {
