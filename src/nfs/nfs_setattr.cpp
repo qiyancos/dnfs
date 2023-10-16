@@ -85,7 +85,7 @@ int nfs3_setattr(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
     }
 
     res->res_setattr3.status = nfs_set_sattr3(*fh_data_val, *new_attr);
-    if (res->res_setattr3.status != NFS_REQ_OK)
+    if (res->res_setattr3.status != NFS3_OK)
     {
         LOG(MODULE_NAME, D_ERROR, "setattr(in nfs3_setattr) failed");
         rc = NFS_REQ_ERROR;
