@@ -29,7 +29,7 @@ typedef enum des_dir des_dir;
 #ifdef __cplusplus
 extern "C" bool xdr_des_dir(XDR *, des_dir *);
 #elif __STDC__
-extern bool xdr_des_dir(XDR *, des_dir *);
+bool xdr_des_dir(XDR *, des_dir *);
 #else				/* Old Style C */
 bool xdr_des_dir();
 #endif				/* Old Style C */
@@ -42,7 +42,7 @@ typedef enum des_mode des_mode;
 #ifdef __cplusplus
 extern "C" bool xdr_des_mode(XDR *, des_mode *);
 #elif __STDC__
-extern bool xdr_des_mode(XDR *, des_mode *);
+bool xdr_des_mode(XDR *, des_mode *);
 #else				/* Old Style C */
 bool xdr_des_mode();
 #endif				/* Old Style C */
@@ -61,7 +61,7 @@ typedef struct desargs desargs;
 #ifdef __cplusplus
 extern "C" bool xdr_desargs(XDR *, desargs *);
 #elif __STDC__
-extern bool xdr_desargs(XDR *, desargs *);
+bool xdr_desargs(XDR *, desargs *);
 #else				/* Old Style C */
 bool xdr_desargs();
 #endif				/* Old Style C */
@@ -78,7 +78,7 @@ typedef struct desresp desresp;
 #ifdef __cplusplus
 extern "C" bool xdr_desresp(XDR *, desresp *);
 #elif __STDC__
-extern bool xdr_desresp(XDR *, desresp *);
+bool xdr_desresp(XDR *, desresp *);
 #else				/* Old Style C */
 bool xdr_desresp();
 #endif				/* Old Style C */

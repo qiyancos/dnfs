@@ -50,12 +50,12 @@ int nfs3_commit(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
 
 void nfs3_commit_free(nfs_res_t *res);
 
-extern bool xdr_COMMIT3args(XDR *xdrs, COMMIT3args *objp);
+bool xdr_COMMIT3args(XDR *xdrs, COMMIT3args *objp);
 
-extern bool xdr_COMMIT3resok(XDR *xdrs, COMMIT3resok *objp);
+bool xdr_COMMIT3resok(XDR *xdrs, COMMIT3resok *objp);
 
-extern bool xdr_COMMIT3resfail(XDR *xdrs, COMMIT3resfail *objp);
+bool xdr_COMMIT3resfail(XDR *xdrs, COMMIT3resfail *objp);
 
-extern bool xdr_COMMIT3res(XDR *xdrs, COMMIT3res *objp);
+bool xdr_COMMIT3res(XDR *xdrs, COMMIT3res *objp);
 
 #endif //DNFSD_NFS_COMMIT_H

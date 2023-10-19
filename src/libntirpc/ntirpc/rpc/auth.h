@@ -97,7 +97,7 @@ union des_block {
 };
 typedef union des_block des_block;
 __BEGIN_DECLS
-extern bool xdr_des_block(XDR *, des_block *);
+bool xdr_des_block(XDR *, des_block *);
 __END_DECLS
 /*
  * Authentication info.  Opaque to client.

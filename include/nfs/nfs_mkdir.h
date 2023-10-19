@@ -45,12 +45,12 @@ int nfs3_mkdir(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
 
 void nfs3_mkdir_free(nfs_res_t *res);
 
-extern bool xdr_MKDIR3args(XDR *xdrs, MKDIR3args *objp);
+bool xdr_MKDIR3args(XDR *xdrs, MKDIR3args *objp);
 
-extern bool xdr_MKDIR3resok(XDR *xdrs, MKDIR3resok *objp);
+bool xdr_MKDIR3resok(XDR *xdrs, MKDIR3resok *objp);
 
-extern bool xdr_MKDIR3resfail(XDR *xdrs, MKDIR3resfail *objp);
+bool xdr_MKDIR3resfail(XDR *xdrs, MKDIR3resfail *objp);
 
-extern bool xdr_MKDIR3res(XDR *xdrs, MKDIR3res *objp);
+bool xdr_MKDIR3res(XDR *xdrs, MKDIR3res *objp);
 
 #endif //DNFSD_NFS_MKDIR_H

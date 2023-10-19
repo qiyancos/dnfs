@@ -44,12 +44,12 @@ int mnt_export(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
 
 void mnt_export_free(nfs_res_t *res);
 
-extern bool xdr_groupnode_x(XDR *xdrs, groupnode *objp);
+bool xdr_groupnode_x(XDR *xdrs, groupnode *objp);
 
-extern bool xdr_groups(XDR *xdrs, struct groupnode **objp);
+bool xdr_groups(XDR *xdrs, struct groupnode **objp);
 
-extern bool xdr_exportnode_x(XDR *xdrs, exportnode *objp);
+bool xdr_exportnode_x(XDR *xdrs, exportnode *objp);
 
-extern bool xdr_exports(XDR *, mnt3_exports *);
+bool xdr_exports(XDR *, mnt3_exports *);
 
 #endif //DNFSD_MNT_EXPORT_H

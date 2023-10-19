@@ -19,9 +19,9 @@ extern "C" {
 }
 #include <cassert>
 #include "dnfsd/dnfs_meta_data.h"
-extern bool xdr_mountstat3(XDR *, mountstat3 *);
-extern bool xdr_fhandle3(XDR *, fhandle3 *);
-extern bool xdr_dirpath(XDR *, mnt3_dirpath *);
-extern bool xdr_name(XDR *, mnt3_name *);
+bool xdr_mountstat3(XDR *, mountstat3 *);
+bool xdr_fhandle3(XDR *, fhandle3 *);
+bool xdr_dirpath(XDR *, mnt3_dirpath *);
+bool xdr_name(XDR *, mnt3_name *);
 
 #endif //DNFSD_MNT_XDR_H

@@ -63,7 +63,7 @@
 /* retry timeout default to the moon and back */
 static struct timespec to = { 3, 0 };
 
-extern bool xdr_wrapstring(XDR *, char **);
+bool xdr_wrapstring(XDR *, char **);
 
 static const char nullstring[] = "\000";
 

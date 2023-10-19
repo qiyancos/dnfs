@@ -139,12 +139,12 @@ int nfs3_mknod(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
     {
         LOG(MODULE_NAME, D_ERROR, "create special file failed");
         rc = NFS_REQ_ERROR;
-        res->res_create3.status = NFS3ERR_NOENT;
+        res->res_mknod3.status = NFS3ERR_NOENT;
         goto outfail;
     }
 
     res->res_mknod3.status = nfs_set_sattr3(file_path.c_str(), *new_attr);
-    if (res->res_mknod3.status != NFS_REQ_OK)
+    if (res->res_mknod3.status != NFS3_OK)
     {
         LOG(MODULE_NAME, D_ERROR, "setattr(in nfs3_mknod) failed");
         rc = NFS_REQ_ERROR;

@@ -57,16 +57,16 @@ int nfs3_mknod(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
 
 void nfs3_mknod_free(nfs_res_t *res);
 
-extern bool xdr_devicedata3(XDR *xdrs, devicedata3 *objp);
+bool xdr_devicedata3(XDR *xdrs, devicedata3 *objp);
 
-extern bool xdr_mknoddata3(XDR *xdrs, mknoddata3 *objp);
+bool xdr_mknoddata3(XDR *xdrs, mknoddata3 *objp);
 
-extern bool xdr_MKNOD3args(XDR *xdrs, MKNOD3args *objp);
+bool xdr_MKNOD3args(XDR *xdrs, MKNOD3args *objp);
 
-extern bool xdr_MKNOD3resok(XDR *xdrs, MKNOD3resok *objp);
+bool xdr_MKNOD3resok(XDR *xdrs, MKNOD3resok *objp);
 
-extern bool xdr_MKNOD3resfail(XDR *xdrs, MKNOD3resfail *objp);
+bool xdr_MKNOD3resfail(XDR *xdrs, MKNOD3resfail *objp);
 
-extern bool xdr_MKNOD3res(XDR *xdrs, MKNOD3res *objp);
+bool xdr_MKNOD3res(XDR *xdrs, MKNOD3res *objp);
 
 #endif //DNFSD_NFS_MKNOD_H

@@ -49,12 +49,12 @@ int nfs3_read(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
 
 void nfs3_read_free(nfs_res_t *res);
 
-extern bool xdr_READ3args(XDR *xdrs, READ3args *objp);
+bool xdr_READ3args(XDR *xdrs, READ3args *objp);
 
-extern bool xdr_READ3resok(XDR *xdrs, READ3resok *objp);
+bool xdr_READ3resok(XDR *xdrs, READ3resok *objp);
 
-extern bool xdr_READ3resfail(XDR *xdrs, READ3resfail *objp);
+bool xdr_READ3resfail(XDR *xdrs, READ3resfail *objp);
 
-extern bool xdr_READ3res(XDR *xdrs, READ3res *objp);
+bool xdr_READ3res(XDR *xdrs, READ3res *objp);
 
 #endif //DNFSD_NFS_READ_H

@@ -31,9 +31,9 @@ int mnt_dump(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
 
 void mnt_dump_free(nfs_res_t *res);
 
-extern bool xdr_mountbody_x(XDR *xdrs, mountbody *objp);
+bool xdr_mountbody_x(XDR *xdrs, mountbody *objp);
 
-extern bool xdr_mountlist(XDR *, mountlist *);
+bool xdr_mountlist(XDR *, mountlist *);
 
 
 #endif //DNFSD_MNT_DUMP_H

@@ -47,12 +47,12 @@ int nfs3_remove(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
 
 void nfs3_remove_free(nfs_res_t *res);
 
-extern bool xdr_REMOVE3args(XDR *, REMOVE3args *);
+bool xdr_REMOVE3args(XDR *, REMOVE3args *);
 
-extern bool xdr_REMOVE3resok(XDR *, REMOVE3resok *);
+bool xdr_REMOVE3resok(XDR *, REMOVE3resok *);
 
-extern bool xdr_REMOVE3resfail(XDR *, REMOVE3resfail *);
+bool xdr_REMOVE3resfail(XDR *, REMOVE3resfail *);
 
-extern bool xdr_REMOVE3res(XDR *, REMOVE3res *);
+bool xdr_REMOVE3res(XDR *, REMOVE3res *);
 
 #endif // DNFSD_NFS_REMOVE_H

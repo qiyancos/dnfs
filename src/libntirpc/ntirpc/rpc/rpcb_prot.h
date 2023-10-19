@@ -149,7 +149,7 @@ extern "C" {
 	bool xdr_rpcb(XDR *, rpcb *);
 }
 #elif __STDC__
-extern bool xdr_rpcb(XDR *, rpcb *);
+bool xdr_rpcb(XDR *, rpcb *);
 #else				/* Old Style C */
 bool xdr_rpcb();
 #endif				/* Old Style C */
@@ -177,7 +177,7 @@ extern "C" {
 	bool xdr_rp__list(XDR *, rp__list *);
 }
 #elif __STDC__
-extern bool xdr_rp__list(XDR *, rp__list *);
+bool xdr_rp__list(XDR *, rp__list *);
 #else				/* Old Style C */
 bool xdr_rp__list();
 #endif				/* Old Style C */
@@ -188,7 +188,7 @@ extern "C" {
 	bool xdr_rpcblist_ptr(XDR *, rpcblist_ptr *);
 }
 #elif __STDC__
-extern bool xdr_rpcblist_ptr(XDR *, rpcblist_ptr *);
+bool xdr_rpcblist_ptr(XDR *, rpcblist_ptr *);
 #else				/* Old Style C */
 bool xdr_rpcblist_ptr();
 #endif				/* Old Style C */
@@ -206,7 +206,7 @@ struct rpcblist {
 #ifdef __cplusplus
 extern "C" {
 #endif
-	extern bool xdr_rpcblist(XDR *, rpcblist **);
+	bool xdr_rpcblist(XDR *, rpcblist **);
 #ifdef __cplusplus
 }
 #endif
@@ -227,7 +227,7 @@ extern "C" {
 	bool xdr_rpcb_rmtcallargs(XDR *, rpcb_rmtcallargs *);
 }
 #elif __STDC__
-extern bool xdr_rpcb_rmtcallargs(XDR *, rpcb_rmtcallargs *);
+bool xdr_rpcb_rmtcallargs(XDR *, rpcb_rmtcallargs *);
 #else				/* Old Style C */
 bool xdr_rpcb_rmtcallargs();
 #endif				/* Old Style C */
@@ -271,7 +271,7 @@ extern "C" {
 	bool xdr_rpcb_rmtcallres(XDR *, rpcb_rmtcallres *);
 }
 #elif __STDC__
-extern bool xdr_rpcb_rmtcallres(XDR *, rpcb_rmtcallres *);
+bool xdr_rpcb_rmtcallres(XDR *, rpcb_rmtcallres *);
 #else				/* Old Style C */
 bool xdr_rpcb_rmtcallres();
 #endif				/* Old Style C */
@@ -308,7 +308,7 @@ extern "C" {
 	bool xdr_rpcb_entry(XDR *, rpcb_entry *);
 }
 #elif __STDC__
-extern bool xdr_rpcb_entry(XDR *, rpcb_entry *);
+bool xdr_rpcb_entry(XDR *, rpcb_entry *);
 #else				/* Old Style C */
 bool xdr_rpcb_entry();
 #endif				/* Old Style C */
@@ -327,7 +327,7 @@ extern "C" {
 	bool xdr_rpcb_entry_list(XDR *, rpcb_entry_list *);
 }
 #elif __STDC__
-extern bool xdr_rpcb_entry_list(XDR *, rpcb_entry_list *);
+bool xdr_rpcb_entry_list(XDR *, rpcb_entry_list *);
 #else				/* Old Style C */
 bool xdr_rpcb_entry_list();
 #endif				/* Old Style C */
@@ -338,7 +338,7 @@ extern "C" {
 	bool xdr_rpcb_entry_list_ptr(XDR *, rpcb_entry_list_ptr *);
 }
 #elif __STDC__
-extern bool xdr_rpcb_entry_list_ptr(XDR *, rpcb_entry_list_ptr *);
+bool xdr_rpcb_entry_list_ptr(XDR *, rpcb_entry_list_ptr *);
 #else				/* Old Style C */
 bool xdr_rpcb_entry_list_ptr();
 #endif				/* Old Style C */
@@ -372,7 +372,7 @@ extern "C" {
 	bool xdr_rpcbs_addrlist(XDR *, rpcbs_addrlist *);
 }
 #elif __STDC__
-extern bool xdr_rpcbs_addrlist(XDR *, rpcbs_addrlist *);
+bool xdr_rpcbs_addrlist(XDR *, rpcbs_addrlist *);
 #else				/* Old Style C */
 bool xdr_rpcbs_addrlist();
 #endif				/* Old Style C */
@@ -395,7 +395,7 @@ extern "C" {
 	bool xdr_rpcbs_rmtcalllist(XDR *, rpcbs_rmtcalllist *);
 }
 #elif __STDC__
-extern bool xdr_rpcbs_rmtcalllist(XDR *, rpcbs_rmtcalllist *);
+bool xdr_rpcbs_rmtcalllist(XDR *, rpcbs_rmtcalllist *);
 #else				/* Old Style C */
 bool xdr_rpcbs_rmtcalllist();
 #endif				/* Old Style C */
@@ -406,7 +406,7 @@ extern "C" {
 	bool xdr_rpcbs_proc(XDR *, rpcbs_proc);
 }
 #elif __STDC__
-extern bool xdr_rpcbs_proc(XDR *, rpcbs_proc);
+bool xdr_rpcbs_proc(XDR *, rpcbs_proc);
 #else				/* Old Style C */
 bool xdr_rpcbs_proc();
 #endif				/* Old Style C */
@@ -417,7 +417,7 @@ extern "C" {
 	bool xdr_rpcbs_addrlist_ptr(XDR *, rpcbs_addrlist_ptr *);
 }
 #elif __STDC__
-extern bool xdr_rpcbs_addrlist_ptr(XDR *, rpcbs_addrlist_ptr *);
+bool xdr_rpcbs_addrlist_ptr(XDR *, rpcbs_addrlist_ptr *);
 #else				/* Old Style C */
 bool xdr_rpcbs_addrlist_ptr();
 #endif				/* Old Style C */
@@ -428,7 +428,7 @@ extern "C" {
 	bool xdr_rpcbs_rmtcalllist_ptr(XDR *, rpcbs_rmtcalllist_ptr *);
 }
 #elif __STDC__
-extern bool xdr_rpcbs_rmtcalllist_ptr(XDR *, rpcbs_rmtcalllist_ptr *);
+bool xdr_rpcbs_rmtcalllist_ptr(XDR *, rpcbs_rmtcalllist_ptr *);
 #else				/* Old Style C */
 bool xdr_rpcbs_rmtcalllist_ptr();
 #endif				/* Old Style C */
@@ -446,7 +446,7 @@ extern "C" {
 	bool xdr_rpcb_stat(XDR *, rpcb_stat *);
 }
 #elif __STDC__
-extern bool xdr_rpcb_stat(XDR *, rpcb_stat *);
+bool xdr_rpcb_stat(XDR *, rpcb_stat *);
 #else				/* Old Style C */
 bool xdr_rpcb_stat();
 #endif				/* Old Style C */
@@ -462,7 +462,7 @@ extern "C" {
 	bool xdr_rpcb_stat_byvers(XDR *, rpcb_stat_byvers);
 }
 #elif __STDC__
-extern bool xdr_rpcb_stat_byvers(XDR *, rpcb_stat_byvers);
+bool xdr_rpcb_stat_byvers(XDR *, rpcb_stat_byvers);
 #else				/* Old Style C */
 bool xdr_rpcb_stat_byvers();
 #endif				/* Old Style C */
@@ -478,7 +478,7 @@ extern "C" {
 	bool xdr_netbuf(XDR *, struct netbuf *);
 }
 #else				/* __STDC__ */
-extern bool xdr_netbuf(XDR *, struct netbuf *);
+bool xdr_netbuf(XDR *, struct netbuf *);
 
 #endif
 
