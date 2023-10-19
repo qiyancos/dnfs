@@ -41,12 +41,12 @@ int nfs3_lookup(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
 
 void nfs3_lookup_free(nfs_res_t *res);
 
-extern bool xdr_LOOKUP3args(XDR *xdrs, LOOKUP3args *objp);
+bool xdr_LOOKUP3args(XDR *xdrs, LOOKUP3args *objp);
 
-extern bool xdr_LOOKUP3resok(XDR *xdrs, LOOKUP3resok *objp);
+bool xdr_LOOKUP3resok(XDR *xdrs, LOOKUP3resok *objp);
 
-extern bool xdr_LOOKUP3resfail(XDR *xdrs, LOOKUP3resfail *objp);
+bool xdr_LOOKUP3resfail(XDR *xdrs, LOOKUP3resfail *objp);
 
-extern bool xdr_LOOKUP3res(XDR *xdrs, LOOKUP3res *objp);
+bool xdr_LOOKUP3res(XDR *xdrs, LOOKUP3res *objp);
 
 #endif //DNFSD_NFS_LOOKUP_H

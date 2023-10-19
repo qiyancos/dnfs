@@ -42,13 +42,13 @@ int nfs3_readlink(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
 
 void nfs3_readlink_free(nfs_res_t *res);
 
-extern bool xdr_READLINK3args(XDR *xdrs, READLINK3args *objp);
+bool xdr_READLINK3args(XDR *xdrs, READLINK3args *objp);
 
-extern bool xdr_READLINK3resok(XDR *xdrs, READLINK3resok *objp);
+bool xdr_READLINK3resok(XDR *xdrs, READLINK3resok *objp);
 
-extern bool xdr_READLINK3resfail(XDR *xdrs, READLINK3resfail *objp);
+bool xdr_READLINK3resfail(XDR *xdrs, READLINK3resfail *objp);
 
-extern bool xdr_READLINK3res(XDR *xdrs, READLINK3res *objp);
+bool xdr_READLINK3res(XDR *xdrs, READLINK3res *objp);
 
 
 #endif //DNFSD_NFS_READLINK_H

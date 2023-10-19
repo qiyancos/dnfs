@@ -194,9 +194,9 @@ rpc_msg_init(struct rpc_msg *msg)
  *  XDR *xdrs;
  *  struct rpc_msg *cmsg;
  */
-extern bool xdr_ncallmsg(XDR *, struct rpc_msg *);
-extern bool xdr_call_decode(XDR *, struct rpc_msg *, int32_t *buf);
-extern bool xdr_call_encode(XDR *, struct rpc_msg *);
+bool xdr_ncallmsg(XDR *, struct rpc_msg *);
+bool xdr_call_decode(XDR *, struct rpc_msg *, int32_t *buf);
+bool xdr_call_encode(XDR *, struct rpc_msg *);
 
 /*
  * XDR routine to handle a duplex rpc message.
@@ -204,10 +204,10 @@ extern bool xdr_call_encode(XDR *, struct rpc_msg *);
  *  XDR *xdrs;
  *  struct rpc_msg *cmsg;
  */
-extern bool xdr_dplx_msg(XDR *, struct rpc_msg *);
-extern bool xdr_dplx_decode(XDR *, struct rpc_msg *);
-extern bool xdr_reply_decode(XDR *, struct rpc_msg *, int32_t *buf);
-extern bool xdr_reply_encode(XDR *, struct rpc_msg *);
+bool xdr_dplx_msg(XDR *, struct rpc_msg *);
+bool xdr_dplx_decode(XDR *, struct rpc_msg *);
+bool xdr_reply_decode(XDR *, struct rpc_msg *, int32_t *buf);
+bool xdr_reply_encode(XDR *, struct rpc_msg *);
 
 /*
  * XDR routine to pre-serialize the static part of a rpc message.
@@ -215,7 +215,7 @@ extern bool xdr_reply_encode(XDR *, struct rpc_msg *);
  *  XDR *xdrs;
  *  struct rpc_msg *cmsg;
  */
-extern bool xdr_ncallhdr(XDR *, struct rpc_msg *);
+bool xdr_ncallhdr(XDR *, struct rpc_msg *);
 
 /*
  * XDR routine to handle a rpc reply.
@@ -223,7 +223,7 @@ extern bool xdr_ncallhdr(XDR *, struct rpc_msg *);
  *  XDR *xdrs;
  *  struct rpc_msg *rmsg;
  */
-extern bool xdr_nreplymsg(XDR *, struct rpc_msg *);
+bool xdr_nreplymsg(XDR *, struct rpc_msg *);
 
 /*
  * XDR routine to handle an accepted rpc reply.
@@ -231,7 +231,7 @@ extern bool xdr_nreplymsg(XDR *, struct rpc_msg *);
  *  XDR *xdrs;
  *  struct accepted_reply *rej;
  */
-extern bool xdr_naccepted_reply(XDR *, struct accepted_reply *);
+bool xdr_naccepted_reply(XDR *, struct accepted_reply *);
 
 /*
  * XDR routine to handle a rejected rpc reply.
@@ -239,7 +239,7 @@ extern bool xdr_naccepted_reply(XDR *, struct accepted_reply *);
  *  XDR *xdrs;
  *  struct rejected_reply *rej;
  */
-extern bool xdr_nrejected_reply(XDR *, struct rejected_reply *);
+bool xdr_nrejected_reply(XDR *, struct rejected_reply *);
 
 /*
  * Fills in the error part of a reply message.

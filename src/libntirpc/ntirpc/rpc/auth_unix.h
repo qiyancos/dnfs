@@ -69,7 +69,7 @@ struct authunix_parms {
 #define authsys_parms authunix_parms
 
 __BEGIN_DECLS
-extern bool xdr_authunix_parms(XDR *, struct authunix_parms *);
+bool xdr_authunix_parms(XDR *, struct authunix_parms *);
 __END_DECLS
 /*
  * If a response verifier has flavor AUTH_SHORT,

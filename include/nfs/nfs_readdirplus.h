@@ -69,12 +69,12 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
  */
 void nfs3_readdirplus_free(nfs_res_t *res);
 
-extern bool xdr_READDIRPLUS3args(XDR *, READDIRPLUS3args *);
+bool xdr_READDIRPLUS3args(XDR *, READDIRPLUS3args *);
 
-extern bool xdr_READDIRPLUS3resok(XDR *, READDIRPLUS3resok *);
+bool xdr_READDIRPLUS3resok(XDR *, READDIRPLUS3resok *);
 
-extern bool xdr_READDIRPLUS3resfail(XDR *, READDIRPLUS3resfail *);
+bool xdr_READDIRPLUS3resfail(XDR *, READDIRPLUS3resfail *);
 
-extern bool xdr_READDIRPLUS3res(XDR *, READDIRPLUS3res *);
+bool xdr_READDIRPLUS3res(XDR *, READDIRPLUS3res *);
 
 #endif // DNFSD_NFS_READDIRPLUS_H

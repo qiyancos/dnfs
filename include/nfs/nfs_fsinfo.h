@@ -58,12 +58,12 @@ int nfs3_fsinfo(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
  */
 void nfs3_fsinfo_free(nfs_res_t *res);
 
-extern bool xdr_FSINFO3args(XDR *, FSINFO3args *);
+bool xdr_FSINFO3args(XDR *, FSINFO3args *);
 
-extern bool xdr_FSINFO3resok(XDR *, FSINFO3resok *);
+bool xdr_FSINFO3resok(XDR *, FSINFO3resok *);
 
-extern bool xdr_FSINFO3resfail(XDR *, FSINFO3resfail *);
+bool xdr_FSINFO3resfail(XDR *, FSINFO3resfail *);
 
-extern bool xdr_FSINFO3res(XDR *, FSINFO3res *);
+bool xdr_FSINFO3res(XDR *, FSINFO3res *);
 
 #endif //DNFSD_NFS_FSINFO_H

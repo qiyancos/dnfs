@@ -57,14 +57,14 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
 
 void nfs3_write_free(nfs_res_t *res);
 
-extern bool xdr_stable_how(XDR *xdrs, stable_how *objp);
+bool xdr_stable_how(XDR *xdrs, stable_how *objp);
 
-extern bool xdr_WRITE3args(XDR *xdrs, WRITE3args *objp);
+bool xdr_WRITE3args(XDR *xdrs, WRITE3args *objp);
 
-extern bool xdr_WRITE3resok(XDR *xdrs, WRITE3resok *objp);
+bool xdr_WRITE3resok(XDR *xdrs, WRITE3resok *objp);
 
-extern bool xdr_WRITE3resfail(XDR *xdrs, WRITE3resfail *objp);
+bool xdr_WRITE3resfail(XDR *xdrs, WRITE3resfail *objp);
 
-extern bool xdr_WRITE3res(XDR *xdrs, WRITE3res *objp);
+bool xdr_WRITE3res(XDR *xdrs, WRITE3res *objp);
 
 #endif //DNFSD_NFS_WRITE_H

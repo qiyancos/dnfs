@@ -91,14 +91,14 @@ struct pmap {
 	rpcport_t pm_port;
 };
 
-extern bool xdr_pmap(XDR *__xdrs, struct pmap *__regs);
+bool xdr_pmap(XDR *__xdrs, struct pmap *__regs);
 
 struct pmaplist {
 	struct pmap pml_map;
 	struct pmaplist *pml_next;
 };
 
-extern bool xdr_pmaplist(XDR *__xdrs, struct pmaplist **__rp);
+bool xdr_pmaplist(XDR *__xdrs, struct pmaplist **__rp);
 
 __END_DECLS
 #endif				/* rpc/pmap_prot.h */

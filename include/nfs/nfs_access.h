@@ -43,13 +43,13 @@ int nfs3_access(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
 
 void nfs3_access_free(nfs_res_t *res);
 
-extern bool xdr_ACCESS3args(XDR *xdrs, ACCESS3args *objp);
+bool xdr_ACCESS3args(XDR *xdrs, ACCESS3args *objp);
 
-extern bool xdr_ACCESS3resok(XDR *xdrs, ACCESS3resok *objp);
+bool xdr_ACCESS3resok(XDR *xdrs, ACCESS3resok *objp);
 
-extern bool xdr_ACCESS3resfail(XDR *xdrs, ACCESS3resfail *objp);
+bool xdr_ACCESS3resfail(XDR *xdrs, ACCESS3resfail *objp);
 
-extern bool xdr_ACCESS3res(XDR *xdrs, ACCESS3res *objp);
+bool xdr_ACCESS3res(XDR *xdrs, ACCESS3res *objp);
 
 
 #endif //DNFSD_NFS_ACCESS_H

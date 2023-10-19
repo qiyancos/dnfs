@@ -47,12 +47,12 @@ int nfs3_rmdir(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
 
 void nfs3_rmdir_free(nfs_res_t *res);
 
-extern bool xdr_RMDIR3args(XDR *, RMDIR3args *);
+bool xdr_RMDIR3args(XDR *, RMDIR3args *);
 
-extern bool xdr_RMDIR3resok(XDR *, RMDIR3resok *);
+bool xdr_RMDIR3resok(XDR *, RMDIR3resok *);
 
-extern bool xdr_RMDIR3resfail(XDR *, RMDIR3resfail *);
+bool xdr_RMDIR3resfail(XDR *, RMDIR3resfail *);
 
-extern bool xdr_RMDIR3res(XDR *, RMDIR3res *);
+bool xdr_RMDIR3res(XDR *, RMDIR3res *);
 
 #endif // DNFSD_NFS_RMDIR_H

@@ -57,18 +57,18 @@ int nfs3_create(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
 
 void nfs3_create_free(nfs_res_t *res);
 
-extern bool xdr_createmode3(XDR *xdrs, createmode3 *objp);
+bool xdr_createmode3(XDR *xdrs, createmode3 *objp);
 
-extern bool xdr_createverf3(XDR *xdrs, createverf3 objp);
+bool xdr_createverf3(XDR *xdrs, createverf3 objp);
 
-extern bool xdr_createhow3(XDR *xdrs, createhow3 *objp);
+bool xdr_createhow3(XDR *xdrs, createhow3 *objp);
 
-extern bool xdr_CREATE3args(XDR *xdrs, CREATE3args *objp);
+bool xdr_CREATE3args(XDR *xdrs, CREATE3args *objp);
 
-extern bool xdr_CREATE3resok(XDR *xdrs, CREATE3resok *objp);
+bool xdr_CREATE3resok(XDR *xdrs, CREATE3resok *objp);
 
-extern bool xdr_CREATE3resfail(XDR *xdrs, CREATE3resfail *objp);
+bool xdr_CREATE3resfail(XDR *xdrs, CREATE3resfail *objp);
 
-extern bool xdr_CREATE3res(XDR *xdrs, CREATE3res *objp);
+bool xdr_CREATE3res(XDR *xdrs, CREATE3res *objp);
 
 #endif //DNFSD_NFS_CREATE_H

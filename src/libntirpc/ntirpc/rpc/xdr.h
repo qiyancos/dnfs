@@ -643,18 +643,18 @@ xdr_putbool(XDR *xdrs, bool_t boolv)
 __BEGIN_DECLS
 extern XDR xdr_free_null_stream;
 
-extern bool xdr_void(XDR *, void *);
-extern bool xdr_int(XDR *, int *);
-extern bool xdr_u_int(XDR *, u_int *);
-extern bool xdr_long(XDR *, long *);
-extern bool xdr_u_long(XDR *, u_long *);
-extern bool xdr_float(XDR *, float *);
-extern bool xdr_double(XDR *, double *);
-extern bool xdr_reference(XDR *, void **, u_int, xdrproc_t);
-extern bool xdr_pointer(XDR *, void **, u_int, xdrproc_t);
-extern bool xdr_wrapstring(XDR *, char **);
-extern bool xdr_longlong_t(XDR *, quad_t *);
-extern bool xdr_u_longlong_t(XDR *, u_quad_t *);
+bool xdr_void(XDR *, void *);
+bool xdr_int(XDR *, int *);
+bool xdr_u_int(XDR *, u_int *);
+bool xdr_long(XDR *, long *);
+bool xdr_u_long(XDR *, u_long *);
+bool xdr_float(XDR *, float *);
+bool xdr_double(XDR *, double *);
+bool xdr_reference(XDR *, void **, u_int, xdrproc_t);
+bool xdr_pointer(XDR *, void **, u_int, xdrproc_t);
+bool xdr_wrapstring(XDR *, char **);
+bool xdr_longlong_t(XDR *, quad_t *);
+bool xdr_u_longlong_t(XDR *, u_quad_t *);
 
 __END_DECLS
 
@@ -678,7 +678,7 @@ struct netobj {
 	char *n_bytes;
 };
 typedef struct netobj netobj;
-extern bool xdr_nnetobj(XDR *, struct netobj *);
+bool xdr_nnetobj(XDR *, struct netobj *);
 
 /*
  * These are the public routines for the various implementations of
