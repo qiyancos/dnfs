@@ -196,9 +196,11 @@ bool judge_file_exit(const std::string &file_path, int judge_mode) {
     struct stat info{};
     /*不存在直接返回*/
     if (lstat(file_path.c_str(), &info) != 0) {
+        LOG(MODULE_NAME, D_INFO, "judge_file_exit lstat false, filepath: %s", file_path.c_str());
         return false;
     } else if (!(info.st_mode & judge_mode)) {
         /*存在但不是需要的文件格式*/
+        LOG(MODULE_NAME, D_INFO, "judge_file_exit judge false, info.st_mode: %o, judge_mode: %o", info.st_mode, judge_mode);
         return false;
     }
     return true;
