@@ -46,6 +46,11 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
             "arg_write get file handle len is 0");
         goto out;
     }
+    /*打印句柄*/
+    LOG(MODULE_NAME, D_INFO,
+        "The value of the arg_write obtained file handle is '%s', and the length is '%d'",
+        write_args->file.data.data_val,
+        write_args->file.data.data_len);
 
     /*打印写入数据*/
     LOG(MODULE_NAME, D_INFO, "write data len is: %d", strlen(write_args->data.data_val));
@@ -90,7 +95,7 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     }
 
     if (write_args->count == 0) {
-        rc=NFS_REQ_OK;
+        rc = NFS_REQ_OK;
         res->res_write3.status = NFS3_OK;
         goto outok;
     }
@@ -109,18 +114,18 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     /*构造写入数据*/
     write_buf.iov_len = write_args->data.data_len;
     write_buf.iov_base = calloc(write_args->data.data_len, sizeof(char));
-    memcpy(write_buf.iov_base,write_args->data.data_val,write_buf.iov_len);
+    memcpy(write_buf.iov_base, write_args->data.data_val, write_buf.iov_len);
 
     /*读取数据*/
-    write_count=pwritev(file_handle, &write_buf, 1,(__off_t)write_args->offset);
+    write_count = pwritev(file_handle, &write_buf, 1, (__off_t) write_args->offset);
 
     /*释放内存*/
-    free(write_buf.iov_base);
+    gsh_free(write_buf.iov_base);
     /*关闭句柄*/
     close(file_handle);
 
     /*写入失败*/
-    if(write_count<0){
+    if (write_count < 0) {
         res->res_write3.status = NFS3ERR_IO;
         rc = NFS_REQ_ERROR;
         LOG(MODULE_NAME, D_ERROR, "open file '%s' failed",
@@ -129,7 +134,7 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     }
 
     /*返回写入数据大小*/
-    write_res_ok->count=write_count;
+    write_res_ok->count = write_count;
 
     outok:
     /*获取目录wcc信息*/
@@ -166,7 +171,8 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     else
         write_res_ok->committed = UNSTABLE;
 
-    LOG(MODULE_NAME,D_INFO,"Interface write result stat is %d:",res->res_write3.status);
+    LOG(MODULE_NAME, D_INFO, "Interface write result stat is %d:",
+        res->res_write3.status);
 
     memcpy(write_res_ok->verf, NFS3_write_verifier, sizeof(writeverf3));
     return rc;

@@ -163,7 +163,7 @@ void nfs3_readdirplus_free(nfs_res_t *res) {
     while (cur != nullptr and cur->nextentry != nullptr) {
         nxt = cur->nextentry;
         if (cur->name_handle.handle_follows) {
-            free(cur->name_handle.post_op_fh3_u.handle.data.data_val);
+            gsh_free(cur->name_handle.post_op_fh3_u.handle.data.data_val);
         }
         delete (cur);
         cur = nxt;

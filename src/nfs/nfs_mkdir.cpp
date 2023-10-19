@@ -147,7 +147,7 @@ void nfs3_mkdir_free(nfs_res_t *res) {
     /*删除句柄*/
     if ((res->res_mkdir3.status == NFS3_OK)
         && (res->res_mkdir3.MKDIR3res_u.resok.obj.handle_follows)) {
-        free(res->res_mkdir3.MKDIR3res_u.resok.obj.post_op_fh3_u.handle.data.data_val);
+        gsh_free(res->res_mkdir3.MKDIR3res_u.resok.obj.post_op_fh3_u.handle.data.data_val);
     }
 }
 

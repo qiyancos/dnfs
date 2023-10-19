@@ -296,5 +296,9 @@ std::string format_message(const char *format, va_list args);
 /*获取调用错误调用堆栈*/
 std::string get_taceback();
 
+/*释放非空指针*/
+void gsh_free(void *p);
+
+
 #endif //UTILS_COMMON_UTILS_H
 

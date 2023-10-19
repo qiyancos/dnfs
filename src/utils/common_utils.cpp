@@ -277,14 +277,24 @@ std::string format_message(const char *format, va_list args) {
 /*获取调用错误调用堆栈*/
 string get_taceback() {
     /*设置栈调用函数*/
-    string trace_back="Traceback:\n";
+    string trace_back = "Traceback:\n";
     /*判定模式*/
     /*获取调用栈*/
     boost::stacktrace::stacktrace stack = boost::stacktrace::stacktrace();
-    for(int i=4;i<stack.size()-3;i++) {
+    for (int i = 4; i < stack.size() - 3; i++) {
         /*获取调用栈*/
-        trace_back+="  FILE "+stack[i].source_file()+",  line "+to_string(stack[i].source_line())+"\n";
-        trace_back+="       "+stack[i].name()+"\n";
+        trace_back += "  FILE " + stack[i].source_file() + ",  line " +
+                      to_string(stack[i].source_line()) + "\n";
+        trace_back += "       " + stack[i].name() + "\n";
     }
     return trace_back;
+}
+
+/*释放非空指针*/
+void gsh_free(void *p) {
+    if (p != nullptr) {
+        free(p);
+    } else {
+        p = nullptr;
+    }
 }

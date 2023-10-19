@@ -156,7 +156,7 @@ void nfs3_create_free(nfs_res_t *res) {
     /*释放句柄内存*/
     if ((res->res_create3.status == NFS3_OK)
         && (res->res_create3.CREATE3res_u.resok.obj.handle_follows)) {
-        free(res->res_create3.CREATE3res_u.resok.obj.post_op_fh3_u.handle.data.data_val);
+        gsh_free(res->res_create3.CREATE3res_u.resok.obj.post_op_fh3_u.handle.data.data_val);
     }
 }
 

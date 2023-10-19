@@ -17,6 +17,7 @@
 #include "mnt/mnt_xdr.h"
 #include "log/log.h"
 #include "dnfsd/dnfs_meta_data.h"
+#include "utils/common_utils.h"
 
 #define MODULE_NAME "MNT"
 
@@ -73,7 +74,7 @@ void mnt3_mnt_free(nfs_res_t *res) {
     mountres3_ok *resok = &res->res_mnt3.mountres3_u.mountinfo;
 
     if (res->res_mnt3.fhs_status == MNT3_OK) {
-        free(resok->auth_flavors.auth_flavors_val);
+        gsh_free(resok->auth_flavors.auth_flavors_val);
 //        free(resok->fhandle.fhandle3_val);
     }
 }

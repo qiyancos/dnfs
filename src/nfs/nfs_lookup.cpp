@@ -69,7 +69,9 @@ int nfs3_lookup(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
         filepath.c_str());
 
     /*如果查找的目录不存在,跳转fail*/
-    if (!judge_file_exit(filepath, S_IFDIR | S_IFREG | S_IFLNK)) {
+    if (!judge_file_exit(filepath,
+                         S_IFDIR | S_IFCHR | S_IFREG | S_IFLNK | S_IFIFO | S_IFBLK |
+                         S_IFSOCK)) {
         rc = NFS_REQ_ERROR;
         /*文件不存在*/
         res->res_rmdir3.status = NFS3ERR_NOENT;
@@ -80,7 +82,7 @@ int nfs3_lookup(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     }
     /*成功查找到文件*/
     /*获取文件句柄*/
-    set_file_handle(&lookup_res_ok->object,filepath);
+    set_file_handle(&lookup_res_ok->object, filepath);
 
     LOG(MODULE_NAME, D_INFO,
         "The value of the arg_lookup lookup file handle is '%s', and the length is '%d'",
@@ -128,8 +130,8 @@ int nfs3_lookup(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
 void nfs3_lookup_free(nfs_res_t *res) {
     /*释放句柄内存*/
-    if(res->res_lookup3.status==NFS3_OK){
-        free(res->res_lookup3.LOOKUP3res_u.resok.object.data.data_val);
+    if (res->res_lookup3.status == NFS3_OK) {
+        gsh_free(res->res_lookup3.LOOKUP3res_u.resok.object.data.data_val);
     }
 }
 

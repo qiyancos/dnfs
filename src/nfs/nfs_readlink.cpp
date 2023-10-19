@@ -105,7 +105,7 @@ int nfs3_readlink(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
 void nfs3_readlink_free(nfs_res_t *res) {
     if (res->res_readlink3.status == NFS3_OK)
-        free(res->res_readlink3.READLINK3res_u.resok.data);
+        gsh_free(res->res_readlink3.READLINK3res_u.resok.data);
 }
 
 bool xdr_READLINK3args(XDR *xdrs, READLINK3args *objp) {

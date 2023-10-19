@@ -16,7 +16,7 @@
 #include "mnt/mnt_xdr.h"
 #include "log/log.h"
 #include "dnfsd/dnfs_meta_data.h"
-
+#include "utils/common_utils.h"
 #define MODULE_NAME "MNT"
 
 int mnt_export(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
@@ -43,11 +43,11 @@ void mnt_export_free(nfs_res_t *res) {
         while (grp != nullptr) {
             next_grp = grp->gr_next;
             if (grp->gr_name != nullptr)
-                free(grp->gr_name);
-            free(grp);
+                gsh_free(grp->gr_name);
+            gsh_free(grp);
             grp = next_grp;
         }
-        free(exp);
+        gsh_free(exp);
         exp = next_exp;
     }
 }

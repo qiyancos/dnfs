@@ -17,6 +17,7 @@
 #define DNFSD_NFS_UTILS_H
 
 #include "dnfsd/dnfs_meta_data.h"
+#include "utils/common_utils.h"
 #include "string"
 
 typedef enum dupreq_status {

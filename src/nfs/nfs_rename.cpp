@@ -89,7 +89,9 @@ int nfs3_rename(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
         "The value of the source file path is '%s'", from_file_path.c_str());
 
     /*判断源文件存不存在*/
-    if (!judge_file_exit(from_file_path, S_IFDIR | S_IFREG | S_IFLNK)) {
+    if (!judge_file_exit(from_file_path,
+                         S_IFDIR | S_IFCHR | S_IFREG | S_IFLNK | S_IFIFO | S_IFBLK |
+                         S_IFSOCK)) {
         rc = NFS_REQ_ERROR;
         res->res_rename3.status = NFS3ERR_NOENT;
         LOG(MODULE_NAME, D_ERROR,

@@ -131,10 +131,10 @@ void rpc_warnx(const char *format, ...) {
     LOG(MODULE_NAME, L_WARN, format, args);
 }
 
-// 该函数船体给tirpc，释放内存空间使用的函数
+// 该函数传递给tirpc，释放内存空间使用的函数
 void rpc_free(void *p, size_t n __attribute__ ((unused))) {
     try {
-        free(p);
+        gsh_free(p);
     } catch (...) {
         LOG(MODULE_NAME, L_ERROR,
             "Failed to free rpc memeory");
@@ -261,7 +261,7 @@ void free_dnfs_request(struct svc_req *req, enum xprt_stat stat) {
     LOG(MODULE_NAME, L_INFO, "%s: %p fd %d xp_refcnt %" PRIu32,
         __func__, xprt, xprt->xp_fd, xprt->xp_refcnt);
 
-    free(reqdata);
+    gsh_free(reqdata);
 
     SVC_RELEASE(xprt, SVC_REF_FLAG_NONE);
 }

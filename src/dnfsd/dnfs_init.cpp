@@ -137,7 +137,7 @@ void init_check_malloc() {
             "DNFS's assumption that malloc(0) returns a non-NULL pointer"
             " is not true, Ganesha can not work with the memory allocator in use. Aborting.");
     }
-    free(p);
+    gsh_free(p);
 
     p = calloc(0, 0);
     if (p == nullptr) {
@@ -145,7 +145,7 @@ void init_check_malloc() {
             "Ganesha's assumption that calloc(0, 0) returns a non-NULL pointer"
             " is not true, Ganesha can not work with the memory allocator in use. Aborting.");
     }
-    free(p);
+    gsh_free(p);
 }
 
 /* 初始化线程对信号的处理操作 */

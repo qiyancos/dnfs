@@ -28,7 +28,7 @@ static void nfs_read_ok(nfs_res_t *res, char *data, uint32_t read_size,
 {
     if ((read_size == 0) && (data != nullptr))
     {
-        free(data);
+        gsh_free(data);
         data = nullptr;
     }
 
@@ -149,7 +149,7 @@ int nfs3_read(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
         LOG(MODULE_NAME, D_ERROR,
             "Interface nfs_read failed to open file '%s'",
             read_args->file.data.data_val);
-        free(iov[0].iov_base);
+        gsh_free(iov[0].iov_base);
         goto outfail;
     }
 
@@ -161,8 +161,8 @@ int nfs3_read(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
         rc = NFS_REQ_ERROR;
         res->res_read3.status = NFS3ERR_IO;
         LOG(MODULE_NAME, D_ERROR, "preadv failed returning %s", errno);
-        
-        free(iov[0].iov_base);
+
+        gsh_free(iov[0].iov_base);
         goto outfail;
     }
 
@@ -187,7 +187,7 @@ outfail:
 void nfs3_read_free(nfs_res_t *res)
 {
     if (res->res_read3.status == NFS3_OK && res->res_read3.READ3res_u.resok.data.data_len != 0)
-        free(res->res_read3.READ3res_u.resok.data.data_val);
+        gsh_free(res->res_read3.READ3res_u.resok.data.data_val);
 }
 
 bool xdr_READ3args(XDR *xdrs, READ3args *objp)

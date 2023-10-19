@@ -152,7 +152,7 @@ void nfs3_symlink_free(nfs_res_t *res) {
     /*释放句柄内存*/
     if (res->res_symlink3.status == NFS3_OK &&
         res->res_symlink3.SYMLINK3res_u.resok.obj.handle_follows)
-        free(res->res_symlink3.SYMLINK3res_u.resok.obj.post_op_fh3_u.handle.data.data_val);
+        gsh_free(res->res_symlink3.SYMLINK3res_u.resok.obj.post_op_fh3_u.handle.data.data_val);
 }
 
 bool xdr_symlinkdata3(XDR *xdrs, symlinkdata3 *objp) {
