@@ -170,7 +170,7 @@ void *rpc_malloc_aligned(size_t a, size_t n,
 
 // 根据给定的结构体个数和结构体大小分配空间
 void *rpc_calloc(size_t n, size_t s, const char *file, int line, const char *function) {
-    void *p = calloc(n, s);
+    void *p = gsh_calloc(n, s);
     if (p == nullptr) {
         LOG(MODULE_NAME, L_ERROR,
             "Error occurred in %s in file %s:%d from %s",
@@ -198,7 +198,7 @@ void *rpc_realloc(void *p, size_t n, const char *file, int line, const char *fun
 struct svc_req *alloc_dnfs_request(SVCXPRT *xprt, XDR *xdrs) {
     /* 首先会为存放请求的结构化数据申请内存空间 */
     auto *reqdata = reinterpret_cast<nfs_request_t *>(
-            calloc(1, sizeof(nfs_request_t)));
+            gsh_calloc(1, sizeof(nfs_request_t)));
 
     LOG_IF(reqdata == nullptr, MODULE_NAME, EXIT_ERROR,
            "Failed to allocate memory for %s", __func__)

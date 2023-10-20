@@ -113,7 +113,7 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     /*构造写入数据*/
     write_buf.iov_len = write_args->data.data_len;
-    write_buf.iov_base = calloc(write_args->data.data_len, sizeof(char));
+    write_buf.iov_base = gsh_calloc(write_args->data.data_len, sizeof(char));
     memcpy(write_buf.iov_base, write_args->data.data_val, write_buf.iov_len);
 
     /*读取数据*/

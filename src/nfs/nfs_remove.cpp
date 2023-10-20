@@ -83,7 +83,7 @@ int nfs3_remove(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
         filepath.c_str());
 
     /*如果删除的文件不存在*/
-    if (!judge_file_exit(filepath, S_IFREG | S_IFLNK)) {
+    if (!judge_file_exit(filepath.c_str(), S_IFREG | S_IFLNK)) {
         rc = NFS_REQ_ERROR;
         /*文件不存在*/
         res->res_remove3.status = NFS3ERR_NOENT;

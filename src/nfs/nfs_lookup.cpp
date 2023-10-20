@@ -69,7 +69,7 @@ int nfs3_lookup(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
         filepath.c_str());
 
     /*如果查找的目录不存在,跳转fail*/
-    if (!judge_file_exit(filepath,
+    if (!judge_file_exit(filepath.c_str(),
                          S_IFDIR | S_IFCHR | S_IFREG | S_IFLNK | S_IFIFO | S_IFBLK |
                          S_IFSOCK)) {
         rc = NFS_REQ_ERROR;

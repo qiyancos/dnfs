@@ -56,8 +56,8 @@ int mnt_mnt(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     fh3->data.data_len = strlen(*mount_dir);
 
     /*添加权限*/
-    mount_res->auth_flavors.auth_flavors_val = (int *) calloc(index_auth,
-                                                              sizeof(int));
+    mount_res->auth_flavors.auth_flavors_val = (int *) gsh_calloc(index_auth,
+                                                                  sizeof(int));
     mount_res->auth_flavors.auth_flavors_val[0] = AUTH_NONE;
     mount_res->auth_flavors.auth_flavors_len = index_auth;
 

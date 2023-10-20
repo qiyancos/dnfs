@@ -63,7 +63,7 @@ nfsstat3 get_pre_op_attr(char *file_path, pre_op_attr &pre_attr);
  * params judge_mode:判断文件格式（文件,文件夹）
  * return 是否满足要求
  * */
-bool judge_file_exit(const std::string &file_path, int judge_mode);
+bool judge_file_exit(const char *file_path, int judge_mode);
 
 /*获取文件弱属性对比信息
  * params file_path:获取属性文件路径

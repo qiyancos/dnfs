@@ -71,7 +71,7 @@ int nfs3_readlink(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     /*为文件内容分配空间*/
     data_len = pos_a.post_op_attr_u.attributes.size;
-    readlink_res_ok->data = (char *) calloc(0,data_len);
+    readlink_res_ok->data = (char *) gsh_calloc(0,data_len);
 
     /*读取文件内容*/
     if (readlink(readlink_args->symlink.data.data_val, readlink_res_ok->data, data_len) ==

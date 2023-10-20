@@ -91,7 +91,7 @@ int nfs3_rmdir(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
 
     /*如果删除的目录不存在*/
-    if (!judge_file_exit(dir_path, S_IFDIR)) {
+    if (!judge_file_exit(dir_path.c_str(), S_IFDIR)) {
         rc = NFS_REQ_ERROR;
         /*目录不存在*/
         res->res_rmdir3.status = NFS3ERR_NOENT;

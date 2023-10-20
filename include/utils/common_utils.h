@@ -41,6 +41,14 @@
 #define INIT_MESSAGE_BUFFER 512
 #define FILE_MODEL_644 (S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)
 
+#define gsh_calloc(n, s) ({ \
+		void *p_ = calloc(n, s); \
+		if (p_ == nullptr) { \
+			abort(); \
+		} \
+		p_; \
+	})
+
 extern bool _beauty;
 extern int _indent;
 extern std::string _indent_str;
@@ -298,7 +306,6 @@ std::string get_taceback();
 
 /*释放非空指针*/
 void gsh_free(void *p);
-
 
 #endif //UTILS_COMMON_UTILS_H
 

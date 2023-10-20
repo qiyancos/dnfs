@@ -442,7 +442,7 @@ Logger::set_module_date_format(const string &module_name,
  * return
  * */
 void Logger::_log(const string &module_name, log_level_t log_level,
-                  const string &file, const int &line, const string &func,
+                  const char *file, const int &line, const char *func,
                   const char *format, ...) {
 
     /*如果模块不存在，直接报错*/

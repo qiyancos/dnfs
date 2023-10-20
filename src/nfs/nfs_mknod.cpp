@@ -68,7 +68,7 @@ int nfs3_mknod(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
             mknod_args->where.dir.data.data_val);
         goto out;
     }
-    if (mknod_args->where.name == NULL || *mknod_args->where.name == '\0')
+    if (mknod_args->where.name == nullptr || *mknod_args->where.name == '\0')
     {
         rc = NFS_REQ_ERROR;
         res->res_mknod3.status = NFS3ERR_INVAL;

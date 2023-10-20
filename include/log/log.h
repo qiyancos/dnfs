@@ -260,8 +260,8 @@ public:
      * return
      * */
     void _log(const std::string &module_name, log_level_t log_level,
-              const std::string &file, const int &line,
-              const std::string &func, const char *format, ...);
+              const char *file, const int &line,
+              const char *func, const char *format, ...);
 
     /*判断模块日志debug状态
      * params module_name:模型名

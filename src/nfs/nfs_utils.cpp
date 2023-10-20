@@ -192,11 +192,11 @@ nfsstat3 get_pre_op_attr(char *file_path, pre_op_attr &pre_attr) {
  * params judge_mode:判断文件格式（文件,文件夹）
  * return 是否满足要求
  * */
-bool judge_file_exit(const std::string &file_path, int judge_mode) {
+bool judge_file_exit(const char *file_path, int judge_mode) {
     struct stat info{};
     /*不存在直接返回*/
-    if (lstat(file_path.c_str(), &info) != 0) {
-        LOG(MODULE_NAME, D_INFO, "judge_file_exit lstat false, filepath: %s", file_path.c_str());
+    if (lstat(file_path ,&info) != 0) {
+        LOG(MODULE_NAME, D_INFO, "judge_file_exit lstat false, filepath: %s", file_path);
         return false;
     } else if (!(info.st_mode & judge_mode)) {
         /*存在但不是需要的文件格式*/
@@ -260,7 +260,7 @@ void set_file_handle(nfs_fh3 *fh, const std::string &file_path) {
     fh->data.data_len = file_path.length();
 
     /*为句柄申请内存*/
-    fh->data.data_val = (char *) calloc(fh->data.data_len + 1, sizeof(char));
+    fh->data.data_val = (char *) gsh_calloc(fh->data.data_len + 1, sizeof(char));
 
     if (fh->data.data_val == nullptr) {
         abort();
