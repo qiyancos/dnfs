@@ -81,6 +81,7 @@ static void
 tirpc_free(void *p, size_t unused)
 {
 	free(p);
+    p= NULL;
 }
 
 static void *

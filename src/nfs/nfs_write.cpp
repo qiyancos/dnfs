@@ -46,16 +46,17 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
             "arg_write get file handle len is 0");
         goto out;
     }
-    /*打印句柄*/
-    LOG(MODULE_NAME, D_INFO,
-        "The value of the arg_write obtained file handle is '%s', and the length is '%d'",
-        write_args->file.data.data_val,
-        write_args->file.data.data_len);
 
     /*打印写入数据*/
     LOG(MODULE_NAME, D_INFO, "write data len is: %d", strlen(write_args->data.data_val));
 
     get_file_handle(write_args->file);
+
+    /*打印句柄*/
+    LOG(MODULE_NAME, D_INFO,
+        "The value of the arg_write obtained file handle is '%s', and the length is '%d'",
+        write_args->file.data.data_val,
+        write_args->file.data.data_len);
 
     /*判断文件存不存在*/
     if (!judge_file_exit(write_args->file.data.data_val, S_IFREG)) {
