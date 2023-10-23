@@ -19,10 +19,11 @@ using namespace std;
 
 /*构造函数*/
 Time_T::Time_T() {
-    /*获取时间戳*/
-    seconds = time(nullptr);
     /*获取毫秒*/
     auto now = chrono::system_clock::now();
+    /*获取秒*/
+    seconds = chrono::duration_cast<chrono::seconds>(
+            now.time_since_epoch()).count();;
     /*获取毫秒*/
     millseconds =
             chrono::duration_cast<chrono::milliseconds>(
