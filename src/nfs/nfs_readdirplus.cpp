@@ -26,6 +26,9 @@ using namespace std;
 #define MODULE_NAME "NFS"
 
 int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
+    timespec ctime;
+    uint64_t change;
+    cookieverf3 cookie_verifier;
     uint64_t mem_avail = 0;
     // response size
     uint32_t maxcount;
@@ -46,6 +49,7 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     readdirplus_res_ok->reply.entries = nullptr;
 
     uint64_t begin_cookie = readdirplus_args->cookie;
+    uint64_t cookie = 0;
     entryplus3 *head;
     entryplus3 *current;
     entryplus3 *node;
@@ -105,6 +109,31 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
         goto out;
     }
 
+    memset(cookie_verifier, 0, sizeof(cookie_verifier));
+    ctime.tv_nsec = readdirplus_res_ok->dir_attributes.post_op_attr_u.attributes.ctime.tv_nsec;
+    ctime.tv_sec = readdirplus_res_ok->dir_attributes.post_op_attr_u.attributes.ctime.tv_sec;
+    change = timespec_to_nsecs(&ctime);
+    memcpy(cookie_verifier, &change, MIN(sizeof(cookie_verifier), sizeof(change)));
+    
+    if (begin_cookie != 0)
+    {
+        /* Not the first call, so we have to check the cookie
+		   verifier */
+		if (memcmp(cookie_verifier,
+			   arg->arg_readdirplus3.cookieverf,
+			   NFS3_COOKIEVERFSIZE) != 0) {
+			res->res_readdirplus3.status = NFS3ERR_BAD_COOKIE;
+			rc = NFS_REQ_OK;
+			goto out;
+		}
+    }
+
+    /* Fudge cookie for "." and "..", if necessary */
+	if (begin_cookie > 2)
+		cookie = begin_cookie;
+	else
+		cookie = 0;
+
     n = scandir(readdirplus_args->dir.data.data_val, &namelist, nullptr, alphasort);
     if (n < 0) {
         LOG(MODULE_NAME, D_ERROR, "nfs_readdirplus scandir '%s' failed",
@@ -123,6 +152,7 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
             node = new entryplus3;
             node->name = namelist[index]->d_name;
             node->fileid = namelist[index]->d_ino;
+            node->cookie = index;
             node->nextentry = nullptr;
             if (strcmp(node->name, ".") == 0 || strcmp(node->name, "..") == 0) {
                 node->name_attributes.attributes_follow = FALSE;
@@ -149,6 +179,7 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
         readdirplus_res_ok->reply.entries = head->nextentry;
     }
     readdirplus_res_ok->reply.eof = TRUE;
+    memcpy(readdirplus_res_ok->cookieverf, cookie_verifier, sizeof(cookieverf3));
 
     out:
     return rc;
