@@ -109,6 +109,7 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
         goto out;
     }
 
+    memset(cookie_verifier, 0, sizeof(cookie_verifier));
     ctime.tv_nsec = readdirplus_res_ok->dir_attributes.post_op_attr_u.attributes.ctime.tv_nsec;
     ctime.tv_sec = readdirplus_res_ok->dir_attributes.post_op_attr_u.attributes.ctime.tv_sec;
     change = timespec_to_nsecs(&ctime);
@@ -151,14 +152,7 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
             node = new entryplus3;
             node->name = namelist[index]->d_name;
             node->fileid = namelist[index]->d_ino;
-            if (index + 1 == n)
-            {
-                node->cookie = 9223372036854775807;
-            }
-            else
-            {
-                node->cookie = cookie;
-            }
+            node->cookie = index;
             node->nextentry = nullptr;
             if (strcmp(node->name, ".") == 0 || strcmp(node->name, "..") == 0) {
                 node->name_attributes.attributes_follow = FALSE;
