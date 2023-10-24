@@ -200,8 +200,7 @@ static void bind_udp_sockets(const string &svc_name, proto_data &sock_info,
                            &pdatap->si_udp6)) {
         LOG(MODULE_NAME, EXIT_ERROR,
             "Cannot get socket info for udp6 socket set for %s errno=%d (%s)",
-            svc_name.c_str(),
-            errno, strerror(errno));
+            svc_name.c_str(), errno, strerror(errno));
     }
 
     LOG(MODULE_NAME, D_INFO,
@@ -216,7 +215,7 @@ static void bind_udp_sockets(const string &svc_name, proto_data &sock_info,
     if (rc == -1) {
         LOG(MODULE_NAME, EXIT_ERROR,
             "Cannot bind udp6 socket to %s, error %d (%s)",
-            errno, strerror(errno));
+            svc_name.c_str(), errno, strerror(errno));
     }
 }
 
