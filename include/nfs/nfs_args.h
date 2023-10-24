@@ -24,6 +24,7 @@ extern "C"
 #include "file/file_handle.h"
 
 #define NFS3_FHSIZE 64
+#define NFS3_COOKIEVERFSIZE 8
 
 #define XDR_STRING_MAXLEN (8*1024)
 

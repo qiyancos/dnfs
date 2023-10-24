@@ -34,6 +34,9 @@
 #include <sstream>
 #include <thread>
 
+typedef uint64_t nsecs_elapsed_t;
+#define NS_PER_SEC  ((nsecs_elapsed_t) 1000000000)
+
 #define SET_PTR_INFO(error_info, error_content) \
     if(error_info != nullptr) *error_info = error_content;
 
@@ -306,6 +309,19 @@ std::string get_taceback();
 
 /*释放非空指针*/
 void gsh_free(void *p);
+
+/**
+ * @brief Convert a timespec to an elapsed time interval
+ *
+ * This will work for wallclock time until 2554.
+ */
+
+static
+inline nsecs_elapsed_t timespec_to_nsecs(struct timespec *timespec)
+{
+	return timespec->tv_sec * NS_PER_SEC + timespec->tv_nsec;
+}
+
 
 #endif //UTILS_COMMON_UTILS_H
 

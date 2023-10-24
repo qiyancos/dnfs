@@ -19,6 +19,8 @@ def single_loop(workdir):
     with open(FILENAME, "w") as f:
         f.write("hello" * 100)
     
+    shutil.copy(FILENAME, FILENAME + "copy")
+    
     os.symlink(FILENAME, FILE_SYMLINK)
     with open(FILE_SYMLINK, "r") as f:
         f.readlines()
@@ -35,8 +37,13 @@ def single_loop(workdir):
     
     os.mkfifo(FIFO_FILE)
     
+    os.remove(FIFO_FILE)
+    
     os.chdir(workdir)
     os.listdir(DIRNAME)
+    
+    shutil.copytree(DIRNAME, DIRNAME + "copy", symlinks=True)
+    shutil.rmtree(DIRNAME + "copy")
     
     shutil.rmtree(DIRNAME)
 
