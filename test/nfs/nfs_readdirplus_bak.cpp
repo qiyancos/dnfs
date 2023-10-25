@@ -51,16 +51,15 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
 
     uint64_t begin_cookie = readdirplus_args->cookie;
     uint64_t cookie = 0;
-    int dir_fh;
-    off_t seekloc = 0;
-    off_t baseloc = 0;
-    unsigned int bpos;
-    int nread;
-    vfs_dirent dentry = {}, *dentryp = &dentry;
     char buf[BUF_SIZE];
     entryplus3 *head;
     entryplus3 *current;
     entryplus3 *node;
+    // scandir相关
+    struct dirent **namelist;
+    int n;
+    int index = 0;
+
     string file_path;
 
     if (readdirplus_args->dir.data.data_len == 0)
@@ -140,78 +139,50 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
     else
         cookie = 0;
 
-    dir_fh = open(readdirplus_args->dir.data.data_val, O_RDONLY | O_DIRECTORY);
-    if (dir_fh < 0)
-    {
+    n = scandir(readdirplus_args->dir.data.data_val, &namelist, nullptr, alphasort);
+    if (n < 0) {
+        LOG(MODULE_NAME, D_ERROR, "nfs_readdirplus scandir '%s' failed",
+            readdirplus_args->dir.data.data_val);
         res->res_readdirplus3.status = NFS3ERR_BADHANDLE;
         rc = NFS_REQ_ERROR;
         goto out;
-    }
-    seekloc = (off_t)cookie;
-    seekloc = lseek(dir_fh, seekloc, SEEK_SET);
-    if (seekloc < 0)
-    {
-        res->res_readdirplus3.status = NFS3ERR_BADHANDLE;
-        rc = NFS_REQ_ERROR;
-        goto out;
-    }
-    head = new entryplus3;
-    head->nextentry = nullptr;
-    current = head;
-    do
-    {
-        baseloc = seekloc;
-        nread = vfs_readents(dir_fh, buf, BUF_SIZE, &seekloc);
-        if (nread < 0)
-        {
-            res->res_readdirplus3.status = NFS3ERR_BADHANDLE;
-            rc = NFS_REQ_ERROR;
-            goto out;
-        }
-        if (nread == 0)
-            break;
-        for (bpos = 0; bpos < nread;)
-        {
-            if (to_vfs_dirent(buf, bpos, dentryp, baseloc))
-            {
-                LOG(MODULE_NAME, D_INFO,
-                    "\nvd->vd_ino:%lu\nvd->vd_reclen:%d\nvd->vd_type:%d\nvd->vd_offset:%ld\nvd->vd_name:%s\n",
-                    dentryp->vd_ino, dentryp->vd_reclen, dentryp->vd_type, dentryp->vd_offset, dentryp->vd_name);
-                node = new entryplus3;
-                node->name = (char *)gsh_calloc(strlen(dentryp->vd_name), sizeof(char));
-                memcpy(node->name, dentryp->vd_name, strlen(dentryp->vd_name));
-                node->fileid = dentryp->vd_ino;
-                node->cookie = (uint64_t)dentryp->vd_offset;
-                node->nextentry = nullptr;
-                if (strcmp(node->name, ".") == 0 || strcmp(node->name, "..") == 0)
-                {
-                    node->name_attributes.attributes_follow = FALSE;
-                    node->name_handle.handle_follows = FALSE;
+    } else {
+        head = new entryplus3;
+        current = head;
+        // todo 分页
+        // while (usecount + entry_size < dircount)
+        while (index < n) {
+            LOG(MODULE_NAME, D_INFO, "nfs_readdirplus get '%s' entry: %s",
+                readdirplus_args->dir.data.data_val, namelist[index]->d_name);
+            node = new entryplus3;
+            node->name = namelist[index]->d_name;
+            node->fileid = namelist[index]->d_ino;
+            node->cookie = index;
+            node->nextentry = nullptr;
+            if (strcmp(node->name, ".") == 0 || strcmp(node->name, "..") == 0) {
+                node->name_attributes.attributes_follow = FALSE;
+                node->name_handle.handle_follows = FALSE;
+            } else {
+                file_path =
+                        string(readdirplus_args->dir.data.data_val) + "/" + node->name;
+                set_file_handle(&node->name_handle.post_op_fh3_u.handle, file_path);
+                node->name_handle.handle_follows = TRUE;
+                if (nfs_set_post_op_attr(
+                        node->name_handle.post_op_fh3_u.handle.data.data_val,
+                        &node->name_attributes) != NFS3_OK) {
+                    rc = NFS_REQ_ERROR;
+                    LOG(MODULE_NAME, D_ERROR, "nfs_readdirplus 'stat %s' failed",
+                        node->name_handle.post_op_fh3_u.handle.data.data_val);
+                    goto out;
                 }
-                else
-                {
-                    file_path = string(readdirplus_args->dir.data.data_val) + "/" + string(node->name);
-                    set_file_handle(&node->name_handle.post_op_fh3_u.handle, file_path);
-                    node->name_handle.handle_follows = TRUE;
-                    if (nfs_set_post_op_attr(
-                            node->name_handle.post_op_fh3_u.handle.data.data_val,
-                            &node->name_attributes) != NFS3_OK)
-                    {
-                        rc = NFS_REQ_ERROR;
-                        LOG(MODULE_NAME, D_ERROR, "nfs_readdirplus 'stat %s' failed",
-                            node->name_handle.post_op_fh3_u.handle.data.data_val);
-                        goto out;
-                    }
-                }
-                current->nextentry = node;
-                current = current->nextentry;
             }
-            bpos += dentryp->vd_reclen;
+            usecount += entry_size;
+            index++;
+            current->nextentry = node;
+            current = current->nextentry;
         }
-    } while (nread > 0);
-    close(dir_fh);
-
-    readdirplus_res_ok->reply.entries = head->nextentry;
+        readdirplus_res_ok->reply.entries = head->nextentry;
+    }
     readdirplus_res_ok->reply.eof = TRUE;
     memcpy(readdirplus_res_ok->cookieverf, cookie_verifier, sizeof(cookieverf3));
 
@@ -231,7 +202,6 @@ void nfs3_readdirplus_free(nfs_res_t *res)
         nxt = cur->nextentry;
         if (cur->name_handle.handle_follows)
         {
-            gsh_free(cur->name);
             gsh_free(cur->name_handle.post_op_fh3_u.handle.data.data_val);
         }
         delete (cur);

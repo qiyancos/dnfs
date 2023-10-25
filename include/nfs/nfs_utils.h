@@ -16,6 +16,8 @@
 #ifndef DNFSD_NFS_UTILS_H
 #define DNFSD_NFS_UTILS_H
 
+#include <sys/syscall.h>
+
 #include "dnfsd/dnfs_meta_data.h"
 #include "utils/common_utils.h"
 #include "string"
@@ -98,5 +100,27 @@ void set_file_handle(nfs_fh3 *fh,const std::string &file_path);
  * return 是否修改成功
  * */
 nfsstat3 nfs_set_sattr3(const char *file_path, sattr3 &new_attr);
+
+/**
+ * @brief Read system directory entries into the buffer
+ *
+ * @param[in]     fd     File descriptor of open directory
+ * @param[in]     buf    The buffer
+ * @param[in]     bcount Buffer size
+ * @param[in,out] basepp Offset into "file" after this read
+ */
+int vfs_readents(int fd, char *buf, unsigned int bcount, off_t *basepp);
+
+/**
+ * @brief Mash a FreeBSD directory entry into the generic form
+ *
+ * @param buf  [in] pointer into buffer read by vfs_readents
+ * @param bpos [in] byte offset into buf to decode
+ * @param vd   [in] pointer to the generic struct
+ * @param base [in] base file offset for this buffer - not used
+ *
+ * @return true. Linux entries are never empty.
+ */
+bool to_vfs_dirent(char *buf, int bpos, struct vfs_dirent *vd, off_t base);
 
 #endif //DNFSD_NFS_UTILS_H

@@ -23,6 +23,8 @@ extern "C"
 
 #include "file/file_handle.h"
 
+#define BUF_SIZE 1024
+
 #define NFS3_FHSIZE 64
 #define NFS3_COOKIEVERFSIZE 8
 
@@ -269,4 +271,13 @@ static struct nfs_request_lookahead dummy_lookahead = {
 };
 
 static writeverf3 NFS3_write_verifier;
+
+struct vfs_dirent {
+	uint64_t vd_ino;
+	uint32_t vd_reclen;
+	uint32_t vd_type;
+	off_t vd_offset;
+	char *vd_name;
+};
+
 #endif // DNFSD_NFS_ARGS_H

@@ -387,3 +387,27 @@ nfsstat3 nfs_set_sattr3(const char *file_path, sattr3 &new_attr)
     }
     return NFS3_OK;
 }
+
+int vfs_readents(int fd, char *buf, unsigned int bcount, off_t *basepp)
+{
+	int retval = 0;
+
+	retval = syscall(SYS_getdents64, fd, buf, bcount);
+	if (retval >= 0)
+		*basepp += retval;
+	return retval;
+}
+
+bool to_vfs_dirent(char *buf, int bpos, struct vfs_dirent *vd, off_t base)
+{
+	struct dirent64 *dp = (struct dirent64 *)(buf + bpos);
+	char type;
+
+	vd->vd_ino = dp->d_ino;
+	vd->vd_reclen = dp->d_reclen;
+	type = buf[dp->d_reclen - 1];
+	vd->vd_type = type;
+	vd->vd_offset = dp->d_off;
+	vd->vd_name = dp->d_name;
+	return true;
+}
