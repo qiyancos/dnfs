@@ -54,7 +54,7 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
     int dir_fh;
     off_t seekloc = 0;
     off_t baseloc = 0;
-    unsigned int bpos;
+    uint32_t bpos;
     int nread;
     vfs_dirent dentry = {}, *dentryp = &dentry;
     char buf[BUF_SIZE];
@@ -178,8 +178,10 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
                     "\nvd->vd_ino:%lu\nvd->vd_reclen:%d\nvd->vd_type:%d\nvd->vd_offset:%ld\nvd->vd_name:%s\n",
                     dentryp->vd_ino, dentryp->vd_reclen, dentryp->vd_type, dentryp->vd_offset, dentryp->vd_name);
                 node = new entryplus3;
-                node->name = (char *)gsh_calloc(strlen(dentryp->vd_name), sizeof(char));
+                node->name = (char *)gsh_calloc(strlen(dentryp->vd_name)+1, sizeof(char));
                 memcpy(node->name, dentryp->vd_name, strlen(dentryp->vd_name));
+                /*添加结束符*/
+                *(node->name + strlen(dentryp->vd_name)) = '\0';
                 node->fileid = dentryp->vd_ino;
                 node->cookie = (uint64_t)dentryp->vd_offset;
                 node->nextentry = nullptr;
@@ -208,7 +210,7 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
             }
             bpos += dentryp->vd_reclen;
         }
-    } while (nread > 0);
+    } while (true);
     close(dir_fh);
 
     readdirplus_res_ok->reply.entries = head->nextentry;
