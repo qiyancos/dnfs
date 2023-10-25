@@ -59,9 +59,10 @@ int nfs3_pathconf(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     pathconf_res_ok->linkmax = 1024;
     pathconf_res_ok->name_max = NAME_MAX;
+    pathconf_res_ok->name_max = 1024;
     pathconf_res_ok->no_trunc = true;
     pathconf_res_ok->chown_restricted = true;
-    pathconf_res_ok->case_insensitive = true;
+    pathconf_res_ok->case_insensitive = false;
     pathconf_res_ok->case_preserving = true;
 
     res->res_pathconf3.status = NFS3_OK;
