@@ -46,11 +46,11 @@ extern "C"
 
 #define FSF3_CANSETTIME 0x0010
 
-#define WRITE_READ_MAX 67108864
+#define WRITE_READ_MAX (64*1024*1024)
 
-#define MAX_FILE_SIZE 17592186044416
+#define MAX_FILE_SIZE (16*1024*1024*1024*1024)
 
-#define READ_DIR_MAX 16384
+#define READ_DIR_MAX (1024*16)
 
 typedef int32_t bool_t;
 
@@ -279,11 +279,11 @@ static struct nfs_request_lookahead dummy_lookahead = {
 static writeverf3 NFS3_write_verifier;
 
 struct vfs_dirent {
-	uint64_t vd_ino;
-	uint32_t vd_reclen;
-	uint32_t vd_type;
-	off_t vd_offset;
-	char *vd_name;
+    uint64_t vd_ino;
+    uint32_t vd_reclen;
+    uint32_t vd_type;
+    off_t vd_offset;
+    char *vd_name;
 };
 
 #endif // DNFSD_NFS_ARGS_H

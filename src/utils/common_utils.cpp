@@ -298,3 +298,13 @@ void gsh_free(void *p) {
         p = nullptr;
     }
 }
+
+/*获取时间*/
+void now(struct timespec *ts)
+{
+    int rc;
+    rc = clock_gettime(CLOCK_REALTIME, ts);
+    if (rc != 0) {
+        abort();
+    }
+}

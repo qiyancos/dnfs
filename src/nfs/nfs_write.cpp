@@ -48,7 +48,8 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     }
 
     /*打印写入数据*/
-    LOG(MODULE_NAME, D_INFO, "write data len is: %d", strlen(write_args->data.data_val));
+    LOG(MODULE_NAME, D_INFO, "write data len is: %d ,offset is %d,count is %d",
+        write_args->data.data_len, write_args->offset, write_args->count);
 
     get_file_handle(write_args->file);
 
