@@ -60,21 +60,21 @@ int nfs3_fsinfo(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
             FSF3_LINK | FSF3_SYMLINK | FSF3_HOMOGENEOUS | FSF3_CANSETTIME;
     // todo 从配置文件读取，暂时给固定值
     // read请求支持的最大大小
-    fsinfo_res_ok->rtmax = 1024 * 1024 * 64;
+    fsinfo_res_ok->rtmax = WRITE_READ_MAX;
     // read请求首选大小
-    fsinfo_res_ok->rtpref = 1024 * 1024 * 64;
+    fsinfo_res_ok->rtpref = WRITE_READ_MAX;
     // read请求大小的建议倍数 This field is generally unused, it will be removed in V4
     fsinfo_res_ok->rtmult = DEV_BSIZE;
     // write请求支持的最大大小
-    fsinfo_res_ok->wtmax = 1024 * 1024 * 64;
+    fsinfo_res_ok->wtmax = WRITE_READ_MAX;
     // write请求首选大小
-    fsinfo_res_ok->wtpref = 1024 * 1024 * 64;
+    fsinfo_res_ok->wtpref = WRITE_READ_MAX;
     // write请求大小的建议倍数 This field is generally unused, it will be removed in V4
     fsinfo_res_ok->wtmult = DEV_BSIZE;
     // readdir请求建议大小
-    fsinfo_res_ok->dtpref = 16 * 1024;
+    fsinfo_res_ok->dtpref = READ_DIR_MAX;
     // 文件系统上文件的最大大小
-    fsinfo_res_ok->maxfilesize = (uint64_t) 1024 * 1024 * 1024 * 1024 * 16;
+    fsinfo_res_ok->maxfilesize = MAX_FILE_SIZE;
     // 服务器保证的时间精确度 (0,1)纳秒 (0,1000000)毫秒 (1,0)秒
     fsinfo_res_ok->time_delta.tv_sec = 1;
     fsinfo_res_ok->time_delta.tv_nsec = 0;

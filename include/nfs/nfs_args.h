@@ -46,6 +46,12 @@ extern "C"
 
 #define FSF3_CANSETTIME 0x0010
 
+#define WRITE_READ_MAX 67108864
+
+#define MAX_FILE_SIZE 17592186044416
+
+#define READ_DIR_MAX 16384
+
 typedef int32_t bool_t;
 
 typedef uint32_t nfs3_uint32;
