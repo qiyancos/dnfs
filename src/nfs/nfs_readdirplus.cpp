@@ -145,7 +145,7 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
     {
         res->res_readdirplus3.status = NFS3ERR_BADHANDLE;
         rc = NFS_REQ_ERROR;
-        goto out;
+        goto done;
     }
     seekloc = (off_t)cookie;
     seekloc = lseek(dir_fh, seekloc, SEEK_SET);
@@ -153,7 +153,7 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
     {
         res->res_readdirplus3.status = NFS3ERR_BADHANDLE;
         rc = NFS_REQ_ERROR;
-        goto out;
+        goto done;
     }
     head = new entryplus3;
     head->nextentry = nullptr;
@@ -166,7 +166,7 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
         {
             res->res_readdirplus3.status = NFS3ERR_BADHANDLE;
             rc = NFS_REQ_ERROR;
-            goto out;
+            goto done;
         }
         if (nread == 0)
             break;
@@ -202,7 +202,7 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
                         rc = NFS_REQ_ERROR;
                         LOG(MODULE_NAME, D_ERROR, "nfs_readdirplus 'stat %s' failed",
                             node->name_handle.post_op_fh3_u.handle.data.data_val);
-                        goto out;
+                        goto done;
                     }
                 }
                 current->nextentry = node;
@@ -211,11 +211,13 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
             bpos += dentryp->vd_reclen;
         }
     } while (true);
-    close(dir_fh);
 
     readdirplus_res_ok->reply.entries = head->nextentry;
     readdirplus_res_ok->reply.eof = TRUE;
     memcpy(readdirplus_res_ok->cookieverf, cookie_verifier, sizeof(cookieverf3));
+
+done:
+    close(dir_fh);
 
 out:
     return rc;
