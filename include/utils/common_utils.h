@@ -310,6 +310,9 @@ std::string get_taceback();
 /*释放非空指针*/
 void gsh_free(void *p);
 
+/*获取时间*/
+void now(struct timespec *ts);
+
 /**
  * @brief Convert a timespec to an elapsed time interval
  *

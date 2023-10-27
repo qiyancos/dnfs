@@ -198,6 +198,21 @@ static void dnfs_init_svc() {
             nfs_param.core_param.bind_addr_str.c_str());
     }
 
+    /*获取verifier*/
+    /* Set the server's boot time and epoch */
+    now(&nfs_ServerBootTime);
+    nfs_ServerEpoch = (time_t) nfs_ServerBootTime.tv_sec;
+
+    union {
+        writeverf3 NFS3_write_verifier;
+        uint64_t epoch;
+    } build_verifier{};
+    build_verifier.epoch = (uint64_t) nfs_ServerEpoch;
+
+    memcpy(NFS3_write_verifier, build_verifier.NFS3_write_verifier,
+           sizeof(NFS3_write_verifier));
+    LOG(MODULE_NAME, D_INFO, "Get NFS3_write_verifier is %s:", NFS3_write_verifier);
+
     /*注册nfs服务*/
     nfs_init_svc(netconfig_udpv4, netconfig_tcpv4);
     /*注册mnt服务*/

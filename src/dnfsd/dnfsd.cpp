@@ -64,6 +64,8 @@ string nfs_config_path = DNFSD_CONFIG_PATH;
 // 默认的PID文件路径
 [[maybe_unused]] string nfs_pidfile_path = DNFSD_PIDFILE_PATH;
 
+struct timespec nfs_ServerBootTime;
+
 /* TODO */
 [[maybe_unused]] time_t nfs_ServerEpoch;
 

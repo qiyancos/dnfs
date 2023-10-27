@@ -41,6 +41,7 @@
 /* 当前最新提交的版本描述信息 */
 #define _GIT_DESCRIBE "V5.4-0-g4f8c484b4"
 
+extern struct timespec nfs_ServerBootTime;
 /* TODO */
 [[maybe_unused]] extern time_t nfs_ServerEpoch;
 
