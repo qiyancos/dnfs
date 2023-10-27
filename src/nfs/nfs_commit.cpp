@@ -57,6 +57,7 @@ int nfs3_commit(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     }
 
     /*获取文件属性信息*/
+/*
     res->res_commit3.status = get_pre_op_attr(commit_args->file.data.data_val,
                                               pre);
     if (res->res_commit3.status != NFS3_OK) {
@@ -66,6 +67,7 @@ int nfs3_commit(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
             commit_args->file.data.data_val);
         goto out;
     }
+*/
 
     /*获取目录wcc信息*/
     res->res_commit3.status = get_wcc_data(commit_args->file.data.data_val,

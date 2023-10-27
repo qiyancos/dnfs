@@ -167,12 +167,12 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     }
 
     out:
-/*    if ((arg->arg_write3.stable == DATA_SYNC) ||
+    if ((arg->arg_write3.stable == DATA_SYNC) ||
         (arg->arg_write3.stable == FILE_SYNC))
         write_res_ok->committed = FILE_SYNC;
     else
-        write_res_ok->committed = UNSTABLE;*/
-    write_res_ok->committed = FILE_SYNC;
+        write_res_ok->committed = UNSTABLE;
+//    write_res_ok->committed = FILE_SYNC;
 
     LOG(MODULE_NAME, D_INFO, "Interface write result stat is %d:",
         res->res_write3.status);
