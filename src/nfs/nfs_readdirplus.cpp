@@ -31,14 +31,14 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
     uint64_t change;
     cookieverf3 cookie_verifier;
     uint64_t mem_avail = 0;
+    uint64_t used_mem = 0;
     // response size
-    uint32_t maxcount;
+    uint32_t max_res_size;
     uint32_t cfg_readdir_size = nfs_param.core_param.readdir_res_size;
     // max entries count
-    uint32_t dircount;
-    uint32_t usecount = 0;
-    uint32_t entry_size = sizeof(entryplus3);
+    uint32_t max_entry_count;
     uint32_t cfg_readdir_count = nfs_param.core_param.readdir_max_count;
+    uint32_t entry_count = 0;
     int rc = NFS_REQ_OK;
     /*数据指针*/
     READDIRPLUS3args *readdirplus_args = &arg->arg_readdirplus3;
@@ -48,6 +48,7 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
         &res->res_readdirplus3.READDIRPLUS3res_u.resok;
 
     readdirplus_res_ok->reply.entries = nullptr;
+    readdirplus_res_ok->reply.eof = FALSE;
 
     uint64_t begin_cookie = readdirplus_args->cookie;
     uint64_t cookie = 0;
@@ -80,17 +81,21 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
 
     // arg_readdirplus3.maxcount 返回结构体READDIRPLUS3resok最大大小
     if (cfg_readdir_size < readdirplus_args->maxcount)
-        maxcount = cfg_readdir_size;
+        max_res_size = cfg_readdir_size;
     else
-        maxcount = readdirplus_args->maxcount;
-    mem_avail = maxcount - BYTES_PER_XDR_UNIT - BYTES_PER_XDR_UNIT - sizeof(fattr3) -
-                sizeof(cookieverf3);
+        max_res_size = readdirplus_args->maxcount;
+    mem_avail = MIN(WRITE_READ_MAX,
+                    max_res_size - BYTES_PER_XDR_UNIT - BYTES_PER_XDR_UNIT - sizeof(fattr3) - sizeof(cookieverf3));
 
     // arg_readdirplus3.dircount 返回的目录信息的最大大小
     if (readdirplus_args->dircount < cfg_readdir_count)
-        dircount = readdirplus_args->dircount;
+        max_entry_count = readdirplus_args->dircount;
     else
-        dircount = cfg_readdir_count;
+        max_entry_count = cfg_readdir_count;
+
+    LOG(MODULE_NAME, D_INFO,
+        "NFS3_READDIRPLUS: dircount=%u begin_cookie=%u mem_avail=%zd max_count = %u",
+        arg->arg_readdirplus3.dircount, begin_cookie, mem_avail, max_entry_count);
 
     /* to avoid setting it on each error case */
     readdirplus_res_fail->dir_attributes.attributes_follow = FALSE;
@@ -178,7 +183,7 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
                     "\nvd->vd_ino:%lu\nvd->vd_reclen:%d\nvd->vd_type:%d\nvd->vd_offset:%ld\nvd->vd_name:%s\n",
                     dentryp->vd_ino, dentryp->vd_reclen, dentryp->vd_type, dentryp->vd_offset, dentryp->vd_name);
                 node = new entryplus3;
-                node->name = (char *)gsh_calloc(strlen(dentryp->vd_name)+1, sizeof(char));
+                node->name = (char *)gsh_calloc(strlen(dentryp->vd_name) + 1, sizeof(char));
                 memcpy(node->name, dentryp->vd_name, strlen(dentryp->vd_name));
                 /*添加结束符*/
                 *(node->name + strlen(dentryp->vd_name)) = '\0';
@@ -207,13 +212,23 @@ int nfs3_readdirplus(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res)
                 }
                 current->nextentry = node;
                 current = current->nextentry;
+                entry_count++;
+                used_mem += sizeof(node);
+                if (entry_count >= max_entry_count || (used_mem + BYTES_PER_XDR_UNIT) >= mem_avail)
+                {
+                    if (node->cookie == LONG_MAX)
+                        break;
+                    goto page;
+                }
             }
             bpos += dentryp->vd_reclen;
         }
     } while (true);
 
-    readdirplus_res_ok->reply.entries = head->nextentry;
     readdirplus_res_ok->reply.eof = TRUE;
+
+page:
+    readdirplus_res_ok->reply.entries = head->nextentry;
     memcpy(readdirplus_res_ok->cookieverf, cookie_verifier, sizeof(cookieverf3));
 
 done:
