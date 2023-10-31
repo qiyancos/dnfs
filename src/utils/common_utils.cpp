@@ -294,14 +294,12 @@ string get_taceback() {
 void gsh_free(void *p) {
     if (p != nullptr) {
         free(p);
-    } else {
-        p = nullptr;
     }
+    p = nullptr;
 }
 
 /*获取时间*/
-void now(struct timespec *ts)
-{
+void now(struct timespec *ts) {
     int rc;
     rc = clock_gettime(CLOCK_REALTIME, ts);
     if (rc != 0) {
