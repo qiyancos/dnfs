@@ -153,11 +153,14 @@ nfsstat3 nfs_set_post_op_attr(char *file_path, post_op_attr *fattr) {
  * */
 void get_file_handle(nfs_fh3 &request_handle) {
     /*获取句柄*/
-    string s = request_handle.data.data_val;
+    string save_handle = request_handle.data.data_val;
+    /*释放之前的空间*/
     free(request_handle.data.data_val);
+    /*重新申请内存*/
     request_handle.data.data_val = (char *) gsh_calloc(request_handle.data.data_len+1,
                                                        sizeof(char));
-    memcpy(request_handle.data.data_val, s.c_str(), request_handle.data.data_len);
+    /*截取句柄*/
+    memcpy(request_handle.data.data_val, save_handle.c_str(), request_handle.data.data_len);
     /*添加结束符*/
     *(request_handle.data.data_val + request_handle.data.data_len) = '\0';
 }
