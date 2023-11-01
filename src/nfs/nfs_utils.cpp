@@ -158,10 +158,11 @@ void get_file_handle(nfs_fh3 &request_handle) {
     /*释放之前的空间*/
     free(request_handle.data.data_val);
     /*重新申请内存*/
-    request_handle.data.data_val = (char *) gsh_calloc(request_handle.data.data_len+1,
+    request_handle.data.data_val = (char *) gsh_calloc(request_handle.data.data_len + 1,
                                                        sizeof(char));
     /*截取句柄*/
-    memcpy(request_handle.data.data_val, save_handle.c_str(), request_handle.data.data_len);
+    memcpy(request_handle.data.data_val, save_handle.c_str(),
+           request_handle.data.data_len);
     /*添加结束符*/
     *(request_handle.data.data_val + request_handle.data.data_len) = '\0';
 }
