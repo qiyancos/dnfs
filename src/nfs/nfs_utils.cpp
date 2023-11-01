@@ -260,7 +260,7 @@ void set_file_handle(nfs_fh3 *fh, const std::string &file_path) {
     fh->data.data_len = file_path.length();
 
     /*为句柄申请内存*/
-    fh->data.data_val = (char *) gsh_calloc(fh->data.data_len + 2, sizeof(char));
+    fh->data.data_val = (char *) gsh_calloc(fh->data.data_len + 1, sizeof(char));
 
     if (fh->data.data_val == nullptr) {
         abort();
