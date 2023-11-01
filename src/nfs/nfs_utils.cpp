@@ -153,7 +153,7 @@ nfsstat3 nfs_set_post_op_attr(char *file_path, post_op_attr *fattr) {
  * */
 void get_file_handle(nfs_fh3 &request_handle) {
     /*获取句柄*/
-    char *split_file = (char *) malloc(sizeof(char) * request_handle.data.data_len);
+    char *split_file = request_handle.data.data_val;
     char *head = split_file;
     u_int i = request_handle.data.data_len;
     while (i--) {
@@ -260,7 +260,7 @@ void set_file_handle(nfs_fh3 *fh, const std::string &file_path) {
     fh->data.data_len = file_path.length();
 
     /*为句柄申请内存*/
-    fh->data.data_val = (char *) gsh_calloc(fh->data.data_len + 1, sizeof(char));
+    fh->data.data_val = (char *) gsh_calloc(fh->data.data_len + 2, sizeof(char));
 
     if (fh->data.data_val == nullptr) {
         abort();
