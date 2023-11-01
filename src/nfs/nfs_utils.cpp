@@ -37,6 +37,7 @@ using namespace std;
 /*释放结果存储空间*/
 void nfs_dupreq_rele(nfs_request_t *reqnfs) {
 
+    /*每个具体接口里的free function*/
     reqnfs->funcdesc->free_function(
             static_cast<nfs_res_t *>(reqnfs->svc.rq_u2));
 
