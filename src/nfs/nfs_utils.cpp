@@ -37,6 +37,7 @@ using namespace std;
 /*释放结果存储空间*/
 void nfs_dupreq_rele(nfs_request_t *reqnfs) {
 
+    /*每个具体接口里的free function*/
     reqnfs->funcdesc->free_function(
             static_cast<nfs_res_t *>(reqnfs->svc.rq_u2));
 
@@ -153,14 +154,17 @@ nfsstat3 nfs_set_post_op_attr(char *file_path, post_op_attr *fattr) {
  * */
 void get_file_handle(nfs_fh3 &request_handle) {
     /*获取句柄*/
-    char *split_file = (char *) malloc(sizeof(char) * request_handle.data.data_len);
-    char *head = split_file;
-    u_int i = request_handle.data.data_len;
-    while (i--) {
-        *(head++) = *request_handle.data.data_val++;
-    }
-    *(head++) = '\0';
-    request_handle.data.data_val = split_file;
+    string save_handle = request_handle.data.data_val;
+    /*释放之前的空间*/
+    free(request_handle.data.data_val);
+    /*重新申请内存*/
+    request_handle.data.data_val = (char *) gsh_calloc(request_handle.data.data_len + 1,
+                                                       sizeof(char));
+    /*截取句柄*/
+    memcpy(request_handle.data.data_val, save_handle.c_str(),
+           request_handle.data.data_len);
+    /*添加结束符*/
+    *(request_handle.data.data_val + request_handle.data.data_len) = '\0';
 }
 
 /*获取文件操作之前属性信息
@@ -195,12 +199,14 @@ nfsstat3 get_pre_op_attr(char *file_path, pre_op_attr &pre_attr) {
 bool judge_file_exit(const char *file_path, int judge_mode) {
     struct stat info{};
     /*不存在直接返回*/
-    if (lstat(file_path ,&info) != 0) {
+    if (lstat(file_path, &info) != 0) {
         LOG(MODULE_NAME, D_INFO, "judge_file_exit lstat false, filepath: %s", file_path);
         return false;
     } else if (!(info.st_mode & judge_mode)) {
         /*存在但不是需要的文件格式*/
-        LOG(MODULE_NAME, D_INFO, "judge_file_exit judge false, info.st_mode: %o, judge_mode: %o", info.st_mode, judge_mode);
+        LOG(MODULE_NAME, D_INFO,
+            "judge_file_exit judge false, info.st_mode: %o, judge_mode: %o", info.st_mode,
+            judge_mode);
         return false;
     }
     return true;
@@ -278,18 +284,15 @@ void set_file_handle(nfs_fh3 *fh, const std::string &file_path) {
  * params new_attr:文件新属性
  * return 是否修改成功
  * */
-nfsstat3 nfs_set_sattr3(const char *file_path, sattr3 &new_attr)
-{
+nfsstat3 nfs_set_sattr3(const char *file_path, sattr3 &new_attr) {
     struct timespec ts[2];
     struct timeval tv[2];
     bool set_time_flag = false;
     int utimes_res = -1;
     /*chmod*/
-    if (new_attr.mode.set_it)
-    {
+    if (new_attr.mode.set_it) {
         int chmod_res = chmod(file_path, new_attr.mode.set_mode3_u.mode);
-        if (chmod_res != 0)
-        {
+        if (chmod_res != 0) {
             LOG(MODULE_NAME, D_ERROR,
                 "Interface nfs_setattr failed to chmod '%s'",
                 file_path);
@@ -297,13 +300,11 @@ nfsstat3 nfs_set_sattr3(const char *file_path, sattr3 &new_attr)
         }
     }
     /*chown*/
-    if (new_attr.gid.set_it || new_attr.uid.set_it)
-    {
+    if (new_attr.gid.set_it || new_attr.uid.set_it) {
         gid3 new_gid = new_attr.gid.set_it ? new_attr.gid.set_gid3_u.gid : -1;
         uid3 new_uid = new_attr.uid.set_it ? new_attr.uid.set_uid3_u.uid : -1;
         int chown_res = chown(file_path, new_uid, new_gid);
-        if (chown_res != 0)
-        {
+        if (chown_res != 0) {
             LOG(MODULE_NAME, D_ERROR,
                 "Interface nfs_setattr failed to chown '%s'",
                 file_path);
@@ -312,27 +313,21 @@ nfsstat3 nfs_set_sattr3(const char *file_path, sattr3 &new_attr)
     }
 
     /*utimes*/
-    if (new_attr.atime.set_it != DONT_CHANGE)
-    {
+    if (new_attr.atime.set_it != DONT_CHANGE) {
         set_time_flag = true;
         LOG(MODULE_NAME, D_INFO, "Interface nfs_setattr atime set=%d atime = %d,%d",
             new_attr.atime.set_it,
             new_attr.atime.set_atime_u.atime.tv_sec,
             new_attr.atime.set_atime_u.atime.tv_nsec);
-        if (new_attr.atime.set_it == SET_TO_CLIENT_TIME)
-        {
+        if (new_attr.atime.set_it == SET_TO_CLIENT_TIME) {
             ts[0].tv_sec = new_attr.atime.set_atime_u.atime.tv_sec;
             ts[0].tv_nsec = new_attr.atime.set_atime_u.atime.tv_nsec;
-        }
-        else if (new_attr.atime.set_it == SET_TO_SERVER_TIME)
-        {
+        } else if (new_attr.atime.set_it == SET_TO_SERVER_TIME) {
             /* Use the server's current time */
             LOG(MODULE_NAME, D_INFO, "SET_TO_SERVER_TIME atime");
             ts[0].tv_sec = 0;
             ts[0].tv_nsec = UTIME_NOW;
-        }
-        else
-        {
+        } else {
             LOG(MODULE_NAME, D_ERROR,
                 "Unexpected value for sattr->atime.set_it = %d",
                 new_attr.atime.set_it);
@@ -340,47 +335,36 @@ nfsstat3 nfs_set_sattr3(const char *file_path, sattr3 &new_attr)
         }
     }
 
-    if (new_attr.mtime.set_it != DONT_CHANGE)
-    {
+    if (new_attr.mtime.set_it != DONT_CHANGE) {
         set_time_flag = true;
         LOG(MODULE_NAME, D_INFO, "Interface nfs_setattr mtime set=%d mtime = %d",
             new_attr.atime.set_it,
             new_attr.mtime.set_mtime_u.mtime.tv_sec);
-        if (new_attr.mtime.set_it == SET_TO_CLIENT_TIME)
-        {
+        if (new_attr.mtime.set_it == SET_TO_CLIENT_TIME) {
             ts[1].tv_sec = new_attr.mtime.set_mtime_u.mtime.tv_sec;
             ts[1].tv_nsec = new_attr.mtime.set_mtime_u.mtime.tv_nsec;
-        }
-        else if (new_attr.mtime.set_it == SET_TO_SERVER_TIME)
-        {
+        } else if (new_attr.mtime.set_it == SET_TO_SERVER_TIME) {
             /* Use the server's current time */
             LOG(MODULE_NAME, D_INFO, "SET_TO_SERVER_TIME Mtime");
             ts[1].tv_sec = 0;
             ts[1].tv_nsec = UTIME_NOW;
-        }
-        else
-        {
+        } else {
             LOG(MODULE_NAME, D_ERROR,
                 "Unexpected value for sattr->mtime.set_it = %d",
                 new_attr.mtime.set_it);
             return NFS3ERR_INVAL;
         }
     }
-    if (set_time_flag)
-    {
-        if (ts[0].tv_nsec == UTIME_NOW || ts[1].tv_nsec == UTIME_NOW)
-        {
+    if (set_time_flag) {
+        if (ts[0].tv_nsec == UTIME_NOW || ts[1].tv_nsec == UTIME_NOW) {
             /* set to the current timestamp. achieve this by passing NULL timeval to kernel */
             utimes_res = utimes(file_path, nullptr);
-        }
-        else
-        {
+        } else {
             TIMESPEC_TO_TIMEVAL(&tv[0], &ts[0]);
             TIMESPEC_TO_TIMEVAL(&tv[1], &ts[1]);
             utimes_res = utimes(file_path, tv);
         }
-        if (utimes_res != 0)
-        {
+        if (utimes_res != 0) {
             LOG(MODULE_NAME, D_ERROR, "modify times failed");
             return NFS3ERR_INVAL;
         }
@@ -388,26 +372,24 @@ nfsstat3 nfs_set_sattr3(const char *file_path, sattr3 &new_attr)
     return NFS3_OK;
 }
 
-int vfs_readents(int fd, char *buf, unsigned int bcount, off_t *basepp)
-{
-	int retval = 0;
+int vfs_readents(int fd, char *buf, unsigned int bcount, off_t *basepp) {
+    int retval = 0;
 
-	retval = syscall(SYS_getdents64, fd, buf, bcount);
-	if (retval >= 0)
-		*basepp += retval;
-	return retval;
+    retval = syscall(SYS_getdents64, fd, buf, bcount);
+    if (retval >= 0)
+        *basepp += retval;
+    return retval;
 }
 
-bool to_vfs_dirent(char *buf, int bpos, struct vfs_dirent *vd, off_t base)
-{
-	struct dirent64 *dp = (struct dirent64 *)(buf + bpos);
-	char type;
+bool to_vfs_dirent(char *buf, int bpos, struct vfs_dirent *vd, off_t base) {
+    struct dirent64 *dp = (struct dirent64 *) (buf + bpos);
+    char type;
 
-	vd->vd_ino = dp->d_ino;
-	vd->vd_reclen = dp->d_reclen;
-	type = buf[dp->d_reclen - 1];
-	vd->vd_type = type;
-	vd->vd_offset = dp->d_off;
-	vd->vd_name = dp->d_name;
-	return true;
+    vd->vd_ino = dp->d_ino;
+    vd->vd_reclen = dp->d_reclen;
+    type = buf[dp->d_reclen - 1];
+    vd->vd_type = type;
+    vd->vd_offset = dp->d_off;
+    vd->vd_name = dp->d_name;
+    return true;
 }

@@ -115,14 +115,11 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     /*构造写入数据*/
     write_buf.iov_len = write_args->data.data_len;
-    write_buf.iov_base = gsh_calloc(write_args->data.data_len, sizeof(char));
-    memcpy(write_buf.iov_base, write_args->data.data_val, write_buf.iov_len);
+    write_buf.iov_base = write_args->data.data_val;
 
     /*读取数据*/
     write_count = pwritev(file_handle, &write_buf, 1, (__off_t) write_args->offset);
 
-    /*释放内存*/
-    gsh_free(write_buf.iov_base);
     /*关闭句柄*/
     close(file_handle);
 
@@ -137,6 +134,11 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     /*返回写入数据大小*/
     write_res_ok->count = write_count;
+
+    if (write_count != write_args->data.data_len) {
+        LOG(MODULE_NAME, D_INFO, "Write error,write_count is %d,count is %d",
+            write_count, write_args->data.data_len);
+    }
 
     outok:
     /*获取目录wcc信息*/

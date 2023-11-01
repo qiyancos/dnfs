@@ -24,8 +24,14 @@
 int nfs3_commit(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     int rc = NFS_REQ_OK;
 
+    struct timespec ts[2];
+
     /*保存操作前的文件信息*/
     struct pre_op_attr pre{};
+
+    int utimes_res = -1;
+
+    struct timeval tv[2];
 
     /*数据指针*/
     COMMIT3args *commit_args = &arg->arg_commit3;
@@ -71,8 +77,8 @@ int nfs3_commit(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     /*获取目录wcc信息*/
     res->res_commit3.status = get_wcc_data(commit_args->file.data.data_val,
-                                          pre,
-                                          commit_res_ok->file_wcc);
+                                           pre,
+                                           commit_res_ok->file_wcc);
     /*获取弱属性信息失败*/
     if (res->res_commit3.status != NFS3_OK) {
         rc = NFS_REQ_ERROR;
@@ -80,8 +86,7 @@ int nfs3_commit(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
             "Interface commit failed to obtain '%s' resok wcc_data",
             commit_args->file.data.data_val);
     }
-
-out:
+    out:
 
     return rc;
 }
