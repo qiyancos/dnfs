@@ -25,6 +25,8 @@
 #include<fcntl.h>
 #include <log/log_data.h>
 
+#define LOG_WRITE_ERROR 0001
+
 class LogFile {
 private:
     /*具体的更新时间间隔或文件大小*/
@@ -77,6 +79,9 @@ private:
 
     /*设置对应输出等级*/
     log_level_t log_level = NOLOG;
+
+    /*遇到一次的错误标志*/
+    int error_flag = 0;
 
     /*设置路径：logfile对象字典*/
     static std::map<std::string, std::shared_ptr<LogFile>> path_log_file_dict;

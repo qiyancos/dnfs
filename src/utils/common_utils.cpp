@@ -105,7 +105,7 @@ void split_str(const string &str, const string &split, vector<string> &result) {
         }
 
         /*去掉已分割的字符串,在剩下的字符串中进行分割*/
-        strs = strs.substr(pos + step, strs.size());
+        strs = strs.substr(pos + step);
 
         /*接着查询分隔符进行切割*/
         pos = strs.find(split);

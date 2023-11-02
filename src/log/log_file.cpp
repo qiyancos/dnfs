@@ -214,10 +214,18 @@ void LogFile::out_message(const string &message) {
     ssize_t result = write(file_handler, message.c_str(), size(message));
     /*写入出错抛出异常*/
     if (result == -1) {
-        throw LogException(
+        /*只输出一次写文件错误*/
+        if (!(error_flag & LOG_WRITE_ERROR)) {
+            fprintf(stderr,
+                    "Failed to write information to file '%s' with module '%s' output level '%s'",
+                    log_file_path.c_str(), module_name.c_str(),
+                    log_level_info_dict[log_level].first[0].c_str());
+            error_flag |= LOG_WRITE_ERROR;
+        }
+/*        throw LogException(
                 "Failed to write information to file '%s' with module '%s' output level '%s'",
                 log_file_path.c_str(), module_name.c_str(),
-                log_level_info_dict[log_level].first[0].c_str());
+                log_level_info_dict[log_level].first[0].c_str());*/
     }
 }
 
@@ -518,8 +526,11 @@ void LogFile::rotate_log_file(const time_t &now_time) {
     if (backup_count > 0 and log_files > backup_count) {
         /*删除文件路径记录的第一条数据*/
         if (remove(file_path_list[0].c_str()) != 0) {
-            throw LogException("Failed to delete module '%s' log file '%s'",
-                               module_name.c_str(), file_path_list[0].c_str());
+            /*只打印删除文件错误不报错*/
+            fprintf(stderr, "Failed to delete module '%s' log file '%s'",
+                    module_name.c_str(), file_path_list[0].c_str());
+/*            throw LogException("Failed to delete module '%s' log file '%s'",
+                               module_name.c_str(), file_path_list[0].c_str());*/
         }
         /*移除路径记录*/
         file_path_list.erase(file_path_list.begin());
@@ -557,6 +568,9 @@ LogFile::get_log_file(const string &config_str, const string &module_n,
     /*生成日志文件名*/
     /*先建立文件属性对象*/
     auto *log_file = new LogFile();
+    /*设置模块名*/
+    log_file->module_name = module_n;
+
     /*建立属性,有错误将抛出异常*/
     log_file->generate_data(config_str, module_n, log_l);
 

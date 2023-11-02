@@ -20,6 +20,8 @@
 #include "log/log.h"
 #include "utils/thread_utils.h"
 
+#define MODULE_NAME "logger"
+
 using namespace std;
 
 /*初始化参数
@@ -51,7 +53,7 @@ LogMessage::LogMessage(const string &module_name,
 
     /*如果添加失败*/
     if (message_len < 0) {
-        LOG("logger", L_ERROR,
+        LOG(MODULE_NAME, L_ERROR,
             "Formatting module %s information failed", module_name.c_str());
     }
 
@@ -68,7 +70,7 @@ LogMessage::LogMessage(const string &module_name,
             buffer_message_new = (char *) realloc(buffer_message, MAX_BUFFER);
 
             message_len = MAX_BUFFER;
-            LOG("logger", L_WARN,
+            LOG(MODULE_NAME, L_WARN,
                 "The module %s log information exceeds the size limit, the limit size is %d, the information size is %d",
                 module_name.c_str(), MAX_BUFFER, message_len);
         }
@@ -81,12 +83,12 @@ LogMessage::LogMessage(const string &module_name,
                                     buffer);
             /*如果添加失败*/
             if (message_len < 0) {
-                LOG("logger", L_ERROR,
+                LOG(MODULE_NAME, L_ERROR,
                     "Module %s log message reformatting failed",
                     module_name.c_str());
             }
         } else {
-            LOG("logger", L_ERROR,
+            LOG(MODULE_NAME, L_ERROR,
                 "Module %s log information failed to apply for memory",
                 module_name.c_str());
         }
