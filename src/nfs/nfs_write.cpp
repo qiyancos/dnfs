@@ -16,6 +16,7 @@
 #include "nfs/nfs_write.h"
 #include "nfs/nfs_xdr.h"
 #include "nfs/nfs_utils.h"
+#include "nfs/fsal_handle.h"
 #include "log/log.h"
 #include "dnfsd/dnfs_meta_data.h"
 
@@ -103,13 +104,11 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     }
 
     /*获取文件句柄*/
-    file_handle = open(write_args->file.data.data_val, O_CREAT | O_WRONLY);
+    file_handle = fsal_handle.get_handle(write_args->file.data.data_val);
     /*打开失败*/
     if (file_handle == -1) {
         res->res_write3.status = NFS3ERR_NOENT;
         rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, D_ERROR, "open file '%s' failed",
-            write_args->file.data.data_val);
         goto outfail;
     }
 
@@ -120,8 +119,6 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     /*读取数据*/
     write_count = pwritev(file_handle, &write_buf, 1, (__off_t) write_args->offset);
 
-    /*关闭句柄*/
-    close(file_handle);
 
     /*写入失败*/
     if (write_count < 0) {
@@ -145,6 +142,7 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     res->res_write3.status = get_wcc_data(write_args->file.data.data_val,
                                           pre,
                                           write_res_ok->file_wcc);
+
     /*获取弱属性信息失败*/
     if (res->res_write3.status != NFS3_OK) {
         rc = NFS_REQ_ERROR;

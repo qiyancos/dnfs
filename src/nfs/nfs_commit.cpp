@@ -16,6 +16,7 @@
 #include "nfs/nfs_commit.h"
 #include "nfs/nfs_xdr.h"
 #include "nfs/nfs_utils.h"
+#include "nfs/fsal_handle.h"
 #include "log/log.h"
 #include "dnfsd/dnfs_meta_data.h"
 
@@ -24,14 +25,13 @@
 int nfs3_commit(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     int rc = NFS_REQ_OK;
 
-    struct timespec ts[2];
-
     /*保存操作前的文件信息*/
     struct pre_op_attr pre{};
 
-    int utimes_res = -1;
-
-    struct timeval tv[2];
+    /*刷新的文件句柄*/
+    int file_handle;
+    /*刷新标志*/
+    int retval;
 
     /*数据指针*/
     COMMIT3args *commit_args = &arg->arg_commit3;
@@ -62,8 +62,53 @@ int nfs3_commit(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
         goto out;
     }
 
+    /*必须有文件句柄，没有报错*/
+    if (!fsal_handle.judge_handle_exist(commit_args->file.data.data_val)) {
+        rc = NFS_REQ_ERROR;
+        res->res_commit3.status = NFS3ERR_IO;
+        LOG(MODULE_NAME, D_ERROR,
+            "Interface commit failed to get '%s' handle",
+            commit_args->file.data.data_val);
+        goto outfail;
+    }
+
+    /*获取文件句柄*/
+    file_handle = fsal_handle.just_get_handle(commit_args->file.data.data_val);
+
+    /*同步文件信息*/
+    retval = fsync(file_handle);
+
+    /*同步缓存失败*/
+    if (retval == -1) {
+        rc = NFS_REQ_ERROR;
+        res->res_commit3.status = NFS3ERR_IO;
+        LOG(MODULE_NAME, D_ERROR,
+            "Failed to refresh file '%s' store",
+            commit_args->file.data.data_val);
+        goto outfail;
+    }
+
+    LOG(MODULE_NAME, D_INFO,
+        "Success to refresh file '%s' store data num is %d",
+        commit_args->file.data.data_val, retval);
+
+    /*获取目录wcc信息*/
+    res->res_commit3.status = get_wcc_data(commit_args->file.data.data_val,
+                                           pre,
+                                           commit_res_ok->file_wcc);
+
+
+    /*获取弱属性信息失败*/
+    if (res->res_commit3.status != NFS3_OK) {
+        rc = NFS_REQ_ERROR;
+        LOG(MODULE_NAME, D_ERROR,
+            "Interface commit failed to obtain '%s' resok wcc_data",
+            commit_args->file.data.data_val);
+    }
+    goto out;
+
+    outfail:
     /*获取文件属性信息*/
-/*
     res->res_commit3.status = get_pre_op_attr(commit_args->file.data.data_val,
                                               pre);
     if (res->res_commit3.status != NFS3_OK) {
@@ -73,19 +118,20 @@ int nfs3_commit(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
             commit_args->file.data.data_val);
         goto out;
     }
-*/
-
     /*获取目录wcc信息*/
     res->res_commit3.status = get_wcc_data(commit_args->file.data.data_val,
                                            pre,
-                                           commit_res_ok->file_wcc);
+                                           commit_res_fail->file_wcc);
+
+
     /*获取弱属性信息失败*/
     if (res->res_commit3.status != NFS3_OK) {
         rc = NFS_REQ_ERROR;
         LOG(MODULE_NAME, D_ERROR,
-            "Interface commit failed to obtain '%s' resok wcc_data",
+            "Interface commit failed to obtain '%s' resfail wcc_data",
             commit_args->file.data.data_val);
     }
+
     out:
 
     return rc;

@@ -13,9 +13,10 @@
  *
  */
 
-#include <string.h>
+#include <cstring>
 
 #include "log/log.h"
+#include "nfs/fsal_handle.h"
 #include "utils/thread_utils.h"
 #include "dnfsd/dnfsd.h"
 #include "dnfsd/dnfsd_exit.h"
@@ -27,6 +28,8 @@
 void crash_handler(int signo, [[maybe_unused]] siginfo_t *info,
                    [[maybe_unused]] void *ctx) {
     LOG(MODULE_NAME, L_BACKTRACE, "");
+    /*关闭所有的文件句柄*/
+    fsal_handle.close_handles();
     /* re-raise the signal for the default signal handler to dump core */
     raise(signo);
 }
