@@ -29,7 +29,7 @@ int nfs3_commit(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     struct pre_op_attr pre{};
 
     /*刷新的文件句柄*/
-    f_handle file_handle;
+    f_handle file_handle{};
     /*刷新标志*/
     int retval;
 
@@ -62,8 +62,10 @@ int nfs3_commit(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
         goto out;
     }
 
+    /*获取文件句柄*/
+    file_handle = fsal_handle.just_get_handle(commit_args->file.data.data_val);
     /*必须有文件句柄，没有报错*/
-    if (!fsal_handle.judge_handle_exist(commit_args->file.data.data_val)) {
+    if(file_handle.handle==-1){
         rc = NFS_REQ_ERROR;
         res->res_commit3.status = NFS3ERR_IO;
         LOG(MODULE_NAME, D_ERROR,
@@ -72,9 +74,7 @@ int nfs3_commit(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
         goto outfail;
     }
 
-    /*获取文件句柄*/
-    file_handle = fsal_handle.just_get_handle(commit_args->file.data.data_val);
-
+    FsalHandle::pthread_unlock_rw(&file_handle.handle_rwlock_lock);
     /*同步文件信息*/
     retval = fsync(file_handle.handle);
 
@@ -133,7 +133,7 @@ int nfs3_commit(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     }
 
     out:
-
+    FsalHandle::pthread_unlock_rw(&file_handle.handle_rwlock_lock);
     return rc;
 }
 

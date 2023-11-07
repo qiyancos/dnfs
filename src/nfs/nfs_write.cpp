@@ -25,7 +25,7 @@
 int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     int rc = NFS_REQ_OK;
     /*文件句柄*/
-    f_handle file_handle;
+    f_handle file_handle{};
 
     /*保存操作前的文件信息*/
     struct pre_op_attr pre{};
@@ -52,7 +52,7 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     }
 
     /*打印写入数据*/
-    LOG(MODULE_NAME, D_INFO, "write data len is: %d ,offset is %d,count is %d",
+    LOG(MODULE_NAME, L_WARN, "write data len is: %d ,offset is %d,count is %d",
         write_args->data.data_len, write_args->offset, write_args->count);
 
     get_file_handle(write_args->file);
@@ -112,7 +112,7 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     else
         write_res_ok->committed = UNSTABLE;
 
-//    write_res_ok->committed = FILE_SYNC;
+    write_res_ok->committed = FILE_SYNC;
 
     /*获取文件句柄*/
     file_handle = fsal_handle.get_handle(write_args->file.data.data_val);
@@ -126,6 +126,8 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     /*构造写入数据*/
     write_buf.iov_len = write_args->data.data_len;
     write_buf.iov_base = write_args->data.data_val;
+
+    FsalHandle::pthread_lock_write(&file_handle.handle_rwlock_lock);
 
     /*读取数据*/
     write_count = pwritev(file_handle.handle, &write_buf, 1, (__off_t) write_args->offset);
@@ -191,6 +193,7 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     }
 
     out:
+    FsalHandle::pthread_unlock_rw(&file_handle.handle_rwlock_lock);
 
     LOG(MODULE_NAME, D_INFO, "Interface write result stat is %d:",
         res->res_write3.status);

@@ -22,7 +22,7 @@
 /*句柄结构体*/
 struct f_handle {
     int handle;
-    pthread_rwlock_t handle_lock;
+    pthread_rwlock_t handle_rwlock_lock;
 };
 
 /*句柄操作类*/
@@ -34,6 +34,8 @@ private:
     std::mutex create_mtx;
     /*空句柄*/
     f_handle n_handle = {-1};
+    /*默认锁属性*/
+    static pthread_rwlockattr_t default_rwlock_attr;
 private:
     /*默认构造函数*/
     FsalHandle();
@@ -66,15 +68,31 @@ public:
      * */
     f_handle just_get_handle(const std::string &path);
 
-    /*锁住句柄
-     * params mutex:需要锁的句柄
+    /*创建句柄
+     * params rwlock:创建的读写锁
+     * params attr:创建的属性
      * */
-    static void pthread_lock_mutex(pthread_mutex_t *mutex);
+    static void pthread_lock_init(pthread_rwlock_t *rwlock,pthread_rwlockattr_t *attr);
+
+    /*删除句柄
+     * params rwlock:删除的读写锁
+     * */
+    static void pthread_lock_destory(pthread_rwlock_t *rwlock);
+
+    /*锁住句柄
+     * params rwlock:需要锁的读写锁
+     * */
+    static void pthread_lock_write(pthread_rwlock_t *rwlock);
+
+    /*锁住句柄
+     * params rwlock:需要锁的读写锁
+     * */
+    static void pthread_lock_read(pthread_rwlock_t *rwlock);
 
     /*释放句柄
-     * params mutex:需要释放的句柄
+     * params rwlock:需要释放的读写锁
      * */
-    static void pthread_unlock_mutex(pthread_mutex_t *mutex);
+    static void pthread_unlock_rw(pthread_rwlock_t *rwlock);
 
     /*关闭所有的文件句柄*/
     void close_handles();

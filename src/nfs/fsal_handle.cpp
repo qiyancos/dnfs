@@ -22,6 +22,9 @@ using namespace std;
 /*默认构造函数*/
 FsalHandle::FsalHandle() = default;
 
+/*默认锁属性*/
+pthread_rwlockattr_t FsalHandle::default_rwlock_attr;
+
 /*建立句柄实例*/
 FsalHandle &fsal_handle = FsalHandle::get_instance();
 
@@ -63,7 +66,10 @@ bool FsalHandle::push_handle(const string &path) {
                 path.c_str());
             return false;
         }
+        /*创建句柄*/
         f_handle handle{file_handle};
+        /*初始化锁*/
+        pthread_lock_init(&handle.handle_rwlock_lock, nullptr);
         /*添加句柄*/
         handle_map[path] = handle;
     }
@@ -101,53 +107,114 @@ f_handle FsalHandle::just_get_handle(const string &path) {
     return n_handle;
 }
 
-/*锁住句柄
- * params mutex:需要锁的句柄
+/*创建句柄
+ * params rwlock:创建的读写锁
+ * params attr:创建的属性
  * */
-void FsalHandle::pthread_lock_mutex(pthread_mutex_t *mutex) {
+void FsalHandle::pthread_lock_init(pthread_rwlock_t *rwlock, pthread_rwlockattr_t *attr) {
     int rc;
-    rc = pthread_mutex_lock(mutex);
+    pthread_rwlockattr_t *_attr = attr;
+
+    if (_attr == nullptr)
+        _attr = &default_rwlock_attr;
+
+    rc = pthread_rwlock_init(rwlock, _attr);
     if (rc == 0) {
-        LOG(MODULE_NAME, D_INFO,
-            "Acquired mutex %p (%s) at %s:%d",
-            mutex, &mutex,
-            __FILE__, __LINE__);
+        LOG(MODULE_NAME, L_WARN,
+            "Init rwlock %p",
+            rwlock);
     } else {
-        LOG(MODULE_NAME, D_INFO,
-            "Error %d, acquiring mutex %p (%s) "
-            "at %s:%d", rc, mutex, &mutex,
-            __FILE__, __LINE__);
+        LOG(MODULE_NAME, L_WARN,
+            "Error %d, Init rwlock %p", rc, rwlock);
+        abort();
+    }
+
+}
+
+/*删除句柄
+ * params rwlock:删除的读写锁
+ * */
+void FsalHandle::pthread_lock_destory(pthread_rwlock_t *rwlock) {
+    int rc;
+
+    rc = pthread_rwlock_destroy(rwlock);
+    if (rc == 0) {
+        LOG(MODULE_NAME, L_WARN,
+            "Destroy mutex %p",
+            rwlock);
+    } else {
+        LOG(MODULE_NAME, L_WARN,
+            "Error %d, Destroy mutex %p", rc, rwlock);
+        abort();
+    }
+}
+
+/*锁住句柄
+ * params rwlock:需要锁的读写锁
+ * */
+void FsalHandle::pthread_lock_write(pthread_rwlock_t *rwlock) {
+    int rc;
+    rc = pthread_rwlock_wrlock(rwlock);
+    if (rc == 0) {
+        LOG(MODULE_NAME, L_WARN,
+            "Got write lock on %p",
+            rwlock);
+    } else {
+        LOG(MODULE_NAME, L_WARN,
+            "Error %d, write locking %p",
+            rc, rwlock);
         abort();
     }
 }
 
 /*释放句柄
- * params mutex:需要释放的句柄
+ * params rwlock:需要释放的读写锁
  * */
-void FsalHandle::pthread_unlock_mutex(pthread_mutex_t *mutex) {
+void FsalHandle::pthread_lock_read(pthread_rwlock_t *rwlock) {
     int rc;
-    rc = pthread_mutex_unlock(mutex);
+    rc = pthread_rwlock_rdlock(rwlock);
     if (rc == 0) {
         LOG(MODULE_NAME, D_INFO,
-            "Released mutex %p (%s) at %s:%d",
-            mutex, &mutex,
-            __FILE__, __LINE__);
+            "Got read lock on %p",
+            rwlock);
     } else {
         LOG(MODULE_NAME, D_INFO,
-            "Error %d, releasing mutex %p (%s) "
-            "at %s:%d", rc, mutex, &mutex,
-            __FILE__, __LINE__);
+            "Error %d, read locking %p",
+            rc, rwlock);
         abort();
     }
 }
 
+/*释放句柄
+ * params rwlock:需要释放的读写锁
+ * */
+void FsalHandle::pthread_unlock_rw(pthread_rwlock_t *rwlock) {
+    int rc;
+    rc = pthread_rwlock_unlock(rwlock);
+    if (rc == 0) {
+        LOG(MODULE_NAME, L_WARN,
+            "Unlocked %p",
+            rwlock);
+    } else {
+        LOG(MODULE_NAME, L_WARN,
+            "Error %d, unlocking %p",
+            rc, rwlock);
+        abort();
+    }
+}
+
+
 /*关闭所有的文件句柄*/
 void FsalHandle::close_handles() {
     /*遍历关闭句柄*/
-    for (const auto &handle: handle_map) {
+    for (auto &handle: handle_map) {
+        /*关闭句柄*/
         close(handle.second.handle);
+        /*销毁锁*/
+        pthread_lock_destory(&(handle.second.handle_rwlock_lock));
     }
     /*清空句柄map*/
     handle_map.clear();
 }
+
 
