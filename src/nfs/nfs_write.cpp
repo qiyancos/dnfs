@@ -66,7 +66,7 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     /*判断文件存不存在*/
     if (!judge_file_exit(write_args->file.data.data_val, S_IFREG)) {
         rc = NFS_REQ_ERROR;
-        res->res_write3.status = NFS3ERR_NOENT;
+        res->res_write3.status = NFS3ERR_INVAL;
         LOG(MODULE_NAME, D_ERROR,
             "The value of the arg_write obtained file handle '%s' not exist",
             write_args->file.data.data_val);
@@ -106,13 +106,13 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
         goto outok;
     }
 
-//    if ((arg->arg_write3.stable == DATA_SYNC) ||
-//        (arg->arg_write3.stable == FILE_SYNC))
-//        write_res_ok->committed = FILE_SYNC;
-//    else
-//        write_res_ok->committed = UNSTABLE;
+    if ((arg->arg_write3.stable == DATA_SYNC) ||
+        (arg->arg_write3.stable == FILE_SYNC))
+        write_res_ok->committed = FILE_SYNC;
+    else
+        write_res_ok->committed = UNSTABLE;
 
-    write_res_ok->committed = FILE_SYNC;
+//    write_res_ok->committed = FILE_SYNC;
 
     /*获取文件句柄*/
     file_handle = fsal_handle.get_handle(write_args->file.data.data_val);
