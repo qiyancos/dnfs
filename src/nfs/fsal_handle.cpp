@@ -16,6 +16,7 @@
 #include "log/log.h"
 
 #define MODULE_NAME "NFS"
+
 using namespace std;
 
 /*默认构造函数*/
@@ -62,17 +63,18 @@ bool FsalHandle::push_handle(const string &path) {
                 path.c_str());
             return false;
         }
+        f_handle handle{file_handle};
         /*添加句柄*/
-        handle_map[path] = file_handle;
+        handle_map[path] = handle;
     }
     return true;
 }
 
 /*获取文件句柄,没有创建
  * params path:获取句柄的路径
- * return 获取的句柄，-1获取失败
+ * return 获取的句柄，n_handle获取失败
  * */
-int FsalHandle::get_handle(const string &path) {
+f_handle FsalHandle::get_handle(const string &path) {
     /*有则返回句柄*/
     if (judge_handle_exist(path)) {
         return handle_map[path];
@@ -83,28 +85,69 @@ int FsalHandle::get_handle(const string &path) {
         }
     }
     /*都失败返回-1*/
-    return -1;
+    return n_handle;
 }
 
 /*仅获取文件句柄
  * params path:获取句柄的路径
- * return 获取的句柄，-1获取失败
+ * return 获取的句柄，n_handle获取失败
  * */
-int FsalHandle::just_get_handle(const string &path) {
+f_handle FsalHandle::just_get_handle(const string &path) {
     /*有则返回句柄*/
     if (judge_handle_exist(path)) {
         return handle_map[path];
     }
     /*返回-1*/
-    return -1;
+    return n_handle;
+}
+
+/*锁住句柄
+ * params mutex:需要锁的句柄
+ * */
+void FsalHandle::pthread_lock_mutex(pthread_mutex_t *mutex) {
+    int rc;
+    rc = pthread_mutex_lock(mutex);
+    if (rc == 0) {
+        LOG(MODULE_NAME, D_INFO,
+            "Acquired mutex %p (%s) at %s:%d",
+            mutex, &mutex,
+            __FILE__, __LINE__);
+    } else {
+        LOG(MODULE_NAME, D_INFO,
+            "Error %d, acquiring mutex %p (%s) "
+            "at %s:%d", rc, mutex, &mutex,
+            __FILE__, __LINE__);
+        abort();
+    }
+}
+
+/*释放句柄
+ * params mutex:需要释放的句柄
+ * */
+void FsalHandle::pthread_unlock_mutex(pthread_mutex_t *mutex) {
+    int rc;
+    rc = pthread_mutex_unlock(mutex);
+    if (rc == 0) {
+        LOG(MODULE_NAME, D_INFO,
+            "Released mutex %p (%s) at %s:%d",
+            mutex, &mutex,
+            __FILE__, __LINE__);
+    } else {
+        LOG(MODULE_NAME, D_INFO,
+            "Error %d, releasing mutex %p (%s) "
+            "at %s:%d", rc, mutex, &mutex,
+            __FILE__, __LINE__);
+        abort();
+    }
 }
 
 /*关闭所有的文件句柄*/
 void FsalHandle::close_handles() {
     /*遍历关闭句柄*/
     for (const auto &handle: handle_map) {
-        close(handle.second);
+        close(handle.second.handle);
     }
     /*清空句柄map*/
     handle_map.clear();
 }
+

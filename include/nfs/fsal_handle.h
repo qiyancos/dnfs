@@ -19,13 +19,21 @@
 #include "string"
 #include "mutex"
 
+/*句柄结构体*/
+struct f_handle {
+    int handle;
+    pthread_rwlock_t handle_lock;
+};
+
 /*句柄操作类*/
 class FsalHandle {
 private:
     /*路径句柄map*/
-    std::map<std::string, int> handle_map = {};
+    std::map<std::string, f_handle> handle_map = {};
     /*创建句柄锁*/
     std::mutex create_mtx;
+    /*空句柄*/
+    f_handle n_handle = {-1};
 private:
     /*默认构造函数*/
     FsalHandle();
@@ -48,15 +56,25 @@ public:
 
     /*获取文件句柄，没有创建
      * params path:获取句柄的路径
-     * return 获取的句柄，-1获取失败
+     * return 获取的句柄，，n_handle获取失败
      * */
-    int get_handle(const std::string &path);
+    f_handle get_handle(const std::string &path);
 
     /*仅获取文件句柄
      * params path:获取句柄的路径
-     * return 获取的句柄，-1获取失败
+     * return 获取的句柄，n_handle获取失败
      * */
-    int just_get_handle(const std::string &path);
+    f_handle just_get_handle(const std::string &path);
+
+    /*锁住句柄
+     * params mutex:需要锁的句柄
+     * */
+    static void pthread_lock_mutex(pthread_mutex_t *mutex);
+
+    /*释放句柄
+     * params mutex:需要释放的句柄
+     * */
+    static void pthread_unlock_mutex(pthread_mutex_t *mutex);
 
     /*关闭所有的文件句柄*/
     void close_handles();

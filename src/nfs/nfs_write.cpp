@@ -25,7 +25,7 @@
 int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     int rc = NFS_REQ_OK;
     /*文件句柄*/
-    int file_handle;
+    f_handle file_handle;
 
     /*保存操作前的文件信息*/
     struct pre_op_attr pre{};
@@ -117,7 +117,7 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     /*获取文件句柄*/
     file_handle = fsal_handle.get_handle(write_args->file.data.data_val);
     /*打开失败*/
-    if (file_handle == -1) {
+    if (file_handle.handle == -1) {
         res->res_write3.status = NFS3ERR_NOENT;
         rc = NFS_REQ_ERROR;
         goto outfail;
@@ -128,7 +128,7 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     write_buf.iov_base = write_args->data.data_val;
 
     /*读取数据*/
-    write_count = pwritev(file_handle, &write_buf, 1, (__off_t) write_args->offset);
+    write_count = pwritev(file_handle.handle, &write_buf, 1, (__off_t) write_args->offset);
 
 
     /*写入失败*/
@@ -150,7 +150,7 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     /*不是异步的，直接刷缓存*/
     if(write_res_ok->committed!=UNSTABLE){
-        retval = fsync(file_handle);
+        retval = fsync(file_handle.handle);
         if(retval==-1){
             rc = NFS_REQ_ERROR;
             res->res_commit3.status = NFS3ERR_IO;

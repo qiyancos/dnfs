@@ -29,7 +29,7 @@ int nfs3_commit(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     struct pre_op_attr pre{};
 
     /*刷新的文件句柄*/
-    int file_handle;
+    f_handle file_handle;
     /*刷新标志*/
     int retval;
 
@@ -76,7 +76,7 @@ int nfs3_commit(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     file_handle = fsal_handle.just_get_handle(commit_args->file.data.data_val);
 
     /*同步文件信息*/
-    retval = fsync(file_handle);
+    retval = fsync(file_handle.handle);
 
     /*同步缓存失败*/
     if (retval == -1) {
