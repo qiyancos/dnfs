@@ -36,6 +36,9 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     /*写入数据*/
     iovec write_buf{};
 
+    /*刷缓存结果*/
+    int retval;
+
     /*数据指针*/
     WRITE3args *write_args = &arg->arg_write3;
     WRITE3resok *write_res_ok = &res->res_write3.WRITE3res_u.resok;
@@ -103,6 +106,14 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
         goto outok;
     }
 
+//    if ((arg->arg_write3.stable == DATA_SYNC) ||
+//        (arg->arg_write3.stable == FILE_SYNC))
+//        write_res_ok->committed = FILE_SYNC;
+//    else
+//        write_res_ok->committed = UNSTABLE;
+
+    write_res_ok->committed = FILE_SYNC;
+
     /*获取文件句柄*/
     file_handle = fsal_handle.get_handle(write_args->file.data.data_val);
     /*打开失败*/
@@ -137,6 +148,19 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
             write_count, write_args->data.data_len);
     }
 
+    /*不是异步的，直接刷缓存*/
+    if(write_res_ok->committed!=UNSTABLE){
+        retval = fsync(file_handle);
+        if(retval==-1){
+            rc = NFS_REQ_ERROR;
+            res->res_commit3.status = NFS3ERR_IO;
+            LOG(MODULE_NAME, D_ERROR,
+                "Interface write failed to refresh file '%s' store",
+                write_args->file.data.data_val);
+            goto outfail;
+        }
+    }
+
     outok:
     /*获取目录wcc信息*/
     res->res_write3.status = get_wcc_data(write_args->file.data.data_val,
@@ -167,12 +191,6 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     }
 
     out:
-    if ((arg->arg_write3.stable == DATA_SYNC) ||
-        (arg->arg_write3.stable == FILE_SYNC))
-        write_res_ok->committed = FILE_SYNC;
-    else
-        write_res_ok->committed = UNSTABLE;
-//    write_res_ok->committed = FILE_SYNC;
 
     LOG(MODULE_NAME, D_INFO, "Interface write result stat is %d:",
         res->res_write3.status);
