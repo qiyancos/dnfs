@@ -25,7 +25,7 @@
 int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     int rc = NFS_REQ_OK;
     /*文件句柄*/
-    f_handle file_handle{};
+    f_handle *file_handle = nullptr;
 
     /*保存操作前的文件信息*/
     struct pre_op_attr pre{};
@@ -117,7 +117,7 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     /*获取文件句柄*/
     file_handle = fsal_handle.get_handle(write_args->file.data.data_val);
     /*打开失败*/
-    if (file_handle.handle == -1) {
+    if (file_handle->handle == -1) {
         res->res_write3.status = NFS3ERR_NOENT;
         rc = NFS_REQ_ERROR;
         goto outfail;
@@ -126,12 +126,11 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     /*构造写入数据*/
     write_buf.iov_len = write_args->data.data_len;
     write_buf.iov_base = write_args->data.data_val;
-
-    FsalHandle::pthread_lock_write(&file_handle.handle_rwlock_lock);
+    FsalHandle::pthread_lock_write(&file_handle->handle_rwlock_lock);
 
     /*读取数据*/
-    write_count = pwritev(file_handle.handle, &write_buf, 1, (__off_t) write_args->offset);
-
+    write_count = pwritev(file_handle->handle, &write_buf, 1,
+                          (__off_t) write_args->offset);
 
     /*写入失败*/
     if (write_count < 0) {
@@ -151,9 +150,9 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     }
 
     /*不是异步的，直接刷缓存*/
-    if(write_res_ok->committed!=UNSTABLE){
-        retval = fsync(file_handle.handle);
-        if(retval==-1){
+    if (write_res_ok->committed != UNSTABLE) {
+        retval = fsync(file_handle->handle);
+        if (retval == -1) {
             rc = NFS_REQ_ERROR;
             res->res_commit3.status = NFS3ERR_IO;
             LOG(MODULE_NAME, D_ERROR,
@@ -193,7 +192,9 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     }
 
     out:
-    FsalHandle::pthread_unlock_rw(&file_handle.handle_rwlock_lock);
+    if(file_handle){
+        FsalHandle::pthread_unlock_rw(&file_handle->handle_rwlock_lock);
+    }
 
     LOG(MODULE_NAME, D_INFO, "Interface write result stat is %d:",
         res->res_write3.status);

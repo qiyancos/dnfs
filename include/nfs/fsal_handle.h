@@ -60,13 +60,13 @@ public:
      * params path:获取句柄的路径
      * return 获取的句柄，，n_handle获取失败
      * */
-    f_handle get_handle(const std::string &path);
+    f_handle* get_handle(const std::string &path);
 
     /*仅获取文件句柄
      * params path:获取句柄的路径
      * return 获取的句柄，n_handle获取失败
      * */
-    f_handle just_get_handle(const std::string &path);
+    f_handle* just_get_handle(const std::string &path);
 
     /*创建句柄
      * params rwlock:创建的读写锁

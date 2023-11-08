@@ -80,31 +80,31 @@ bool FsalHandle::push_handle(const string &path) {
  * params path:获取句柄的路径
  * return 获取的句柄，n_handle获取失败
  * */
-f_handle FsalHandle::get_handle(const string &path) {
+f_handle* FsalHandle::get_handle(const string &path) {
     /*有则返回句柄*/
     if (judge_handle_exist(path)) {
-        return handle_map[path];
+        return &handle_map[path];
     } else {
         /*不存在创建句柄返回*/
         if (push_handle(path)) {
-            return handle_map[path];
+            return &handle_map[path];
         }
     }
     /*都失败返回-1*/
-    return n_handle;
+    return &n_handle;
 }
 
 /*仅获取文件句柄
  * params path:获取句柄的路径
  * return 获取的句柄，n_handle获取失败
  * */
-f_handle FsalHandle::just_get_handle(const string &path) {
+f_handle* FsalHandle::just_get_handle(const string &path) {
     /*有则返回句柄*/
     if (judge_handle_exist(path)) {
-        return handle_map[path];
+        return &handle_map[path];
     }
     /*返回-1*/
-    return n_handle;
+    return &n_handle;
 }
 
 /*创建句柄
@@ -120,11 +120,11 @@ void FsalHandle::pthread_lock_init(pthread_rwlock_t *rwlock, pthread_rwlockattr_
 
     rc = pthread_rwlock_init(rwlock, _attr);
     if (rc == 0) {
-        LOG(MODULE_NAME, L_WARN,
+        LOG(MODULE_NAME, D_INFO,
             "Init rwlock %p",
             rwlock);
     } else {
-        LOG(MODULE_NAME, L_WARN,
+        LOG(MODULE_NAME, D_ERROR,
             "Error %d, Init rwlock %p", rc, rwlock);
         abort();
     }
@@ -139,11 +139,11 @@ void FsalHandle::pthread_lock_destory(pthread_rwlock_t *rwlock) {
 
     rc = pthread_rwlock_destroy(rwlock);
     if (rc == 0) {
-        LOG(MODULE_NAME, L_WARN,
+        LOG(MODULE_NAME, D_INFO,
             "Destroy mutex %p",
             rwlock);
     } else {
-        LOG(MODULE_NAME, L_WARN,
+        LOG(MODULE_NAME, D_ERROR,
             "Error %d, Destroy mutex %p", rc, rwlock);
         abort();
     }
@@ -156,11 +156,11 @@ void FsalHandle::pthread_lock_write(pthread_rwlock_t *rwlock) {
     int rc;
     rc = pthread_rwlock_wrlock(rwlock);
     if (rc == 0) {
-        LOG(MODULE_NAME, L_WARN,
-            "Got write lock on %p",
+        LOG(MODULE_NAME, D_INFO,
+            "Get write lock on %p",
             rwlock);
     } else {
-        LOG(MODULE_NAME, L_WARN,
+        LOG(MODULE_NAME, D_ERROR,
             "Error %d, write locking %p",
             rc, rwlock);
         abort();
@@ -175,7 +175,7 @@ void FsalHandle::pthread_lock_read(pthread_rwlock_t *rwlock) {
     rc = pthread_rwlock_rdlock(rwlock);
     if (rc == 0) {
         LOG(MODULE_NAME, D_INFO,
-            "Got read lock on %p",
+            "Get read lock on %p",
             rwlock);
     } else {
         LOG(MODULE_NAME, D_INFO,
@@ -192,11 +192,11 @@ void FsalHandle::pthread_unlock_rw(pthread_rwlock_t *rwlock) {
     int rc;
     rc = pthread_rwlock_unlock(rwlock);
     if (rc == 0) {
-        LOG(MODULE_NAME, L_WARN,
+        LOG(MODULE_NAME, D_INFO,
             "Unlocked %p",
             rwlock);
     } else {
-        LOG(MODULE_NAME, L_WARN,
+        LOG(MODULE_NAME, D_ERROR,
             "Error %d, unlocking %p",
             rc, rwlock);
         abort();
