@@ -53,6 +53,49 @@ struct WRITE3res {
     } WRITE3res_u;
 };
 
+/*写数据请求*/
+struct nfs3_write_data {
+    /** 写数据结果 */
+    nfs_res_t *res;
+    /**写请求*/
+    struct svc_req *req;
+    /**句柄*/
+    struct f_handle *obj;
+    /**曹祖结果*/
+    int rc;
+    /*文件路径*/
+    char *file_path;
+    /**控制异步标志*/
+    uint32_t flags;
+    /**需要写入的数据*/
+    struct fsal_io_arg write_arg;
+};
+
+/*重构函数作为参数*/
+typedef void (*fsal_async_cb)(nfs3_write_data *write_data);
+
+/*构造返回结果
+ * params data:写操作结果
+ * return 操作结果
+ * */
+int nfs3_complete_write(struct nfs3_write_data *data);
+
+enum xprt_stat nfs3_write_resume(struct svc_req *req);
+
+/*写操作完处理函数
+ * params write_data:写请求保存
+ * */
+void nfs3_write_cb(nfs3_write_data *write_data);
+
+/*写缓存
+ * params done_cb:写完数据处理函数
+ * params write_arg:待写入数据
+ * params write_data:写请求
+ * */
+void nfs_write_buff(fsal_async_cb done_cb,
+                    struct fsal_io_arg *write_arg,
+                    nfs3_write_data *write_data);
+
 int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res);
 
 void nfs3_write_free(nfs_res_t *res);

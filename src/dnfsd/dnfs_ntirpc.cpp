@@ -347,6 +347,22 @@ void free_args(nfs_request_t *reqdata) {
     nfs_dupreq_rele(reqdata);
 }
 
+void complete_request_instrumentation(nfs_request_t *reqdata)
+{
+#ifdef USE_LTTNG
+    tracepoint(nfs_rpc, op_end, reqdata);
+#endif
+}
+
+
+void nfs_rpc_complete_async_request(nfs_request_t *reqdata,
+                                    enum nfs_req_result rc)
+{
+    complete_request_instrumentation(reqdata);
+    rc = complete_request(reqdata, rc);
+    free_args(reqdata);
+}
+
 /* RPC处理主程序入口 */
 enum xprt_stat nfs_rpc_process_request(nfs_request_t *reqdata, bool retry) {
     LOG(MODULE_NAME, D_INFO,

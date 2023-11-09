@@ -56,6 +56,13 @@ struct svc_req *alloc_dnfs_request(SVCXPRT *xprt, XDR *xdrs);
 /* 释放请求数据结构体对应的内存空间并执行其他销毁操作 */
 void free_dnfs_request(struct svc_req *req, enum xprt_stat stat);
 
+void free_args(nfs_request_t *reqdata);
+
+void complete_request_instrumentation(nfs_request_t *reqdata);
+
+void nfs_rpc_complete_async_request(nfs_request_t *reqdata,
+                                    enum nfs_req_result rc);
+
 /* 如果收到的RPC请求Program代码错误，调用该函数处理 */
 enum xprt_stat nfs_rpc_noprog(nfs_request_t *reqdata);
 

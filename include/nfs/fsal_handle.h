@@ -18,12 +18,7 @@
 #include "map"
 #include "string"
 #include "mutex"
-
-/*句柄结构体*/
-struct f_handle {
-    int handle;
-    pthread_rwlock_t handle_rwlock_lock;
-};
+#include "nfs_args.h"
 
 /*句柄操作类*/
 class FsalHandle {

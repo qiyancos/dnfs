@@ -52,6 +52,12 @@ extern "C"
 
 #define READ_DIR_MAX (1024*16)
 
+/* Async process synchronizations flags to be used with
+ * atomic_postset_uint32_t_bits
+ */
+#define ASYNC_PROC_DONE 1
+#define ASYNC_PROC_EXIT 2
+
 typedef int32_t bool_t;
 
 typedef uint32_t nfs3_uint32;
@@ -286,4 +292,36 @@ struct vfs_dirent {
     char *vd_name;
 };
 
+/*句柄结构体*/
+struct f_handle {
+    /*获取的句柄*/
+    int handle;
+    /*线程读写锁*/
+    pthread_rwlock_t handle_rwlock_lock;
+    /*todo 先不用以后进行使用*/
+    pthread_mutex_t work_mutex;
+    pthread_cond_t work_cond;
+};
+
+/*保存读写结果*/
+struct fsal_io_arg {
+    /*写操作数目*/
+    size_t io_amount;
+    /*是否是延续请求标志，不为0说明之前有相同的请求*/
+    int fsal_resume;
+    union {
+        /*文件结束标志*/
+        bool end_of_file;
+        /*是不是异步写*/
+        bool fsal_stable;
+    };
+    /*读标志*/
+    struct state_t *state;
+    /*读偏移量*/
+    uint64_t offset;
+    /*iov结构体数量*/
+    int iov_count;
+    /*读写缓存保存列表*/
+    struct iovec iov[];
+};
 #endif // DNFSD_NFS_ARGS_H
