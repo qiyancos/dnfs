@@ -19,7 +19,6 @@
 #include "nfs/fsal_handle.h"
 #include "log/log.h"
 #include "dnfsd/dnfs_meta_data.h"
-#include "dnfsd/dnfs_ntirpc.h"
 
 #define MODULE_NAME "NFS"
 
@@ -74,73 +73,12 @@ int nfs3_complete_write(struct nfs3_write_data *data) {
     return data->rc;
 }
 
-enum xprt_stat nfs3_write_resume(struct svc_req *req) {
-    nfs_request_t *reqdata = get_parent_struct_addr(req, nfs_request_t, svc);
-    auto *data = static_cast<nfs3_write_data *>(reqdata->proc_data);
-    int rc;
-    uint32_t flags;
-    /*如果是恢复的链接*/
-    if (data->write_arg.fsal_resume) {
-        /*清空标志位*/
-        atomic_postclear_uint32_t_bits(&data->flags,
-                                       ASYNC_PROC_EXIT |
-                                       ASYNC_PROC_DONE);
-        /*重新写入数据*/
-        nfs_write_buff(nfs3_write_cb, &data->write_arg, data);
-
-        /*设置链接为已经存在*/
-        flags =
-                atomic_postset_uint32_t_bits(&data->flags, ASYNC_PROC_EXIT);
-
-        if ((flags & ASYNC_PROC_DONE) != ASYNC_PROC_DONE) {
-            /* The write was not finished before we got here. When
-             * the write completes, nfs3_write_cb() will have to
-             * reschedule the request for completion. The resume
-             * will be resolved by nfs3_write_resume() which will
-             * free write_data and return the appropriate return
-             * result. We will NOT go async again for the write op
-             * (but could for a subsequent op in the compound).
-             */
-            return XPRT_SUSPEND;
-        }
-    }
-
-    /* Complete the write */
-    rc = nfs3_complete_write(data);
-
-    /* Free the write_data. */
-    gsh_free(data);
-    reqdata->proc_data = nullptr;
-
-    nfs_rpc_complete_async_request(reqdata, static_cast<nfs_req_result>(rc));
-
-    return XPRT_IDLE;
-}
-
-/*写操作完处理函数
- * params write_data:写请求保存
- * */
-void nfs3_write_cb(nfs3_write_data *write_data) {
-    uint32_t flags;
-    /*设置请求结束标志*/
-    flags = atomic_postset_uint32_t_bits(&write_data->flags, ASYNC_PROC_DONE);
-
-    /*如果链接已经存在进行数据恢复*/
-    if ((flags & ASYNC_PROC_EXIT) == ASYNC_PROC_EXIT) {
-        /* 如果写操作已经存在则重新安排请求
-         */
-        write_data->req->rq_resume_cb = nfs3_write_resume;
-        svc_resume(write_data->req);
-    }
-}
-
 /*写缓存
  * params done_cb:写完数据处理函数
  * params write_arg:待写入数据
  * params write_data:写请求
  * */
-void nfs_write_buff(fsal_async_cb done_cb,
-                    struct fsal_io_arg *write_arg,
+void nfs_write_buff(struct fsal_io_arg *write_arg,
                     nfs3_write_data *write_data) {
 
     /*获取句柄*/
@@ -180,7 +118,6 @@ void nfs_write_buff(fsal_async_cb done_cb,
     out:
     FsalHandle::pthread_unlock_rw(&file_handle->handle_rwlock_lock);
 
-    done_cb(write_data);
 }
 
 int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
@@ -312,34 +249,9 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
 
     reqdata->proc_data = write_data;
 
-    again:
-    nfs_write_buff(nfs3_write_cb, write_arg, write_data);
+    nfs_write_buff(write_arg, write_data);
 
-    /*设置请求存在标志*/
-    flags = atomic_postset_uint32_t_bits(&write_data->flags, ASYNC_PROC_EXIT);
-
-    if ((flags & ASYNC_PROC_DONE) != ASYNC_PROC_DONE) {
-        /* The write was not finished before we got here. When the
-         * write completes, nfs3_write_cb() will have to reschedule the
-         * request for completion. The resume will be resolved by
-         * nfs3_write_resume() which will free write_data and return
-         * the appropriate return result.
-         */
-        return NFS_REQ_ASYNC_WAIT;
-    }
-
-    if (write_arg->fsal_resume) {
-        /* FSAL is requesting another write2 call */
-        atomic_postclear_uint32_t_bits(&write_data->flags,
-                                       ASYNC_PROC_EXIT |
-                                       ASYNC_PROC_DONE);
-        /* Make the call with the same params, though the FSAL will be
-         * signaled by fsal_resume being set.
-         */
-        goto again;
-    }
-
-    /* Complete the write */
+    /* 构造返回结果 */
     rc = nfs3_complete_write(write_data);
 
     /* Since we're actually done, we can free write_data. */

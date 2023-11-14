@@ -301,6 +301,8 @@ struct f_handle {
     /*todo 先不用以后进行使用*/
     pthread_mutex_t work_mutex;
     pthread_cond_t work_cond;
+    /*已经接收的的数据大小*/
+    size_t accept_size;
 };
 
 /*保存读写结果*/
