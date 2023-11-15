@@ -586,7 +586,7 @@ fsal_status_t fsal_start_global_io(struct f_handle *file_handle,
 fsal_status_t fsal_start_io(struct f_handle *file_handle,
                             struct state_t *state,
                             fsal_openflags_t openflags,
-                            bool bypass,struct fsal_share *share) {
+                            bool bypass, struct fsal_share *share) {
     if (state == nullptr)
         goto global;
     wait_to_start_io(file_handle, openflags);
@@ -630,7 +630,7 @@ fsal_status_t fsal_complete_io(struct f_handle *file_handle) {
     fsal_status_t status = {ERR_FSAL_NO_ERROR, 0};
     bool got_mutex;
 
-    LOG(MODULE_NAME, L_WARN,
+    LOG(MODULE_NAME, D_INFO,
         "%p done io_work (-1) = %i fd_work = %i",
         file_handle,
         atomic_fetch_int32_t(&file_handle->io_work) - 1,
