@@ -52,11 +52,21 @@ extern "C"
 
 #define READ_DIR_MAX (1024*16)
 
-/* Async process synchronizations flags to be used with
- * atomic_postset_uint32_t_bits
- */
-#define ASYNC_PROC_DONE 1
-#define ASYNC_PROC_EXIT 2
+typedef uint16_t fsal_openflags_t;
+
+#define FSAL_O_CLOSED     0x0000  /* Closed */
+#define FSAL_O_READ       0x0001  /* read */
+#define FSAL_O_WRITE      0x0002  /* write */
+#define FSAL_O_RDWR       (FSAL_O_READ|FSAL_O_WRITE)  /* read/write: both flags
+						     * explicitly or'd together
+						     * so that FSAL_O_RDWR can
+						     * be used as a mask */
+#define FSAL_O_RECLAIM         0x0008  /* open reclaim */
+#define FSAL_O_ANY             0x0020  /* any open file descriptor is usable */
+#define FSAL_O_TRUNC           0x0040  /* Truncate file on open */
+#define FSAL_O_DENY_READ       0x0100
+#define FSAL_O_DENY_WRITE      0x0200
+#define FSAL_O_DENY_WRITE_MAND 0x0400  /* Mandatory deny-write (i.e. NFSv4) */
 
 typedef int32_t bool_t;
 
@@ -292,17 +302,29 @@ struct vfs_dirent {
     char *vd_name;
 };
 
+struct fsal_share {
+    unsigned int share_access_read;
+    unsigned int share_access_write;
+    unsigned int share_deny_read;
+    unsigned int share_deny_write;
+    /**< Count of mandatory share deny write */
+    unsigned int share_deny_write_mand;
+};
+
 /*句柄结构体*/
 struct f_handle {
     /*获取的句柄*/
     int handle;
     /*线程读写锁*/
     pthread_rwlock_t handle_rwlock_lock;
-    /*todo 先不用以后进行使用*/
     pthread_mutex_t work_mutex;
     pthread_cond_t work_cond;
-    /*已经接收的的数据大小*/
-    size_t accept_size;
+    /*判断现在是否在工作*/
+    int32_t io_work;
+    int32_t want_read;
+    int32_t want_write;
+    int32_t fd_work;
+    struct fsal_share *share;
 };
 
 /*保存读写结果*/

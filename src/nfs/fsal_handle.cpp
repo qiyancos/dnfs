@@ -14,6 +14,7 @@
  */
 #include "nfs/fsal_handle.h"
 #include "log/log.h"
+#include "utils/common_utils.h"
 
 #define MODULE_NAME "NFS"
 
@@ -24,6 +25,7 @@ FsalHandle::FsalHandle() = default;
 
 /*默认锁属性*/
 pthread_rwlockattr_t FsalHandle::default_rwlock_attr;
+pthread_mutexattr_t FsalHandle::default_mutex_attr;
 
 /*建立句柄实例*/
 FsalHandle &fsal_handle = FsalHandle::get_instance();
@@ -67,9 +69,22 @@ bool FsalHandle::push_handle(const string &path) {
             return false;
         }
         /*创建句柄*/
-        f_handle handle{file_handle};
-        /*初始化锁*/
-        pthread_lock_init(&handle.handle_rwlock_lock, nullptr);
+        auto *handle = (f_handle *) gsh_calloc(1, sizeof(f_handle));
+        /*初始化数据*/
+        handle->want_write = 0;
+        handle->want_read = 0;
+        handle->fd_work = 0;
+        handle->io_work = 0;
+        /*保存句柄*/
+        handle->handle = file_handle;
+        /*初始化读写锁*/
+        pthread_lock_init(&handle->handle_rwlock_lock, nullptr);
+        /*初始化互斥锁*/
+        pthread_w_mutex_init(&handle->work_mutex, nullptr);
+        /*初始化通知信号*/
+        pthread_w_cond_init(&handle->work_cond, nullptr);
+        /*初始化share的*/
+        handle->share = (fsal_share *) gsh_calloc(1, sizeof(fsal_share));
         /*添加句柄*/
         handle_map[path] = handle;
     }
@@ -80,14 +95,14 @@ bool FsalHandle::push_handle(const string &path) {
  * params path:获取句柄的路径
  * return 获取的句柄，n_handle获取失败
  * */
-f_handle* FsalHandle::get_handle(const string &path) {
+f_handle *FsalHandle::get_handle(const string &path) {
     /*有则返回句柄*/
     if (judge_handle_exist(path)) {
-        return &handle_map[path];
+        return handle_map[path];
     } else {
         /*不存在创建句柄返回*/
         if (push_handle(path)) {
-            return &handle_map[path];
+            return handle_map[path];
         }
     }
     /*都失败返回-1*/
@@ -98,10 +113,10 @@ f_handle* FsalHandle::get_handle(const string &path) {
  * params path:获取句柄的路径
  * return 获取的句柄，n_handle获取失败
  * */
-f_handle* FsalHandle::just_get_handle(const string &path) {
+f_handle *FsalHandle::just_get_handle(const string &path) {
     /*有则返回句柄*/
     if (judge_handle_exist(path)) {
-        return &handle_map[path];
+        return handle_map[path];
     }
     /*返回-1*/
     return &n_handle;
@@ -140,11 +155,11 @@ void FsalHandle::pthread_lock_destory(pthread_rwlock_t *rwlock) {
     rc = pthread_rwlock_destroy(rwlock);
     if (rc == 0) {
         LOG(MODULE_NAME, D_INFO,
-            "Destroy mutex %p",
+            "Destroy lock %p",
             rwlock);
     } else {
         LOG(MODULE_NAME, D_ERROR,
-            "Error %d, Destroy mutex %p", rc, rwlock);
+            "Error %d, Destroy lock %p", rc, rwlock);
         abort();
     }
 }
@@ -203,15 +218,167 @@ void FsalHandle::pthread_unlock_rw(pthread_rwlock_t *rwlock) {
     }
 }
 
+/*初始化互斥锁
+ * params work_mutex:初始化的互斥锁
+ * params mutex_attr:初始化的属性
+ * */
+void FsalHandle::pthread_w_mutex_init(pthread_mutex_t *work_mutex,
+                                      pthread_mutexattr_t *mutex_attr) {
+    int rc;
+    pthread_mutexattr_t *attr = mutex_attr;
+
+    if (attr == nullptr)
+        attr = &default_mutex_attr;
+
+    rc = pthread_mutex_init(work_mutex, attr);
+
+    if (rc == 0) {
+        LOG(MODULE_NAME, D_INFO,
+            "Init rwlock %p",
+            work_mutex);
+    } else {
+        LOG(MODULE_NAME, D_ERROR,
+            "Error %d, Init mutex %p", rc, work_mutex);
+        abort();
+    }
+}
+
+/*锁互斥锁
+ * params work_mutex:初始化的互斥锁
+ * */
+void FsalHandle::pthread_w_mutex_lock(pthread_mutex_t *work_mutex) {
+    int rc;
+
+    rc = pthread_mutex_lock(work_mutex);
+    if (rc == 0) {
+        LOG(MODULE_NAME, D_INFO, "Acquired mutex %p", work_mutex);
+    } else {
+        LOG(MODULE_NAME, D_ERROR,
+            "Error %d, acquiring mutex %p", rc, work_mutex);
+        abort();
+    }
+}
+
+/*解锁互斥锁
+ * params work_mutex:初始化的互斥锁
+ * */
+void FsalHandle::pthread_w_mutex_unlock(pthread_mutex_t *work_mutex) {
+    int rc;
+
+    rc = pthread_mutex_unlock(work_mutex);
+    if (rc == 0) {
+        LOG(MODULE_NAME, D_INFO, "Released mutex %p", work_mutex);
+    } else {
+        LOG(MODULE_NAME, D_ERROR,
+            "Error %d, releasing mutex %p", rc, work_mutex);
+        abort();
+    }
+}
+
+/*销毁互斥锁
+ * params work_mutex:需要销毁的互斥锁
+ * */
+void FsalHandle::pthread_w_mutex_destroy(pthread_mutex_t *work_mutex) {
+    int rc;
+
+    rc = pthread_mutex_destroy(work_mutex);
+    if (rc == 0) {
+        LOG(MODULE_NAME, D_INFO,
+            "Destroy mutex %p",
+            work_mutex);
+    } else {
+        LOG(MODULE_NAME, D_ERROR,
+            "Error %d, Destroy mutex %p", rc, work_mutex);
+        abort();
+    }
+}
+
+/*初始化通知
+ * params cond:待初始化的通知信号
+ * params cond_attr:信号属性
+ * */
+void FsalHandle::pthread_w_cond_init(pthread_cond_t *cond,
+                                     pthread_condattr_t *cond_attr) {
+    int rc;
+
+    rc = pthread_cond_init(cond, cond_attr);
+    if (rc == 0) {
+        LOG(MODULE_NAME, D_INFO,
+            "Init cond %p", cond);
+    } else {
+        LOG(MODULE_NAME, D_ERROR,
+            "Error %d, Init cond %p (%s) ", rc, cond);
+        abort();
+    }
+}
+
+/*销毁通知信号
+ * params cond:待销毁的信号
+ * */
+void FsalHandle::pthread_w_cond_destroy(pthread_cond_t *cond) {
+    int rc;
+
+    rc = pthread_cond_destroy(cond);
+    if (rc == 0) {
+        LOG(MODULE_NAME, D_INFO,
+            "Destroy cond %p", cond);
+    } else {
+        LOG(MODULE_NAME, D_ERROR,
+            "Error %d, Destroy cond %p", rc, cond);
+        abort();
+    }
+}
+
+/*等该信号通知
+ * params cond:等待通知信号
+ * params work_mutex:等待通知互斥锁
+ * */
+void FsalHandle::pthread_w_cond_wait(pthread_cond_t *cond,
+                                     pthread_mutex_t *work_mutex) {
+    int rc;
+
+    rc = pthread_cond_wait(cond, work_mutex);
+    if (rc == 0) {
+        LOG(MODULE_NAME, D_INFO, "Wait cond %p mutex %p", cond, work_mutex);
+    } else {
+        LOG(MODULE_NAME, D_ERROR,
+            "Error %d, Wait cond %p mutex", rc, cond, work_mutex);
+        abort();
+    }
+}
+
+/* 通知信号
+ * params cond:等待通知信号
+ * */
+void FsalHandle::pthread_w_cond_signal(pthread_cond_t *cond) {
+    int rc;
+
+    rc = pthread_cond_signal(cond);
+    if (rc == 0) {
+        LOG(MODULE_NAME, D_INFO, "Signal cond %p", cond);
+    } else {
+        LOG(MODULE_NAME, D_ERROR,
+            "Error %d, Signal cond %p ", rc, cond);
+        abort();
+    }
+}
 
 /*关闭所有的文件句柄*/
 void FsalHandle::close_handles() {
     /*遍历关闭句柄*/
     for (auto &handle: handle_map) {
         /*关闭句柄*/
-        close(handle.second.handle);
-        /*销毁锁*/
-        pthread_lock_destory(&(handle.second.handle_rwlock_lock));
+        close(handle.second->handle);
+        /*释放share空间*/
+        gsh_free(handle.second->share);
+        /*销毁读写锁*/
+        pthread_lock_destory(&handle.second->handle_rwlock_lock);
+        /*销毁互斥锁*/
+        pthread_w_mutex_destroy(&handle.second->work_mutex);
+        /*销毁通知信号*/
+        pthread_w_cond_destroy(&handle.second->work_cond);
+        /*释放整个空间*/
+        gsh_free(handle.second);
     }
     /*清空句柄map*/
     handle_map.clear();

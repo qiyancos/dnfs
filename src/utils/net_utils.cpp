@@ -271,6 +271,7 @@ static void bind_tcp_sockets(const string &svc_name, proto_data &sock_info,
     if (rc == -1) {
         LOG(MODULE_NAME, EXIT_ERROR,
             "Cannot bind tcp socket to %s, error %d(%s)",
+            svc_name.c_str(),
             errno, strerror(errno));
     }
 }

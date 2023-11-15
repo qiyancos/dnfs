@@ -79,7 +79,7 @@ nfsstat3 get_wcc_data(char *file_path, pre_op_attr &pre_attr, wcc_data &wccData)
  * params path:删除的目录
  * return 是否删除成功
  * */
-bool remove_directory(const std::string& path);
+bool remove_directory(const std::string &path);
 
 /*删除文件
  * params path:删除的目录
@@ -91,7 +91,7 @@ bool remove_file(const std::string &path);
  * params fh:建立的句柄
  * params file_path:构造参数
  * */
-void set_file_handle(nfs_fh3 *fh,const std::string &file_path);
+void set_file_handle(nfs_fh3 *fh, const std::string &file_path);
 
 
 /*设置文件属性
@@ -122,5 +122,51 @@ int vfs_readents(int fd, char *buf, unsigned int bcount, off_t *basepp);
  * @return true. Linux entries are never empty.
  */
 bool to_vfs_dirent(char *buf, int bpos, struct vfs_dirent *vd, off_t base);
+
+fsal_status_t wait_to_start_io(struct f_handle *file_handele,
+                               int openflags);
+
+void update_share_counters(struct fsal_share *share,
+                           fsal_openflags_t old_openflags,
+                           fsal_openflags_t new_openflags);
+
+fsal_status_t fsalstat(fsal_errors_t major, int minor);
+
+fsal_status_t check_share_conflict(struct fsal_share *share,
+                                   fsal_openflags_t openflags,
+                                   bool bypass);
+
+fsal_status_t check_share_conflict_and_update(struct fsal_share *share,
+                                              fsal_openflags_t old_openflags,
+                                              fsal_openflags_t new_openflags,
+                                              bool bypass);
+
+fsal_status_t check_share_conflict_and_update_locked(struct f_handle *file_handle,
+                                                     struct fsal_share *share,
+                                                     fsal_openflags_t old_openflags,
+                                                     fsal_openflags_t new_openflags,
+                                                     bool bypass);
+
+fsal_status_t fsal_start_global_io(struct f_handle *file_handle,
+                                   fsal_openflags_t openflags,
+                                   bool bypass,struct fsal_share *share);
+
+fsal_status_t fsal_start_io(struct f_handle *file_handle,
+                            struct state_t *state,
+                            fsal_openflags_t openflags,
+                            bool bypass,struct fsal_share *share);
+
+bool atomic_add_unless_int32_t(int32_t *var,
+                               int32_t addend,
+                               int32_t unless);
+
+bool PTHREAD_MUTEX_dec_int32_t_and_lock(int32_t *var,
+                                        pthread_mutex_t *lock);
+
+fsal_status_t fsal_complete_io(struct f_handle *file_handle);
+
+void update_share_counters_locked(struct f_handle *file_handle,
+                                  fsal_openflags_t old_openflags,
+                                  fsal_openflags_t new_openflags);
 
 #endif //DNFSD_NFS_UTILS_H

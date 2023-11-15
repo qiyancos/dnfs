@@ -24,13 +24,14 @@
 class FsalHandle {
 private:
     /*路径句柄map*/
-    std::map<std::string, f_handle> handle_map = {};
+    std::map<std::string, f_handle *> handle_map = {};
     /*创建句柄锁*/
     std::mutex create_mtx;
     /*空句柄*/
     f_handle n_handle = {-1};
     /*默认锁属性*/
     static pthread_rwlockattr_t default_rwlock_attr;
+    static pthread_mutexattr_t default_mutex_attr;
 private:
     /*默认构造函数*/
     FsalHandle();
@@ -55,19 +56,19 @@ public:
      * params path:获取句柄的路径
      * return 获取的句柄，，n_handle获取失败
      * */
-    f_handle* get_handle(const std::string &path);
+    f_handle *get_handle(const std::string &path);
 
     /*仅获取文件句柄
      * params path:获取句柄的路径
      * return 获取的句柄，n_handle获取失败
      * */
-    f_handle* just_get_handle(const std::string &path);
+    f_handle *just_get_handle(const std::string &path);
 
     /*创建句柄
      * params rwlock:创建的读写锁
      * params attr:创建的属性
      * */
-    static void pthread_lock_init(pthread_rwlock_t *rwlock,pthread_rwlockattr_t *attr);
+    static void pthread_lock_init(pthread_rwlock_t *rwlock, pthread_rwlockattr_t *attr);
 
     /*删除句柄
      * params rwlock:删除的读写锁
@@ -88,6 +89,50 @@ public:
      * params rwlock:需要释放的读写锁
      * */
     static void pthread_unlock_rw(pthread_rwlock_t *rwlock);
+
+    /*初始化互斥锁
+     * params work_mutex:初始化的互斥锁
+     * params mutex_attr:初始化的属性
+     * */
+    static void
+    pthread_w_mutex_init(pthread_mutex_t *work_mutex, pthread_mutexattr_t *mutex_attr);
+
+    /*锁互斥锁
+     * params work_mutex:初始化的互斥锁
+     * */
+    static void pthread_w_mutex_lock(pthread_mutex_t *work_mutex);
+
+    /*解锁互斥锁
+     * params work_mutex:初始化的互斥锁
+     * */
+    static void pthread_w_mutex_unlock(pthread_mutex_t *work_mutex);
+
+    /*销毁互斥锁
+     * params work_mutex:需要销毁的互斥锁
+     * */
+    static void pthread_w_mutex_destroy(pthread_mutex_t *work_mutex);
+
+    /*初始化通知
+     * params cond:待初始化的通知信号
+     * params cond_attr:信号属性
+     * */
+    static void pthread_w_cond_init(pthread_cond_t *cond, pthread_condattr_t *cond_attr);
+
+    /*销毁通知信号
+     * params cond:待销毁的信号
+     * */
+    static void pthread_w_cond_destroy(pthread_cond_t *cond);
+
+    /*等该信号通知
+     * params cond:等待通知信号
+     * params work_mutex:等待通知互斥锁
+     * */
+    static void pthread_w_cond_wait(pthread_cond_t *cond, pthread_mutex_t *work_mutex);
+
+    /* 通知信号
+     * params cond:等待通知信号
+     * */
+    static void pthread_w_cond_signal(pthread_cond_t *cond);
 
     /*关闭所有的文件句柄*/
     void close_handles();

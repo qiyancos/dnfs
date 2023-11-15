@@ -83,11 +83,21 @@ void nfs_write_buff(struct fsal_io_arg *write_arg,
 
     /*获取句柄*/
     f_handle *file_handle = write_data->obj;
-    /*构造写入数据*/
-    FsalHandle::pthread_lock_write(&file_handle->handle_rwlock_lock);
+
+    fsal_status_t status, status2;
 
     /*推送缓存结果*/
     int retval;
+
+    status = fsal_start_io(file_handle, write_arg->state, FSAL_O_WRITE, false,
+                           file_handle->share);
+
+    if (FSAL_IS_ERROR(status)) {
+        LOG(MODULE_NAME, D_ERROR,
+            "fsal_start_io failed returning %s",
+            fsal_err_txt(status));
+        goto out;
+    }
 
     /*读取数据*/
     write_arg->io_amount = pwritev(file_handle->handle, write_arg->iov,
@@ -95,10 +105,10 @@ void nfs_write_buff(struct fsal_io_arg *write_arg,
                                    (off64_t) write_arg->offset);
 
     /*写入失败*/
-    if (write_arg->io_amount < 0) {
+    if (write_arg->io_amount == -1) {
         write_data->res->res_write3.status = NFS3ERR_IO;
         write_data->rc = NFS_REQ_ERROR;
-        LOG(MODULE_NAME, D_ERROR, "open file '%s' failed",
+        LOG(MODULE_NAME, D_ERROR, "Write file '%s' failed",
             write_data->file_path);
         goto out;
     }
@@ -115,9 +125,19 @@ void nfs_write_buff(struct fsal_io_arg *write_arg,
             goto out;
         }
     }
-    out:
-    FsalHandle::pthread_unlock_rw(&file_handle->handle_rwlock_lock);
 
+    status2 = fsal_complete_io(file_handle);
+
+    LOG(MODULE_NAME, D_INFO,
+        "fsal_complete_io returned %s",
+        fsal_err_txt(status2));
+
+    if (write_arg->state == nullptr) {
+        update_share_counters_locked(file_handle,
+                                     FSAL_O_WRITE, FSAL_O_CLOSED);
+    }
+    out:
+    LOG(MODULE_NAME, D_INFO, "Write buff end");
 }
 
 int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
@@ -134,8 +154,6 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     struct fsal_io_arg *write_arg;
     /*获取写请求*/
     nfs_request_t *reqdata = get_parent_struct_addr(req, nfs_request_t, svc);
-    /*连续请求标志*/
-    uint32_t flags;
 
     /*数据指针*/
     WRITE3args *write_args = &arg->arg_write3;

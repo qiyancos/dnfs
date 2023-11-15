@@ -27,6 +27,7 @@
 #include <sys/sysmacros.h>
 
 #include "nfs/nfs_utils.h"
+#include "nfs/fsal_handle.h"
 #include "log/log.h"
 #include "rpc/svc_auth.h"
 #include "string"
@@ -382,7 +383,7 @@ int vfs_readents(int fd, char *buf, unsigned int bcount, off_t *basepp) {
 }
 
 bool to_vfs_dirent(char *buf, int bpos, struct vfs_dirent *vd, off_t base) {
-    struct dirent64 *dp = (struct dirent64 *) (buf + bpos);
+    auto *dp = (struct dirent64 *) (buf + bpos);
     char type;
 
     vd->vd_ino = dp->d_ino;
@@ -392,4 +393,267 @@ bool to_vfs_dirent(char *buf, int bpos, struct vfs_dirent *vd, off_t base) {
     vd->vd_offset = dp->d_off;
     vd->vd_name = dp->d_name;
     return true;
+}
+
+
+fsal_status_t wait_to_start_io(struct f_handle *file_handele,
+                               int openflags) {
+    fsal_status_t status = {ERR_FSAL_NO_ERROR, 0};
+
+    /* Indicate we want to do I/O work */
+    atomic_inc_int32_t(&file_handele->io_work);
+
+//    if (openflags & FSAL_O_READ) {
+//        /* Indicate we want to read */
+//        atomic_inc_int32_t(&file_handele->want_read);
+//    }
+//
+//    if (openflags & FSAL_O_WRITE) {
+//        /* Indicate we want to read */
+//        atomic_inc_int32_t(&file_handele->want_write);
+//    }
+
+
+//    if (openflags & FSAL_O_READ) {
+//        /* Indicate we want to read */
+//        atomic_dec_int32_t(&file_handele->want_read);
+//    }
+//
+//    if (openflags & FSAL_O_WRITE) {
+//        /* Indicate we want to read */
+//        atomic_dec_int32_t(&file_handele->want_write);
+//    }
+
+    return status;
+}
+
+void update_share_counters(struct fsal_share *share,
+                           fsal_openflags_t old_openflags,
+                           fsal_openflags_t new_openflags) {
+    int access_read_inc =
+            ((int) (new_openflags & FSAL_O_READ) != 0) -
+            ((int) (old_openflags & FSAL_O_READ) != 0);
+
+    int access_write_inc =
+            ((int) (new_openflags & FSAL_O_WRITE) != 0) -
+            ((int) (old_openflags & FSAL_O_WRITE) != 0);
+
+    int deny_read_inc =
+            ((int) (new_openflags & FSAL_O_DENY_READ) != 0) -
+            ((int) (old_openflags & FSAL_O_DENY_READ) != 0);
+
+    /* Combine both FSAL_O_DENY_WRITE and FSAL_O_DENY_WRITE_MAND */
+    int deny_write_inc =
+            ((int) (new_openflags & FSAL_O_DENY_WRITE) != 0) -
+            ((int) (old_openflags & FSAL_O_DENY_WRITE) != 0) +
+            ((int) (new_openflags & FSAL_O_DENY_WRITE_MAND) != 0) -
+            ((int) (old_openflags & FSAL_O_DENY_WRITE_MAND) != 0);
+
+    int deny_write_mand_inc =
+            ((int) (new_openflags & FSAL_O_DENY_WRITE_MAND) != 0) -
+            ((int) (old_openflags & FSAL_O_DENY_WRITE_MAND) != 0);
+
+    share->share_access_read += access_read_inc;
+    share->share_access_write += access_write_inc;
+    share->share_deny_read += deny_read_inc;
+    share->share_deny_write += deny_write_inc;
+    share->share_deny_write_mand += deny_write_mand_inc;
+
+    LOG(MODULE_NAME, D_INFO,
+        "share counter: access_read %u, access_write %u, deny_read %u, deny_write %u, deny_write_v4 %u",
+        share->share_access_read,
+        share->share_access_write,
+        share->share_deny_read,
+        share->share_deny_write,
+        share->share_deny_write_mand);
+}
+
+fsal_status_t fsalstat(fsal_errors_t major, int minor) {
+    fsal_status_t status = {major, minor};
+    return status;
+}
+
+fsal_status_t check_share_conflict(struct fsal_share *share,
+                                   fsal_openflags_t openflags,
+                                   bool bypass) {
+    string cause;
+
+    if ((openflags & FSAL_O_READ) != 0
+        && share->share_deny_read > 0
+        && !bypass) {
+        cause = "access read denied by existing deny read";
+        goto out_conflict;
+    }
+
+    if ((openflags & FSAL_O_WRITE) != 0
+        && (share->share_deny_write_mand > 0 ||
+            (!bypass && share->share_deny_write > 0))) {
+        cause = "access write denied by existing deny write";
+        goto out_conflict;
+    }
+
+    if ((openflags & FSAL_O_DENY_READ) != 0
+        && share->share_access_read > 0) {
+        cause = "deny read denied by existing access read";
+        goto out_conflict;
+    }
+
+    if (((openflags & FSAL_O_DENY_WRITE) != 0 ||
+         (openflags & FSAL_O_DENY_WRITE_MAND) != 0)
+        && share->share_access_write > 0) {
+        cause = "deny write denied by existing access write";
+        goto out_conflict;
+    }
+
+    return fsalstat(ERR_FSAL_NO_ERROR, 0);
+
+    out_conflict:
+
+    LOG(MODULE_NAME, D_INFO,
+        "Share conflict detected: %s openflags=%d bypass=%s",
+        cause.c_str(), (int) openflags,
+        bypass ? "yes" : "no");
+
+    LOG(MODULE_NAME, D_INFO,
+        "share->share_deny_read=%d share->share_deny_write=%d share->share_access_read=%d share->share_access_write=%d",
+        share->share_deny_read, share->share_deny_write,
+        share->share_access_read, share->share_access_write);
+
+    return fsalstat(ERR_FSAL_SHARE_DENIED, 0);
+}
+
+fsal_status_t check_share_conflict_and_update(struct fsal_share *share,
+                                              fsal_openflags_t old_openflags,
+                                              fsal_openflags_t new_openflags,
+                                              bool bypass) {
+    fsal_status_t status;
+
+    status = check_share_conflict(share, new_openflags, bypass);
+
+    if (!FSAL_IS_ERROR(status)) {
+        /* Take the share reservation now by updating the counters. */
+        update_share_counters(share, old_openflags, new_openflags);
+    }
+
+    return status;
+}
+
+
+fsal_status_t check_share_conflict_and_update_locked(struct f_handle *file_handle,
+                                                     struct fsal_share *share,
+                                                     fsal_openflags_t old_openflags,
+                                                     fsal_openflags_t new_openflags,
+                                                     bool bypass) {
+    fsal_status_t status;
+
+    FsalHandle::pthread_lock_write(&file_handle->handle_rwlock_lock);
+
+    status = check_share_conflict_and_update(share, old_openflags,
+                                             new_openflags, bypass);
+
+    FsalHandle::pthread_unlock_rw(&file_handle->handle_rwlock_lock);
+
+    return status;
+}
+
+fsal_status_t fsal_start_global_io(struct f_handle *file_handle,
+                                   fsal_openflags_t openflags,
+                                   bool bypass, struct fsal_share *share) {
+    fsal_status_t status = {ERR_FSAL_NO_ERROR, 0};
+    bool open_any = openflags == FSAL_O_ANY;
+
+    if (!open_any && share != nullptr) {
+        status = check_share_conflict_and_update_locked(file_handle,
+                                                        share,
+                                                        FSAL_O_CLOSED,
+                                                        openflags,
+                                                        bypass);
+
+        if (FSAL_IS_ERROR(status)) {
+            FsalHandle::pthread_unlock_rw(&file_handle->handle_rwlock_lock);
+            LOG(MODULE_NAME, D_ERROR,
+                "check_share_conflict_and_update_locked failed with %s",
+                fsal_err_txt(status));
+            return status;
+        }
+    }
+
+    status = wait_to_start_io(file_handle, openflags);
+
+    return status;
+}
+
+fsal_status_t fsal_start_io(struct f_handle *file_handle,
+                            struct state_t *state,
+                            fsal_openflags_t openflags,
+                            bool bypass,struct fsal_share *share) {
+    if (state == nullptr)
+        goto global;
+    wait_to_start_io(file_handle, openflags);
+
+    global:
+    return fsal_start_global_io(file_handle, openflags,
+                                bypass, state == nullptr ? share : nullptr);
+}
+
+bool atomic_add_unless_int32_t(int32_t *var,
+                               int32_t addend,
+                               int32_t unless) {
+    int32_t cur, newv;
+    bool changed;
+
+    cur = atomic_fetch_int32_t(var);
+    do {
+        if (cur == unless)
+            return false;
+        newv = cur + addend;
+        changed = __atomic_compare_exchange_n(var, &cur, newv, false,
+                                              __ATOMIC_SEQ_CST,
+                                              __ATOMIC_SEQ_CST);
+    } while (!changed);
+    return true;
+}
+
+bool PTHREAD_MUTEX_dec_int32_t_and_lock(int32_t *var,
+                                        pthread_mutex_t *lock) {
+    if (atomic_add_unless_int32_t(var, -1, 1))
+        return false;
+
+    FsalHandle::pthread_w_mutex_lock(lock);
+    if (atomic_add_int32_t(var, -1) == 0)
+        return true;
+    FsalHandle::pthread_w_mutex_unlock(lock);
+    return false;
+}
+
+fsal_status_t fsal_complete_io(struct f_handle *file_handle) {
+    fsal_status_t status = {ERR_FSAL_NO_ERROR, 0};
+    bool got_mutex;
+
+    LOG(MODULE_NAME, L_WARN,
+        "%p done io_work (-1) = %i fd_work = %i",
+        file_handle,
+        atomic_fetch_int32_t(&file_handle->io_work) - 1,
+        atomic_fetch_int32_t(&file_handle->fd_work));
+
+    got_mutex = PTHREAD_MUTEX_dec_int32_t_and_lock(&file_handle->io_work,
+                                                   &file_handle->work_mutex);
+
+//    if (got_mutex)
+//        FsalHandle::pthread_w_cond_signal(&file_handle->work_cond);
+//
+    if (got_mutex)
+        FsalHandle::pthread_w_mutex_unlock(&file_handle->work_mutex);
+
+    return status;
+}
+
+void update_share_counters_locked(struct f_handle *file_handle,
+                                  fsal_openflags_t old_openflags,
+                                  fsal_openflags_t new_openflags) {
+    FsalHandle::pthread_lock_write(&file_handle->handle_rwlock_lock);
+
+    update_share_counters(file_handle->share, old_openflags, new_openflags);
+
+    FsalHandle::pthread_unlock_rw(&file_handle->handle_rwlock_lock);
 }

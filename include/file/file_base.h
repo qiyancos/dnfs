@@ -213,6 +213,12 @@ typedef enum fsal_errors_t {
     ERR_FSAL_XATTR2BIG = 10100,
 } fsal_errors_t;
 
+const char *msg_fsal_err(fsal_errors_t fsal_err);
+#define fsal_err_txt(s) msg_fsal_err((s).major)
+
+#define FSAL_IS_SUCCESS(_status_) ((_status_).major == ERR_FSAL_NO_ERROR)
+#define FSAL_IS_ERROR(_status_) (!FSAL_IS_SUCCESS(_status_))
+
 /**
  * @brief The return status of FSAL calls.
  */
