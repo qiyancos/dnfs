@@ -136,6 +136,7 @@ int nfs3_commit(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     }
 
     out:
+    memcpy(commit_res_ok->verf, NFS3_write_verifier, sizeof(writeverf3));
     return rc;
 }
 
