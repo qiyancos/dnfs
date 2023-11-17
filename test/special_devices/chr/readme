@@ -11,3 +11,4 @@
     4. 创建设备文件 “sudo mknod /dev/memdev0 c 主设备号 次设备号”
         例：sudo mknod /dev/memdev0 c 240 0
     5. 运行测试脚本
+    6. 卸载驱动 “sudo rmmod MemDev.ko”
