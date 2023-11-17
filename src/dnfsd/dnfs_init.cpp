@@ -69,7 +69,7 @@ void init_logging(const string &exec_name, const string &nfs_host_name,
     logger.init_module("NFS");
     logger.init_module("MNT");
     /*初始化日志等级*/
-    logger.set_log_level(L_WARN);
+    logger.set_log_level(debug_level);
 
     if (!log_path.empty()) {
         log_path = format_message("%s@(%s,%s,%d)", log_config.path.c_str(),

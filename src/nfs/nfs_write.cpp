@@ -167,7 +167,7 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     }
 
     /*打印写入数据*/
-    LOG(MODULE_NAME, L_WARN, "write data len is: %d ,offset is %d,count is %d",
+    LOG(MODULE_NAME, D_INFO, "write data len is: %d ,offset is %d,count is %d",
         write_args->data.data_len, write_args->offset, write_args->count);
 
     get_file_handle(write_args->file);
@@ -247,7 +247,6 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     write_arg->offset = write_args->offset;
     /*是否异步*/
     write_arg->fsal_stable = arg->arg_write3.stable != UNSTABLE;
-//    write_arg->fsal_stable = true;
     /*缓存数目*/
     write_arg->iov_count = 1;
     /*缓存数据*/
