@@ -1,0 +1,14 @@
+当前目录文件说明
+    MemDev.c 字符设备驱动程序源码文件
+    MemRead.c 读操作测试脚本
+    MemWrite.c 写操作测试脚本
+
+
+字符设备文件测试步骤
+    1. 在当前文件夹下编译，执行 “make” ，得到文件MemDev.ko
+    2. 安装驱动 “sudo insmod MemDev.ko” （若没有insmod，安装方法 apt-get install kmod）
+    3. 查看主设备号 “cat /proc/devices”，找到memdev对应的主设备号，例：240
+    4. 创建设备文件 “sudo mknod /dev/memdev0 c 主设备号 次设备号”
+        例：sudo mknod /dev/memdev0 c 240 0
+    5. 运行测试脚本
+    6. 卸载驱动 “sudo rmmod MemDev.ko”

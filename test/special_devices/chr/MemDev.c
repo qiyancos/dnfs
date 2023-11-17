@@ -14,7 +14,18 @@ int dev2_registers[5];
 struct cdev cdev;
 dev_t devno;
 
-/*文件打开函数*/
+/*
+struct file *filp -- 与字符设备文件关联的file结构，由内核创建
+char __user *buf -- 从设备文件读取到的数据，需要保存到的位置
+                    由系统调用提供该参数
+                    来源于用户空间的指针，这类指针都不能被内核代码直接引用，必须使用专门的函数
+                        copy_from_user
+                        copy_to_user
+size_t size -- 请求传输的数据量
+loff_t *ppos -- 文件的读写位置，由内核从file结构中取出后，传递进来
+*/
+
+/*文件打开函数 响应系统open调用*/
 int mem_open(struct inode *inode, struct file *filp)
 {
     /*获取次设备号*/
@@ -30,13 +41,13 @@ int mem_open(struct inode *inode, struct file *filp)
     return 0;
 }
 
-/*文件释放函数*/
+/*文件释放函数 响应系统close调用*/
 int mem_release(struct inode *inode, struct file *filp)
 {
     return 0;
 }
 
-/*读函数*/
+/*读函数  响应系统read调用*/
 static ssize_t mem_read(struct file *filp, char __user *buf, size_t size, loff_t *ppos)
 {
     unsigned long p = *ppos;
@@ -64,7 +75,7 @@ static ssize_t mem_read(struct file *filp, char __user *buf, size_t size, loff_t
     return ret;
 }
 
-/*写函数*/
+/*写函数  响应系统write调用*/
 static ssize_t mem_write(struct file *filp, const char __user *buf, size_t size, loff_t *ppos)
 {
     unsigned long p = *ppos;
@@ -91,7 +102,7 @@ static ssize_t mem_write(struct file *filp, const char __user *buf, size_t size,
     return ret;
 }
 
-/* seek文件定位函数 */
+/*文件定位函数  响应系统sleek调用*/
 static loff_t mem_llseek(struct file *filp, loff_t offset, int whence)
 {
     loff_t newpos;
