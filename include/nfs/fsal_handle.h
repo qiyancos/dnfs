@@ -64,6 +64,11 @@ public:
      * */
     f_handle *just_get_handle(const std::string &path);
 
+    /*关闭句柄
+     * params file_handle:需要关闭的句柄
+     * */
+    static void close_handle(f_handle *file_handle);
+
     /*创建句柄
      * params rwlock:创建的读写锁
      * params attr:创建的属性

@@ -98,6 +98,9 @@ bool FsalHandle::push_handle(const string &path) {
 f_handle *FsalHandle::get_handle(const string &path) {
     /*有则返回句柄*/
     if (judge_handle_exist(path)) {
+        if (handle_map[path]->handle == -1)
+            /*打开句柄*/
+            handle_map[path]->handle = open(path.c_str(), O_CREAT | O_WRONLY);
         return handle_map[path];
     } else {
         /*不存在创建句柄返回*/
@@ -121,6 +124,17 @@ f_handle *FsalHandle::just_get_handle(const string &path) {
     /*返回-1*/
     return &n_handle;
 }
+
+/*关闭句柄
+ * params file_handle:需要关闭的句柄
+ * */
+void FsalHandle::close_handle(f_handle *file_handle) {
+    if (file_handle->handle != -1) {
+        close(file_handle->handle);
+        file_handle->handle = -1;
+    }
+}
+
 
 /*创建句柄
  * params rwlock:创建的读写锁
@@ -383,5 +397,4 @@ void FsalHandle::close_handles() {
     /*清空句柄map*/
     handle_map.clear();
 }
-
 
