@@ -275,9 +275,11 @@ int nfs3_write(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     gsh_free(write_data);
     reqdata->proc_data = nullptr;
 
-    return rc;
-
     return_res:
+    if (file_handle != nullptr) {
+        /*关闭句柄*/
+        FsalHandle::close_handle(file_handle);
+    }
 
     LOG(MODULE_NAME, D_INFO, "Interface write result stat is %d:",
         res->res_write3.status);

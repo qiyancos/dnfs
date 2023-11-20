@@ -136,6 +136,10 @@ int nfs3_commit(nfs_arg_t *arg, struct svc_req *req, nfs_res_t *res) {
     }
 
     out:
+    if(file_handle!= nullptr){
+        /*关闭句柄*/
+        FsalHandle::close_handle(file_handle);
+    }
     memcpy(commit_res_ok->verf, NFS3_write_verifier, sizeof(writeverf3));
     return rc;
 }
