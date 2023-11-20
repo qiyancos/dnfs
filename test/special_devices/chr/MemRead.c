@@ -21,17 +21,5 @@ int main()
     /*关闭设备*/
     close(fd);
 
-    /*打开设备文件*/
-    fd = open("/dev/memdev1", O_RDWR);
-
-    lseek(fd, 3, SEEK_SET);
-    /*写入数据*/
-    read(fd, &dst, sizeof(int));
-
-    printf("dst1 is %d\n", dst);
-
-    /*关闭设备*/
-    close(fd);
-
     return 0;
 }

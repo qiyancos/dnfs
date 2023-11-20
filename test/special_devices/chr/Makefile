@@ -10,4 +10,6 @@ else
 	PWD := $(shell pwd)
 default:
 	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules
+clean:
+	rm -rf .*.cmd *.o *.mod.c *.ko .tmp_versions modules.*  Module.* .*.o.d *.mod
 endif

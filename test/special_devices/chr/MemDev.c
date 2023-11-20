@@ -7,11 +7,9 @@
 #include <linux/uaccess.h>
 #include <linux/slab.h>
 
-/* We suppose this is the two device's registers */
 int dev1_registers[5];
-int dev2_registers[5];
 
-struct cdev cdev;
+struct cdev *cdev;
 dev_t devno;
 
 /*
@@ -28,13 +26,12 @@ loff_t *ppos -- 文件的读写位置，由内核从file结构中取出后，传
 /*文件打开函数 响应系统open调用*/
 int mem_open(struct inode *inode, struct file *filp)
 {
+    printk("mem_open\n");
     /*获取次设备号*/
     int num = MINOR(inode->i_rdev);
 
     if (num == 0)
         filp->private_data = dev1_registers;
-    else if (num == 1)
-        filp->private_data = dev2_registers;
     else
         return -ENODEV; // 无效的次设备号
 
@@ -44,12 +41,14 @@ int mem_open(struct inode *inode, struct file *filp)
 /*文件释放函数 响应系统close调用*/
 int mem_release(struct inode *inode, struct file *filp)
 {
+    printk("mem_release\n");
     return 0;
 }
 
 /*读函数  响应系统read调用*/
 static ssize_t mem_read(struct file *filp, char __user *buf, size_t size, loff_t *ppos)
 {
+    printk("mem_read\n");
     unsigned long p = *ppos;
     unsigned int count = size;
     int ret = 0;
@@ -78,6 +77,7 @@ static ssize_t mem_read(struct file *filp, char __user *buf, size_t size, loff_t
 /*写函数  响应系统write调用*/
 static ssize_t mem_write(struct file *filp, const char __user *buf, size_t size, loff_t *ppos)
 {
+    printk("mem_write\n");
     unsigned long p = *ppos;
     unsigned int count = size;
     int ret = 0;
@@ -146,13 +146,17 @@ static const struct file_operations mem_fops =
 /*设备驱动模块加载函数*/
 static int memdev_init(void)
 {
-    /*初始化cdev结构*/
-    cdev_init(&cdev, &mem_fops);
+    /* 申请设备号 */
+    alloc_chrdev_region(&devno, 0, 1, "memdev");
+
+    /* 分配字符设备 */
+    cdev = cdev_alloc();
+
+    /* 设置字符设备 */
+    cdev_init(cdev, &mem_fops);
 
     /* 注册字符设备 */
-    alloc_chrdev_region(&devno, 0, 2, "memdev");
-
-    cdev_add(&cdev, devno, 2);
+    cdev_add(cdev, devno, 1);
 
     return 0;
 }
@@ -160,8 +164,9 @@ static int memdev_init(void)
 /*模块卸载函数*/
 static void memdev_exit(void)
 {
-    cdev_del(&cdev);                    /*注销设备*/
-    unregister_chrdev_region(devno, 2); /*释放设备号*/
+    cdev_del(cdev); /*注销设备*/
+    kfree(cdev);
+    unregister_chrdev_region(devno, 1); /*释放设备号*/
 }
 
 MODULE_LICENSE("GPL");
