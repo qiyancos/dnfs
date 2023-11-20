@@ -18,7 +18,7 @@
 #include <string>
 #include <thread>
 #include "log_output.h"
-#include "log_data.h"
+#include "log_args.h"
 
 class Logger;
 

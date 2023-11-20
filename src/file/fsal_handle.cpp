@@ -12,7 +12,7 @@
  * along with this project.
  *
  */
-#include "nfs/fsal_handle.h"
+#include "file/fsal_handle.h"
 #include "log/log.h"
 #include "utils/common_utils.h"
 

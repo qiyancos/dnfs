@@ -16,7 +16,7 @@
 #include "nfs/nfs_write.h"
 #include "nfs/nfs_xdr.h"
 #include "nfs/nfs_utils.h"
-#include "nfs/fsal_handle.h"
+#include "file/fsal_handle.h"
 #include "log/log.h"
 #include "dnfsd/dnfs_meta_data.h"
 

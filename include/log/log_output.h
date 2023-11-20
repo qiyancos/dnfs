@@ -20,7 +20,7 @@
 #include <syslog.h>
 #include <cstdarg>
 #include <log/log_file.h>
-#include <log/log_data.h>
+#include <log/log_args.h>
 
 /*日志输出属性*/
 class LogOutputAttr {

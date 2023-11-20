@@ -16,7 +16,7 @@
 #include <cstring>
 
 #include "log/log.h"
-#include "nfs/fsal_handle.h"
+#include "file/fsal_handle.h"
 #include "utils/thread_utils.h"
 #include "dnfsd/dnfsd.h"
 #include "dnfsd/dnfsd_exit.h"

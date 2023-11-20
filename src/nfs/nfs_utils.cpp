@@ -27,7 +27,7 @@
 #include <sys/sysmacros.h>
 
 #include "nfs/nfs_utils.h"
-#include "nfs/fsal_handle.h"
+#include "file/fsal_handle.h"
 #include "log/log.h"
 #include "rpc/svc_auth.h"
 #include "string"

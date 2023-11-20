@@ -23,6 +23,5 @@ add_library(nfs
         nfs_fsstat.cpp
         nfs_fsinfo.cpp
         nfs_pathconf.cpp
-        nfs_commit.cpp
-        fsal_handle.cpp)
+        nfs_commit.cpp)
 target_link_libraries(nfs utils)

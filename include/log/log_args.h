@@ -12,8 +12,8 @@
  * along with this project.
  *
  */
-#ifndef DNFSD_LOG_DATA_H
-#define DNFSD_LOG_DATA_H
+#ifndef DNFSD_LOG_ARGS_H
+#define DNFSD_LOG_ARGS_H
 
 #include <map>
 #include <syslog.h>
@@ -130,4 +130,4 @@ typedef enum LogGenerate{
     LMODULE_LOG_LEVEL
 }log_generate_t;
 
-#endif //DNFSD_LOG_DATA_H
+#endif //DNFSD_LOG_ARGS_H

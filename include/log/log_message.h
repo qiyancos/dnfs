@@ -21,7 +21,7 @@
 #include <vector>
 #include <thread>
 #include <memory>
-#include "log_data.h"
+#include "log_args.h"
 #include "log_attr.h"
 #include "utils/time_utils.h"
 

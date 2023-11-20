@@ -302,31 +302,6 @@ struct vfs_dirent {
     char *vd_name;
 };
 
-struct fsal_share {
-    unsigned int share_access_read;
-    unsigned int share_access_write;
-    unsigned int share_deny_read;
-    unsigned int share_deny_write;
-    /**< Count of mandatory share deny write */
-    unsigned int share_deny_write_mand;
-};
-
-/*句柄结构体*/
-struct f_handle {
-    /*获取的句柄*/
-    int handle;
-    /*线程读写锁*/
-    pthread_rwlock_t handle_rwlock_lock;
-    pthread_mutex_t work_mutex;
-    pthread_cond_t work_cond;
-    /*判断现在是否在工作*/
-    int32_t io_work;
-    int32_t want_read;
-    int32_t want_write;
-    int32_t fd_work;
-    struct fsal_share *share;
-};
-
 /*保存读写结果*/
 struct fsal_io_arg {
     /*写操作数目*/

@@ -23,7 +23,7 @@
 #include<sys/types.h>
 #include<sys/stat.h>
 #include<fcntl.h>
-#include <log/log_data.h>
+#include <log/log_args.h>
 
 #define LOG_WRITE_ERROR 0001
 

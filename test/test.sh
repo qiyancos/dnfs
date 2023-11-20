@@ -24,6 +24,14 @@ function test_cd() {
   fi
 }
 
+#judge exit
+function judge_exit(){
+	if [ $exit_flag -ne 0 ];
+	then
+		exit
+	fi
+}
+
 # test ls
 function test_ls() {
   if [ $mode_flag -eq 0 ];
@@ -41,7 +49,8 @@ function test_ls() {
 	  ls >> /dev/null
 	  if [ $? -ne 0 ];then
 		  print "Test ls failed" $split_str
-		  exit
+		  judge_exit 
+		  return
 	  fi
   done
 
@@ -70,7 +79,8 @@ function test_touch() {
 	   touch $file_name$i
 	   if [ $? -ne 0 ];then
 		   print "Touch file $file_name$i failed" $split_str
-		   exit
+		   judge_exit
+		   return
 	   fi
    done
    print "Successfully tested touch the result is:" 
@@ -96,7 +106,8 @@ function test_mkdir(){
            mkdir $dir_name$i
            if [ $? -ne 0 ];then
                    print "Make dir $dir_name$i failed" $split_str
-                   exit
+                   judge_exit
+		   return
            fi
    done
    print "Successfully tested make dir the result is:" 
@@ -122,7 +133,8 @@ function test_remove(){
 	   rm -rf *
 	   if [ $? -ne 0 ];then
                    print "Failed to remove all files" $split_str
-                   exit
+                   judge_exit
+		   return
            fi
 	   print "Successfully deleted all files"
    else
@@ -140,7 +152,8 @@ function test_remove(){
                            if [ $? -ne 0 ];
 			   then
                                    print "Failed to remove $delete_name" $split_str
-                                   exit
+                                   judge_exit
+				   return
                            fi
 	           else
 		           print "Select file $delete_name not exist"
@@ -179,7 +192,8 @@ function test_soft_link(){
 			if [ $? -ne 0 ];
 			then
 				print "Failed to create soft link $target_path$i" $split_str
-				exit
+				judge_exit
+				return
 			fi
 		done
 	else
@@ -214,7 +228,8 @@ function test_hard_link(){
 			if [ $? -ne 0 ];
 			then
 				print "Failed to create hard link $target_path$i" $split_str
-				exit
+				judge_exit
+				return
 			fi
 		done
         else
@@ -245,7 +260,8 @@ function test_mv(){
                 if [ $? -ne 0 ];
 		then
 			print "Failed to mv $src_path to $target_path" $split_str
-			exit
+			judge_exit
+			return
 		fi
 	else
 		print "Mv source path $src_path not exist" $split_str
@@ -275,7 +291,8 @@ function test_cp(){
                 if [ $? -ne 0 ];
                 then
                         print "Failed to cp $src_path to $target_path" $split_str
-                        exit
+                        judge_exit
+			return
                 fi
         else
                 print "Cp source path $src_path not exist" $split_str
@@ -296,7 +313,8 @@ function test_vim(){
 	if [ $? -ne 0 ];
 	then
 		print"Failed to vim $src_path" $split_str
-		exit
+		judge_exit
+		return
 	fi
 	print "Successfully tested vim"
 	ls -lh | grep $src_path
@@ -319,11 +337,12 @@ function test_chmod(){
 	if [ -e $src_path ];
 	then
 		print "Change $src_path permission to $change_mode"
-		chmod $change_mode $src_path
+		chmod $src_path $change_mode
 		if [ $? -ne 0 ];
 		then
 			print "Failed to change $src_path permission to $change_mode" $split_str
-			exit
+			judge_exit
+			return
 		fi
 	else
 		print "Chmod file $src_path not exit" $split_str
@@ -335,66 +354,135 @@ function test_chmod(){
 
 }
 
+
+#rm file if it exist
+function rm_file(){
+	if [ -e $1 ];
+	then
+		rm -rf $1
+	fi
+}
+
 #concurrency test
 function test_concurrency(){
 	print "Concurrency test"
 	test_file="concurrency.txt"
+	compore_file="compore.txt"
+
+	rm_file $test_file
+	rm_file $compore_file
+
 	if [ ${#mount_path[*]} -ge 2 ];
 	then
 		for (( i=0; i<${#mount_path[*]}; i++))
 		do
-			test_cd ${mount_path[$1]}
+			print "Enter mount path ${mount_path[$i]}"
+			cd ${mount_path[$i]}
 			if [ -e $test_file ];
 			then
 				print "Test file is $test_file"
 			else
                                 print "Create test file $test_file"
-				touch $test_file
+				touch $test_file 
 				if [ $? -ne 0 ];
 				then
-					print "Failed to create test file $test_file" $split_str
+					print "Failed to create test file $test_file"
 					test_cd ${mount_path[0]}
-					exit
+					judge_exit
+					return
+				fi
+				chmod 777 $test_file
+				if [ $? -ne 0 ];
+				then
+					print "Failed to chage $test_file mode"
+					test_cd ${mount_path[0]}
+					judge_exit
+					return
 				fi
 			fi
 			{
 				print "Three thousand data will be written to ${mount_path[$i]}/$test_file"
-				for (( j=1; j<3000; i++ ))
+				for (( j=1; j<300; j++ ))
 				do
-					echo $j >> "concurrency.txt"
+					echo $j >> $test_file
 					if [ $? -ne 0 ];
 					then
 						print "Failed to write data to ${mount_path[$i]}/$test_file"
 						test_cd ${mount_path[0]}
-						exit
+						judge_exit
+						return
 					fi
 			 	done
 			}&
 		done
+		
+	        #create compre file
+		cd ${mount_path[0]}
+		if [ -e $compore_file ];
+		then
+	       		print "Compore file is $compore_file"
+		else
+			print "Create compore file"
+			touch $compore_file
+			if [ $? -ne 0 ];
+			then
+				print "Failed to create compore file $compore_file" $split_str
+				judge_exit
+				return
+			fi
+			chmod 777 $compore_file
+			if [ $? -ne 0 ];
+			then
+				print "Failed to chage $compore_file mode" $split_str
+				judge_exit
+				return
+			fi
 
+		fi
+		print "three hundred data will be written to ${mount_path[0]}/$compore_file" 
+		for (( j=1; j<300; j++ ))
+		do
+			echo $j >> $compore_file
+			if [ $? -ne 0 ];
+			then
+				print "Failed to write data to $compore_file" $split_str
+				judge_exit
+				return
+			fi
+		done
+                sleep 1
 		wait
 
 	else
 		print "Concurrency test requires at least two mounting paths for testing" $split_str
 	        return
 	fi	
-	print "Successfully tested concurrency"
-	test_cd ${mount_path[0]}
+
+	test_size=$(stat -c%s $test_file)
+	compore_size=$(stat -c%s $compore_file)
+	total_size=$[ $compore_size*${#mount_path[*]} ]  
+	print "Test file $test_file size is $test_size,compore file $compore_file size is $compore_size"
+	if [ $test_size -eq $total_size ];
+	then
+		print "Successfully tested concurrency"
+	else
+		print "Failed tested concurrency"
+	fi
 	print $split_str
 }
 
 print "Start test nfs"
 print "!!!!!!!Any method test will exit when an error is encountered!!!!!!" $split_str
 
-#judge arg num must gt 2 the first is test mode manual or auto next are mount paths
-if [ $# -ge 2 ];
+#judge arg num must gt 2 the first is test mode manual or auto,0 is manual other is auto,the second is exit flag when an error is encountered,0 is not exit other exit next are mount paths
+if [ $# -ge 3 ];
 then   
         #first get mount path
-        index=-1
-	mount_path=$@
+        index=-2
+        mount_path=()
         for i in $@
 	do
-		if [ $index -eq -1 ];
+		if [ $index -le -1 ];
 		then
 			let index++
 			continue
@@ -406,6 +494,7 @@ then
 	#judge path exist
 	for i in ${mount_path[@]}
 	do
+		print "Determine whether the path $i exists"
 		if [ -e $i ];
 		then
 			continue
@@ -413,8 +502,14 @@ then
 			print "Mount path $i not exist" $split_str
 		fi
 	done
-
+        
 	mode_flag=$1
+	if [ $mode_flag -eq 0 ];
+	then
+		exit_flag=$2
+	else
+                exit_flag=0
+	fi
 
 	if [ $mode_flag -eq 0 ];
 	then
@@ -435,8 +530,10 @@ then
 			       8 cp\n
 			       9 vim\n
 			       10 chmod\n
+			       11 concurrency\n
 			       other exit\n";
 			read -p "You select is: " select
+			print $split_str
 			case $select in "1")
 				#test ls
                                 test_ls
@@ -477,6 +574,10 @@ then
 				#test chmod
 				test_chmod
 				;;
+			"11")
+				#test concurrency
+				test_concurrency
+				;;
 			*)
 				print "Exit ,thank you" $split_str
 				exit
@@ -515,10 +616,12 @@ then
 
 		#test rm
 		test_remove
-
+                
+		#test concurrency
+		test_concurrency
 	fi
 
 else
-	print "Please enter test mode and at least one mount path" $split_str
+	print "Please enter test mode,0 is manual other is auto,exit mode 0 is not exit other exit and at least one mount path" $split_str
 fi
 	
