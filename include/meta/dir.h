@@ -12,4 +12,14 @@
  * along with this project.
  *
  */
-#include "storage/physical_storage.h"
+#ifndef DNFSD_DIR_H
+#define DNFSD_DIR_H
+
+/*文件夹操作*/
+
+class dir {
+
+};
+
+
+#endif //DNFSD_DIR_H

@@ -12,4 +12,17 @@
  * along with this project.
  *
  */
-#include "storage/physical_storage.h"
+#ifndef DNFSD_FILE_HANDLE_H
+#define DNFSD_FILE_HANDLE_H
+
+#include "string"
+#include "atomic"
+
+/*文件句柄管理*/
+struct FileHandle {
+    u_int data_len;
+    char *data_val;
+};
+
+
+#endif //DNFSD_FILE_HANDLE_H

@@ -57,7 +57,7 @@ add_subdirectory(src/mnt)
 add_subdirectory(src/file)
 add_subdirectory(src/dnfsd)
 add_subdirectory(src/volume)
-add_subdirectory(src/storager)
+add_subdirectory(src/storage)
 #add_subdirectory(src/protocol)
 
 #[[测试日志]]

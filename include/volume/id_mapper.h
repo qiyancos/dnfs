@@ -12,4 +12,13 @@
  * along with this project.
  *
  */
-#include "storage/physical_storage.h"
+#ifndef DNFSD_ID_MAPPER_H
+#define DNFSD_ID_MAPPER_H
+
+/*volume id管理器，id 自增，二分查找，当id达到最大值时查询空闲id进行重载*/
+class IdMapper {
+
+};
+
+
+#endif //DNFSD_ID_MAPPER_H

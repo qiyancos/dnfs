@@ -1,4 +1,5 @@
 add_library(volume
         physical_volume.cpp
         virtual_valume.cpp
-        mount_volume.cpp)
+        mount_volume.cpp
+        id_mapper.cpp)

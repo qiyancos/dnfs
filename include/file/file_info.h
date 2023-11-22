@@ -12,4 +12,7 @@
  * along with this project.
  *
  */
-#include "storage/physical_storage.h"
+#ifndef DNFSD_FILE_H
+#define DNFSD_FILE_H
+/*todo 记录文件相关信息*/
+#endif //DNFSD_FILE_H

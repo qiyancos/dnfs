@@ -22,8 +22,8 @@
 /**
  * @brief Object file type within the system
  */
-typedef enum {
-    NO_FILE_TYPE = 0,	/* sanity check to ignore type */
+enum object_file_type {
+    NO_FILE_TYPE = 0,    /* sanity check to ignore type */
     REGULAR_FILE = 1,
     CHARACTER_FILE = 2,
     BLOCK_FILE = 3,
@@ -32,7 +32,7 @@ typedef enum {
     FIFO_FILE = 6,
     DIRECTORY = 7,
     EXTENDED_ATTR = 8
-} object_file_type_t;
+};
 
 /**
  * Defines an attribute mask.
@@ -63,7 +63,7 @@ typedef struct fsal_ace_ {
     fsal_aceperm_t perm;
 
     fsal_aceflag_t flag;
-    fsal_aceflag_t iflag;	/* Internal flags. */
+    fsal_aceflag_t iflag;    /* Internal flags. */
     union {
         uid_t uid;
         gid_t gid;
@@ -84,7 +84,7 @@ typedef struct fsal_acl_ {
  */
 typedef struct fsal_fs_locations {
     uint32_t ref;
-    uint32_t nservers;	/* size of server array */
+    uint32_t nservers;    /* size of server array */
     pthread_rwlock_t fsloc_lock;
     char *fs_root;
     char *rootpath;
@@ -102,37 +102,37 @@ typedef struct fsal_dev_ {
  */
 struct fsal_attrlist {
     attrmask_t request_mask; /*< Indicates the requested from the FSAL. */
-    attrmask_t valid_mask;	/*< Indicates the attributes to be set or
+    attrmask_t valid_mask;    /*< Indicates the attributes to be set or
 				   that have been filled in by the FSAL. */
-    attrmask_t supported;	/*< Indicates which attributes the FSAL
+    attrmask_t supported;    /*< Indicates which attributes the FSAL
 				    supports. */
-    object_file_type_t type;	/*< Type of this object */
-    uint64_t filesize;	/*< Logical size (amount of data that can be
+    object_file_type type;    /*< Type of this object */
+    uint64_t filesize;    /*< Logical size (amount of data that can be
 				   read) */
-    fsal_fsid_t fsid;	/*< Filesystem on which this object is
+    fsal_fsid_t fsid;    /*< Filesystem on which this object is
 				   stored */
-    uint64_t fsid3;		/*< Squashed fsid for NFS v3 */
-    fsal_acl_t *acl;	/*< ACL for this object */
-    uint64_t fileid;	/*< Unique identifier for this object within
+    uint64_t fsid3;        /*< Squashed fsid for NFS v3 */
+    fsal_acl_t *acl;    /*< ACL for this object */
+    uint64_t fileid;    /*< Unique identifier for this object within
 				   the scope of the fsid, (e.g. inode number) */
-    uint32_t mode;		/*< POSIX access mode */
-    uint32_t numlinks;	/*< Number of links to this file */
-    uint64_t owner;		/*< Owner ID */
-    uint64_t group;		/*< Group ID */
-    fsal_dev_t rawdev;	/*< Major/minor device number (only
+    uint32_t mode;        /*< POSIX access mode */
+    uint32_t numlinks;    /*< Number of links to this file */
+    uint64_t owner;        /*< Owner ID */
+    uint64_t group;        /*< Group ID */
+    fsal_dev_t rawdev;    /*< Major/minor device number (only
 				   meaningful for character/block special
 				   files.) */
-    struct timespec atime;	/*< Time of last access */
-    struct timespec creation;	/*< Creation time */
-    struct timespec ctime;	/*< Inode modification time (a la stat.
+    struct timespec atime;    /*< Time of last access */
+    struct timespec creation;    /*< Creation time */
+    struct timespec ctime;    /*< Inode modification time (a la stat.
 				   NOT creation.) */
-    struct timespec mtime;	/*< Time of last modification */
-    uint64_t spaceused;	/*< Space used on underlying filesystem */
-    uint64_t change;	/*< A 'change id' */
-    uint64_t generation;	/*< Generation number for this file */
-    int32_t expire_time_attr;	/*< Expiration time interval in seconds
+    struct timespec mtime;    /*< Time of last modification */
+    uint64_t spaceused;    /*< Space used on underlying filesystem */
+    uint64_t change;    /*< A 'change id' */
+    uint64_t generation;    /*< Generation number for this file */
+    int32_t expire_time_attr;    /*< Expiration time interval in seconds
 					   for attributes. Settable by FSAL. */
-    fsal_fs_locations_t *fs_locations;	/*< fs locations for this
+    fsal_fs_locations_t *fs_locations;    /*< fs locations for this
 						    object if any */
 //    struct sec_label4 sec_label;
 };
@@ -214,6 +214,7 @@ typedef enum fsal_errors_t {
 } fsal_errors_t;
 
 const char *msg_fsal_err(fsal_errors_t fsal_err);
+
 #define fsal_err_txt(s) msg_fsal_err((s).major)
 
 #define FSAL_IS_SUCCESS(_status_) ((_status_).major == ERR_FSAL_NO_ERROR)
@@ -223,8 +224,8 @@ const char *msg_fsal_err(fsal_errors_t fsal_err);
  * @brief The return status of FSAL calls.
  */
 typedef struct fsal_status_ {
-    fsal_errors_t major;	/*< FSAL status code */
-    int minor;		/*< Other error code (usually POSIX) */
+    fsal_errors_t major;    /*< FSAL status code */
+    int minor;        /*< Other error code (usually POSIX) */
 } fsal_status_t;
 
 #endif //DNFSD_FILE_BASE_H
