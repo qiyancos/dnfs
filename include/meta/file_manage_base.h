@@ -12,17 +12,13 @@
  * along with this project.
  *
  */
-#ifndef DNFSD_FILE_HANDLE_H
-#define DNFSD_FILE_HANDLE_H
+#ifndef DNFSD_FILE_BASE_H
+#define DNFSD_FILE_BASE_H
 
-#include "string"
-#include "atomic"
 
-/*文件句柄管理*/
-struct FileHandle {
-    u_int data_len;
-    char *data_val;
+class FileManageBase {
+
 };
 
 
-#endif //DNFSD_FILE_HANDLE_H
+#endif //DNFSD_FILE_BASE_H

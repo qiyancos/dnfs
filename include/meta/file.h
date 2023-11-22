@@ -23,7 +23,7 @@
 
 class file : public Serializable{
     /*句柄指针*/
-
+    struct FileHandle *obj_handle;
     /*挂载卷文件系统路径*/
     std::string mvfs_path;
     /*文件名*/
