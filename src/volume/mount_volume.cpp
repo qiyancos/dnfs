@@ -13,3 +13,4 @@
  *
  */
 #include "volume/mount_volume.h"
+#include "volume/id_mapper.h"

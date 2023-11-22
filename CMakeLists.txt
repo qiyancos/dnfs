@@ -62,5 +62,7 @@ add_subdirectory(src/storage)
 
 #[[测试日志]]
 add_subdirectory(test/log)
+#测试卷
+add_subdirectory(test/volume)
 # #[[测试配置文件读取]]
 # add_subdirectory(test/dnfs_config)

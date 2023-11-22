@@ -13,3 +13,4 @@
  *
  */
 #include "volume/virtual_valume.h"
+#include "volume/id_mapper.h"

@@ -13,3 +13,4 @@
  *
  */
 #include "volume/physical_volume.h"
+#include "volume/id_mapper.h"

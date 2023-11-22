@@ -20,6 +20,7 @@
 
 /*文件句柄管理*/
 struct FileHandle {
+    uint64_t
     u_int data_len;
     char *data_val;
 };
