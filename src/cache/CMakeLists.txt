@@ -1,2 +1,2 @@
-add_library(lru
+add_library(cache
         lru.cpp)

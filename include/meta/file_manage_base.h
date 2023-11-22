@@ -12,5 +12,13 @@
  * along with this project.
  *
  */
-#include "volume/physical_volume.h"
-#include "volume/id_mapper.h"
+#ifndef DNFSD_FILE_BASE_H
+#define DNFSD_FILE_BASE_H
+
+
+class FileManageBase {
+
+};
+
+
+#endif //DNFSD_FILE_BASE_H
