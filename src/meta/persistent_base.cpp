@@ -12,4 +12,8 @@
  * along with this project.
  *
  */
-#include "utils/serializable_base.h"
+#include "base/persistent_base.h"
+
+void PersistentBase::init_name_path_map() {
+
+}

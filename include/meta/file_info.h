@@ -12,23 +12,20 @@
  * along with this project.
  *
  */
-#include <cstdarg>
-#include "utils/unit_exception.h"
-#include "utils/common_utils.h"
-using namespace std;
+#ifndef DNFSD_FILE_H
+#define DNFSD_FILE_H
 
-/*构造函数*/
-UnitException::UnitException(const char *format, ...) {
-    va_list args;
-    va_start(args, format);
-    error_message = format_message(format, args);
-    va_end(args);
-}
+#include <string>
+#include <atomic>
+#include "object_info_base.h"
 
-/*返回错误信息
- * return 错误信息
- * */
-char const *
-UnitException::what() const _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_USE_NOEXCEPT {
-    return error_message.c_str();
-}
+/*持久化基类，序列化和反序列化*/
+/*包含了文件信息 */
+
+class FileInfo : public ObjectInfoBase {
+    /*硬链接计数*/
+    std::atomic<int> hard_link_count = 0;
+};
+
+
+#endif //DNFSD_FILE_H

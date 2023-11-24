@@ -26,7 +26,7 @@
 #include <experimental/filesystem>
 
 #include "utils/common_utils.h"
-#include "utils/unit_exception.h"
+#include "utils/util_exception.h"
 
 using namespace std;
 
@@ -152,7 +152,7 @@ void creat_directory(const string &judge_dir) {
         experimental::filesystem::create_directories(judge_dir);
     } else if (!(info.st_mode & S_IFDIR)) {
         /*如果存在但不是文件夹*/
-        throw UnitException(
+        throw UtilException(
                 "The storage log path '%s' set is not a directory",
                 judge_dir.c_str());
     }

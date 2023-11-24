@@ -12,14 +12,4 @@
  * along with this project.
  *
  */
-#ifndef DNFSD_DIR_H
-#define DNFSD_DIR_H
-
-/*文件夹操作*/
-
-class dir {
-
-};
-
-
-#endif //DNFSD_DIR_H
+#include "meta/dir_info.h"

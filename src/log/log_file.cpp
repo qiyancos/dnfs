@@ -349,9 +349,15 @@ void LogFile::judge_and_create_log_file() {
         /*建立构造时间*/
         use_file_build_time = time(nullptr);
 
-    }
-    /*文件存在，但没有获取输出文件流，获取*/
-    if (file_handler == -1) {
+    } else {
+        if (access(log_file_path.c_str(), W_OK) != 0) {
+            /*判断文件写权限*/
+            throw LogException(
+                    "The log files '%s' under this log level '%s' of this module '%s' do not have write permission",
+                    log_file_path.c_str(),
+                    log_level_info_dict[log_level].first[0].c_str(),
+                    module_name.c_str());
+        }
         /*尝试打开文件,追加方式*/
         file_handler = open(log_file_path.c_str(), O_WRONLY | O_APPEND);
         /*如果文件流没有成功打开*/
@@ -367,18 +373,6 @@ void LogFile::judge_and_create_log_file() {
         struct stat file_stat = {};
         fstat(file_handler, &file_stat);
         use_file_build_time = file_stat.st_ctim.tv_sec;
-    }
-    /*如果没有写权限*/
-    if (access(log_file_path.c_str(), W_OK) != 0) {
-        /*如果保存了文件流关闭*/
-        if (file_handler > -1) {
-            close(file_handler);
-        }
-        throw LogException(
-                "The log files '%s' under this log level '%s' of this module '%s' do not have write permission",
-                log_file_path.c_str(),
-                log_level_info_dict[log_level].first[0].c_str(),
-                module_name.c_str());
     }
 }
 
@@ -491,7 +485,7 @@ time_t LogFile::get_mid_night(const time_t &now_time) {
  * */
 void LogFile::rotate_log_file(const time_t &now_time) {
     /*先关闭之前的文件*/
-    if (file_handler > -1) {
+    if (file_handler != -1) {
         close(file_handler);
     }
     /*构造文件名*/

@@ -12,7 +12,4 @@
  * along with this project.
  *
  */
-#ifndef DNFSD_FILE_H
-#define DNFSD_FILE_H
-/*todo 记录文件相关信息*/
-#endif //DNFSD_FILE_H
+#include "meta/object_info_base.h"

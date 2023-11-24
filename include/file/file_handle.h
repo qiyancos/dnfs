@@ -13,8 +13,8 @@
  *
  */
 
-#ifndef DNFSD_FILE_HANDLE_H
-#define DNFSD_FILE_HANDLE_H
+#ifndef DNFSD_OBJECT_HANDLE_H
+#define DNFSD_OBJECT_HANDLE_H
 
 #include "file/file_base.h"
 
@@ -44,4 +44,4 @@ struct nfs_fh3 {
     } data;
 };
 
-#endif //DNFSD_FILE_HANDLE_H
+#endif //DNFSD_OBJECT_HANDLE_H

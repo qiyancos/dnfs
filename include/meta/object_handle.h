@@ -12,4 +12,21 @@
  * along with this project.
  *
  */
-#include "meta/dir.h"
+#ifndef DNFSD_OBJECT_HANDLE_H
+#define DNFSD_OBJECT_HANDLE_H
+
+#include <string>
+#include <atomic>
+#include "base/persistent_base.h"
+
+/*文件句柄管理*/
+class ObjectHandle : public PersistentBase {
+private:
+    u_int data_len;
+    char *data_val;
+public:
+    ObjectHandle() = default;
+};
+
+
+#endif //DNFSD_OBJECT_HANDLE_H

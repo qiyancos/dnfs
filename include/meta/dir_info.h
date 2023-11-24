@@ -12,17 +12,16 @@
  * along with this project.
  *
  */
-#ifndef DNFSD_FILE_HANDLE_H
-#define DNFSD_FILE_HANDLE_H
+#ifndef DNFSD_DIR_H
+#define DNFSD_DIR_H
 
-#include "string"
-#include "atomic"
+#include <string>
+#include <atomic>
+#include "object_info_base.h"
 
-/*文件句柄管理*/
-struct FileHandle {
-    u_int data_len;
-    char *data_val;
+/*文件夹操作*/
+class DirInfo : public ObjectInfoBase {
 };
 
 
-#endif //DNFSD_FILE_HANDLE_H
+#endif //DNFSD_DIR_H
