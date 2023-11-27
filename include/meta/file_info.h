@@ -12,8 +12,8 @@
  * along with this project.
  *
  */
-#ifndef DNFSD_FILE_H
-#define DNFSD_FILE_H
+#ifndef DNFSD_FILE_INFO_H
+#define DNFSD_FILE_INFO_H
 
 #include <string>
 #include <atomic>
@@ -28,4 +28,4 @@ class FileInfo : public ObjectInfoBase {
 };
 
 
-#endif //DNFSD_FILE_H
+#endif //DNFSD_FILE_INFO_H

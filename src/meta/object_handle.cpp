@@ -13,3 +13,19 @@
  *
  */
 #include "meta/object_handle.h"
+
+/*构造函数
+ * params fh:获取数据的文件句柄
+ * */
+ObjectHandle::ObjectHandle(struct nfs_fh3 &fh) {
+    this->data_val = (uint64_t) fh.data.data_val;
+    this->data_len = fh.data.data_len;
+}
+
+/*生成文件句柄
+ * params fh:生成的文件句柄
+ * */
+void ObjectHandle::generate_nfs_fh(nfs_fh3 &fh) {
+    fh.data.data_len = this->data_len;
+    fh.data.data_val = (char *) this->data_val;
+}

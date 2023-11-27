@@ -66,5 +66,7 @@ add_subdirectory(src/cache)
 add_subdirectory(test/log)
 #测试卷
 add_subdirectory(test/volume)
+#测试缓存
+add_subdirectory(test/cache)
 # #[[测试配置文件读取]]
 # add_subdirectory(test/dnfs_config)

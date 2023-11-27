@@ -20,6 +20,8 @@
 #include <mutex>
 #include "meta/object_handle.h"
 #include "meta/object_info_base.h"
+#include "base/persistent_base.h"
+#include "lru.h"
 
 /*日志缓存map,hash:<文件句柄，文件信息>*/
 typedef std::map<ObjectHandle *, ObjectInfoBase *> LogBufferMap;
@@ -33,15 +35,17 @@ typedef std::map<std::string, std::vector<ObjectHandle *>> disk_map;
 #define BIN_LOG_NAME "bin_log.bin"
 /*日志缓存大小*/
 #define BIN_LOG_BUFFER_LIMIT 100
+/*记录工作缓存变化次数，查过进行落盘*/
+#define BUFFER_CHANGE_LIMIT 50
 
 /*创建单例模式，记录文件操作信息*/
-class BinLog {
+class BinLog final : public PersistentBase {
 private:
     /*缓存数据,用filehandle的hash作为索引，最新的文件信息指针，文件信息在日志文件的偏移量，便于修改*/
-    LogBufferMap *memery_buffer = nullptr;
+    LogBufferMap *memery_buffer = new LogBufferMap();
 
     /*存储需要罗盘的缓存数据*/
-    LogBufferMap *disk_buffer = nullptr;
+    LogBufferMap *disk_buffer = new LogBufferMap();
 
     /*缓存文件io句柄*/
     int bin_log_fd = -1;
@@ -62,6 +66,11 @@ private:
     /*落盘日志文件保存路径*/
     std::string last_log_file_path;
 
+    /*工作缓存变化次数记录*/
+    int buffer_change_count;
+    /*工作缓存变化次数限制，超过落盘*/
+    int buffer_change_limit = BUFFER_CHANGE_LIMIT;
+
     /*是否监控落盘标志*/
     bool watch_disk = false;
 public:
@@ -70,14 +79,11 @@ public:
      * */
     BinLog(FileInfoType info_type);
 
-    /*在对象建立时判断落盘日志文件是否存在，存在将数据落盘*/
-    void judge_last_file_exist();
+    /*反序列化尚未完成落盘日志文件*/
+    void resolve_last_file();
 
-    /*在对象建立时判断工作日志文件是否存在，存在将数据读取到工作缓存，不存在创建*/
-    void generate_work_file();
-
-    /*创建日志文件*/
-    void init_log_file();
+    /*序列化工作日志文件*/
+    void resolve_work_file();
 
     /*推送信息，增加操作字节追加缓存，删除修改进行合并
      * params obj_handle:操作句柄
@@ -95,23 +101,35 @@ public:
     bool find_info(ObjectHandle *obj_handle, ObjectInfoBase *obj_info);
 
     /*缓存大小信息大小比对，只有追加文件信息才进行大小比对*/
-    bool need_switch();
+    void need_switch();
 
     /*切换缓存log，封存当前log文件,创建新的文件并获取句柄*/
     void switch_buffer();
 
     /*规划需要落盘的缓存*/
-    void statistics_disk_buffer();
+    void statistics_disk_buffer(disk_map &disk_m);
 
-    /*监控落盘是否完成
-    * */
-    void watch_disk_work();
+    /*将落盘任务发送到落盘管理器
+     * params disk_m:分发的任务数据
+     * */
+    void dispatch_task(const disk_map &disk_m);
 
-    /*从日志文件恢复数据*/
-    void restore_data();
+    /*缓存落盘*/
+    void cache_to_disk();
+
+    /*持久化
+     * params path:持久化到的文件
+     * */
+    void persist(const std::string &persisence_path) override;
+
+    /*读取持久化文件
+     * params path:读取的持久化文件
+     * */
+    void resolve(const std::string &resolve_path) override;
 
     /*析构函数*/
     ~BinLog();
+
 };
 
 

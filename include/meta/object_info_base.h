@@ -12,8 +12,8 @@
  * along with this project.
  *
  */
-#ifndef DNFSD_FILE_BASE_H
-#define DNFSD_FILE_BASE_H
+#ifndef DNFSD_OBJECT_FILE_BASE_H
+#define DNFSD_OBJECT_FILE_BASE_H
 
 #include <map>
 #include "base/serializable_base.h"
@@ -58,4 +58,4 @@ public:
 };
 
 
-#endif //DNFSD_FILE_BASE_H
+#endif //DNFSD_OBJECT_FILE_BASE_H

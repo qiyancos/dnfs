@@ -18,14 +18,25 @@
 #include <string>
 #include <atomic>
 #include "base/persistent_base.h"
+#include "file/file_handle.h"
 
 /*文件句柄管理*/
 class ObjectHandle : public PersistentBase {
 private:
+    /*句柄id*/
+    u_int64_t data_val;
+    /*句柄长度*/
     u_int data_len;
-    char *data_val;
 public:
-    ObjectHandle() = default;
+    /*构造函数
+     * params fh:获取数据的文件句柄
+     * */
+    explicit ObjectHandle(struct nfs_fh3 &fh);
+
+    /*生成文件句柄。/
+     * params fh:生成的文件句柄
+     * */
+    void generate_nfs_fh(struct nfs_fh3 &fh);
 };
 
 

@@ -12,8 +12,8 @@
  * along with this project.
  *
  */
-#ifndef DNFSD_DIR_H
-#define DNFSD_DIR_H
+#ifndef DNFSD_DIR_INFO_H
+#define DNFSD_DIR_INFO_H
 
 #include <string>
 #include <atomic>
@@ -24,4 +24,4 @@ class DirInfo : public ObjectInfoBase {
 };
 
 
-#endif //DNFSD_DIR_H
+#endif //DNFSD_DIR_INFO_H
