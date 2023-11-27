@@ -12,4 +12,23 @@
  * along with this project.
  *
  */
-#include "meta/file_handle.h"
+#ifndef DNFSD_SEQUENCE_BASE_H
+#define DNFSD_SEQUENCE_BASE_H
+
+#include "string"
+/*todo 设计二进制缓存结构体*/
+/*持久化基类*/
+class Serializable {
+public:
+    Serializable() = default;
+
+protected:
+    /*序列化*/
+    virtual void serialize() = 0;
+
+    /*反序列化*/
+    virtual void *deserialize() = 0;
+};
+
+
+#endif //DNFSD_SEQUENCE_BASE_H

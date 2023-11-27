@@ -41,7 +41,7 @@ typedef uint64_t nsecs_elapsed_t;
     if(error_info != nullptr) *error_info = error_content;
 
 /*设置格式化缓存区默认大小*/
-#define INIT_MESSAGE_BUFFER 512
+#define INIT_MESSAGE_BUFFER 1024
 #define FILE_MODEL_644 (S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)
 
 #define gsh_calloc(n, s) ({ \

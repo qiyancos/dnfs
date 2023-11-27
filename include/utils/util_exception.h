@@ -12,18 +12,18 @@
  * along with this project.
  *
  */
-#ifndef DNFSD_UNIT_EXCEPTION_H
-#define DNFSD_UNIT_EXCEPTION_H
+#ifndef DNFSD_UTIL_EXCEPTION_H
+#define DNFSD_UTIL_EXCEPTION_H
 #include <exception>
 #include <string>
 
-class UnitException : public std::exception {
+class UtilException : public std::exception {
 private:
     /*需要显示的错误信息*/
     std::string error_message;
 public:
     /*构造函数*/
-    explicit UnitException(const char *format, ...);
+    explicit UtilException(const char *format, ...);
 
     /*返回错误信息
      * return 错误信息
@@ -33,4 +33,4 @@ public:
 };
 
 
-#endif //DNFSD_UNIT_EXCEPTION_H
+#endif //DNFSD_UTIL_EXCEPTION_H

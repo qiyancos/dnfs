@@ -1,5 +1,8 @@
 add_library(meta
-        file.cpp
-        file_handle.cpp
-        dir.cpp
-        file_manage_base.cpp)
+        object_handle.cpp
+        object_info_base.cpp
+        file_info.cpp
+        dir_info.cpp
+        persistent_base.cpp
+        dir_persistent.cpp
+        file_persistent.cpp)

@@ -12,14 +12,16 @@
  * along with this project.
  *
  */
-#ifndef DNFSD_DIR_H
-#define DNFSD_DIR_H
+#ifndef DNFSD_DIR_INFO_H
+#define DNFSD_DIR_INFO_H
+
+#include <string>
+#include <atomic>
+#include "object_info_base.h"
 
 /*文件夹操作*/
-
-class dir {
-
+class DirInfo : public ObjectInfoBase {
 };
 
 
-#endif //DNFSD_DIR_H
+#endif //DNFSD_DIR_INFO_H

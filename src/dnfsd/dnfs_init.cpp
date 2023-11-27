@@ -68,6 +68,12 @@ void init_logging(const string &exec_name, const string &nfs_host_name,
     logger.init_module("DNFS");
     logger.init_module("NFS");
     logger.init_module("MNT");
+    logger.init_module("bin_log");
+    logger.init_module("meta");
+    logger.init_module("cache");
+    logger.init_module("storage");
+    logger.init_module("storage_band");
+    logger.init_module("volume");
     /*初始化日志等级*/
     logger.set_log_level(debug_level);
 

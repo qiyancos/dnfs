@@ -12,13 +12,4 @@
  * along with this project.
  *
  */
-#ifndef DNFSD_FILE_BASE_H
-#define DNFSD_FILE_BASE_H
-
-
-class FileManageBase {
-
-};
-
-
-#endif //DNFSD_FILE_BASE_H
+#include "meta/dir_info.h"

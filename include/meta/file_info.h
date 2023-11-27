@@ -12,7 +12,20 @@
  * along with this project.
  *
  */
-#ifndef DNFSD_FILE_H
-#define DNFSD_FILE_H
-/*todo 记录文件相关信息*/
-#endif //DNFSD_FILE_H
+#ifndef DNFSD_FILE_INFO_H
+#define DNFSD_FILE_INFO_H
+
+#include <string>
+#include <atomic>
+#include "object_info_base.h"
+
+/*持久化基类，序列化和反序列化*/
+/*包含了文件信息 */
+
+class FileInfo : public ObjectInfoBase {
+    /*硬链接计数*/
+    std::atomic<int> hard_link_count = 0;
+};
+
+
+#endif //DNFSD_FILE_INFO_H

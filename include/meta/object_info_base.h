@@ -12,30 +12,50 @@
  * along with this project.
  *
  */
-#ifndef DNFSD_FILE_H
-#define DNFSD_FILE_H
-#include <string>
-#include "file_handle.h"
-#include "utils/serializable_base.h"
+#ifndef DNFSD_OBJECT_FILE_BASE_H
+#define DNFSD_OBJECT_FILE_BASE_H
 
-/*持久化基类，序列化和反序列化*/
-/*包含了文件信息 */
+#include <map>
+#include "base/serializable_base.h"
 
-class file : public Serializable{
+/*文件信息*/
+enum FileInfoType {
+    FILE_INFO,
+    DIR_INFO
+};
+
+/*文件信息解释对应字典*/
+static std::map<FileInfoType, std::string> info_explain_map = {{FILE_INFO, "file"},
+                                                               {DIR_INFO,  "die"}};
+
+/*文件信息操作*/
+enum FileOperate {
+    CREATE,
+    DELETE,
+    UPDATE,
+    SELECT
+};
+
+/*文件信息基类*/
+class ObjectInfoBase : public Serializable {
+private:
     /*句柄指针*/
-    struct FileHandle *obj_handle;
+    struct ObjectHandle *object_handle;
     /*挂载卷文件系统路径*/
     std::string mvfs_path;
     /*文件名*/
     std::string name;
-    /*硬链接计数*/
-    std::atomic<int> hard_link_count = 0;
     /*文件io handle*/
     void *io_handle;
     /*todo 锁添加*/
     /*挂载卷的id*/
     std::string volvme_id;
+    /*文件信息类型*/
+    FileInfoType file_info_type;
+public:
+    /*生成信息保存路径*/
+    std::string generate_file_save();
 };
 
 
-#endif //DNFSD_FILE_H
+#endif //DNFSD_OBJECT_FILE_BASE_H

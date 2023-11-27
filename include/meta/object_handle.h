@@ -12,17 +12,32 @@
  * along with this project.
  *
  */
-#ifndef DNFSD_FILE_HANDLE_H
-#define DNFSD_FILE_HANDLE_H
+#ifndef DNFSD_OBJECT_HANDLE_H
+#define DNFSD_OBJECT_HANDLE_H
 
-#include "string"
-#include "atomic"
+#include <string>
+#include <atomic>
+#include "base/persistent_base.h"
+#include "file/file_handle.h"
 
 /*文件句柄管理*/
-struct FileHandle {
+class ObjectHandle : public PersistentBase {
+private:
+    /*句柄id*/
+    u_int64_t data_val;
+    /*句柄长度*/
     u_int data_len;
-    char *data_val;
+public:
+    /*构造函数
+     * params fh:获取数据的文件句柄
+     * */
+    explicit ObjectHandle(struct nfs_fh3 &fh);
+
+    /*生成文件句柄。/
+     * params fh:生成的文件句柄
+     * */
+    void generate_nfs_fh(struct nfs_fh3 &fh);
 };
 
 
-#endif //DNFSD_FILE_HANDLE_H
+#endif //DNFSD_OBJECT_HANDLE_H

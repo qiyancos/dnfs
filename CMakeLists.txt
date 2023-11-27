@@ -56,13 +56,17 @@ add_subdirectory(src/nfs)
 add_subdirectory(src/mnt)
 add_subdirectory(src/file)
 add_subdirectory(src/dnfsd)
+add_subdirectory(src/meta)
 add_subdirectory(src/volume)
 add_subdirectory(src/storage)
+add_subdirectory(src/cache)
 #add_subdirectory(src/protocol)
 
 #[[测试日志]]
 add_subdirectory(test/log)
 #测试卷
 add_subdirectory(test/volume)
+#测试缓存
+add_subdirectory(test/cache)
 # #[[测试配置文件读取]]
 # add_subdirectory(test/dnfs_config)
