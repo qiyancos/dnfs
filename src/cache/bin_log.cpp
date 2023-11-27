@@ -132,16 +132,16 @@ void BinLog::sync_log() {
             buffer_t.lock();
             /*清空记录数*/
             buffer_change_count = 0;
-            /*建立保存数据*/
-            auto *copy_buffer = new LogBufferMap();
             /*todo 复制数据memery_buffer*/
-
+            for (auto &data: *disk_buffer) {
+                persist_buffer->insert({data.first, data.second});
+            }
             /*释放锁*/
             buffer_t.unlock();
             /*todo 持久化数据*/
             persist("");
             /*删除复制数据*/
-            delete copy_buffer;
+            delete persist_buffer;
         }
     }
 

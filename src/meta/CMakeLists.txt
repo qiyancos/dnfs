@@ -3,6 +3,6 @@ add_library(meta
         object_info_base.cpp
         file_info.cpp
         dir_info.cpp
-        persistent_base.cpp
         dir_persistent.cpp
-        file_persistent.cpp)
+        file_persistent.cpp
+        file_handle_pool.cpp)

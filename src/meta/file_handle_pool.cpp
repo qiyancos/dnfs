@@ -12,8 +12,4 @@
  * along with this project.
  *
  */
-#include "base/persistent_base.h"
-
-void PersistentBase::init_name_path_map() {
-
-}
+#include "meta/file_handle_pool.h"

@@ -47,6 +47,9 @@ private:
     /*存储需要罗盘的缓存数据*/
     LogBufferMap *disk_buffer = new LogBufferMap();
 
+    /*写日志文件时的保存数据*/
+    LogBufferMap *persist_buffer = new LogBufferMap();
+
     /*缓存文件io句柄*/
     int bin_log_fd = -1;
 

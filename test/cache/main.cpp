@@ -20,8 +20,21 @@ int main() {
     ObjectInfoBase *w = (ObjectInfoBase *) malloc(sizeof(ObjectInfoBase));
     ObjectInfoBase *j = (ObjectInfoBase *) malloc(sizeof(ObjectInfoBase));
     a->insert({s, w});
-    auto j=a->find(s);
+    printf("%p\n",a->find(s)->second);
+    auto n=a->find(s);
+    n->second=j;
+    printf("%p\n",a->find(s)->second);
+    printf("%p\n",j);
     auto *p=new LogBufferMap();
+
+    auto *o=new LogBufferMap();
+    for (auto &data: *a) {
+        p->insert({data.first,data.second});
+    }
+    n->second=w;
+    printf("%p\n",p->find(s)->second);
+    printf("%p\n",a->find(s)->second);
+
     memcpy(p,a,a->size()*(sizeof(ObjectInfoBase*)+ sizeof(ObjectHandle*)));
     printf("%d\n",p->size());
     printf("%d\n", a->size());
