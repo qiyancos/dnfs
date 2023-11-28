@@ -20,22 +20,22 @@
 #include <exception>
 #include <string>
 
-class BaseException : public std::exception
-{
-private:
-    /*需要显示的错误信息*/
-    std::string error_message;
+// class BaseException : public std::exception
+// {
+// private:
+//     /*需要显示的错误信息*/
+//     std::string error_message;
 
-public:
-    /*构造函数*/
-    explicit BaseException(const char *format, ...);
+// public:
+//     /*构造函数*/
+//     explicit BaseException(const char *format, ...);
 
-    /*返回错误信息
-     * return 错误信息
-     * */
-    [[nodiscard]] char const *
-    what() const _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_USE_NOEXCEPT override;
-    ;
-};
+//     /*返回错误信息
+//      * return 错误信息
+//      * */
+//     [[nodiscard]] char const *
+//     what() const _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_USE_NOEXCEPT override;
+//     ;
+// };
 
 #endif // DNFSD_BASE_EXCEPTION_H
