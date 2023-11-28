@@ -22,10 +22,9 @@
 #include <iostream>
 
 #include "base/serializable_base.h"
-#include "base/base_exception.h"
+// #include "base/base_exception.h"
 
 /*持久化数据*/
-template <typename KEY, typename VALUE>
 class PersistentBase
 {
 public:
@@ -44,10 +43,11 @@ public:
      * params: persisence_path 存入的文件路径
      * return: bool 是否成功
      * */
-    bool save_to_file(std::map<KEY, VALUE> *m_map, const std::string &persisence_path)
+    template <typename KEY, typename VALUE>
+    bool save_to_file(std::map<KEY, VALUE> m_map, const std::string &persisence_path)
     {
         // 得到m_map键值对数量
-        int m_size = m_map->size();
+        int m_size = m_map.size();
         if (m_size == 0)
         {
             return false;
@@ -56,12 +56,14 @@ public:
         // 判断m_map中键、值是否可以序列化（是否为Serializable的子类）
         if (std::is_base_of<Serializable, KEY>::value == false)
         {
-            throw BaseException("The key class '%s' does not support serialization", typeid(KEY).name());
+            std::cout << "does not support serialization" << std::endl;
+            // throw BaseException("The key class '%s' does not support serialization", typeid(KEY).name());
             return false;
         }
         if (std::is_base_of<Serializable, VALUE>::value == false)
         {
-            throw BaseException("The value class '%s' does not support serialization", typeid(VALUE).name());
+            std::cout << "does not support serialization" << std::endl;
+            // throw BaseException("The value class '%s' does not support serialization", typeid(VALUE).name());
             return false;
         }
 
@@ -98,6 +100,7 @@ public:
      * params: m_map 读出的map
      * return: bool 是否成功
      * */
+    template <typename KEY, typename VALUE>
     bool read_from_file(const std::string &resolve_path, std::map<KEY, VALUE> *m_map){
         KEY k;
         VALUE v;
