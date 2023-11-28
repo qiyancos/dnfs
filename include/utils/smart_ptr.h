@@ -28,8 +28,6 @@ private:
     std::mutex *count_mutex;
     /*计数变化标志，防止只初始化了一次，导致没有释放内存*/
     bool *count_change;
-    /*已经删除标志*/
-    bool *is_delete;
     /*在初始化的数据后第一次析构啥都不做*/
     bool *is_build;
 
@@ -61,9 +59,6 @@ public:
 
     /*返回引用计数*/
     int &use_count();
-
-    /*返回是否已经删除数据*/
-    bool get_delete();
 
     /*重载* */
     T &operator*() {
@@ -100,7 +95,6 @@ SmartPtr<T>::SmartPtr(T *ptr) {
     count = new int(0);
     count_mutex = new std::mutex;
     count_change = new bool(false);
-    is_delete = new bool(false);
     is_build = new bool(true);
 }
 
@@ -112,7 +106,6 @@ SmartPtr<T>::SmartPtr(const SmartPtr<T> &cp_ptr) {
     count = cp_ptr.count;
     count_mutex = cp_ptr.count_mutex;
     count_change = cp_ptr.count_change;
-    is_delete = cp_ptr.is_delete;
     is_build = cp_ptr.is_build;
     printf("%p,%s\n", ptr, "调用拷贝构造");
     /*计数加1*/
@@ -136,16 +129,11 @@ int &SmartPtr<T>::use_count() {
     return *count;
 }
 
-/*返回是否已经删除数据*/
-template<typename T>
-bool SmartPtr<T>::get_delete() {
-    return *is_delete;
-}
-
 /*释放内存*/
 template<typename T>
 void SmartPtr<T>::realse() {
     printf("%p,%s\n", ptr, "调用解析");
+    bool is_delete=false;
     {
         std::unique_lock<std::mutex> count_l(*count_mutex);
         /*如果需要计数为0*/
@@ -159,27 +147,21 @@ void SmartPtr<T>::realse() {
             delete ptr;
             ptr = nullptr;
 
+            /*归还计数变化空间*/
+            delete count_change;
+            count_change = nullptr;
+
             /*设置删除标志*/
-            *is_delete = true;
-            return;
+            is_delete = true;
+
+            /*todo 从全局map删除其对应的数据*/
         }
         if (count != nullptr) {
             printf("%p,现在的count %d\n", ptr, *count);
         }
     }
     /*说明这是最后一个指针，进行删除剩余空间操作*/
-    if (*is_delete) {
-        {
-            printf("彻底删除\n");
-            std::unique_lock<std::mutex> count_l(*count_mutex);
-            /*归还删除标志位空间*/
-            delete is_delete;
-            is_delete = nullptr;
-
-            /*归还计数变化空间*/
-            delete count_change;
-            count_change = nullptr;
-        }
+    if (is_delete) {
         printf("删除锁空间\n");
         delete count_mutex;
         count_mutex = nullptr;
