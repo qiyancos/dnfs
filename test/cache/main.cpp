@@ -18,8 +18,9 @@
 #include <thread>
 #include <ctime>
 #include <map>
+#include <ptr
 #include "utils/smart_ptr.h"
-
+#include <memory>
 
 using namespace std;
 mutex whar;
@@ -43,9 +44,11 @@ int main() {
     SmartPtr<string> ptr_2 = ptr_1;
     printf("%d\n", ptr_2.use_count());
 
-    map<SmartPtr<string>, SmartPtr<string>> map_test;
-    map_test.emplace(ptr_1,ptr_2);
+    map<SmartPtr<string>, int> map_test;
+    map_test.emplace(ptr_1, 2);
+    map_test.emplace(ptr_2, 3);
 
+    auto ptr_3 = map_test.find(ptr_1);
 //    thread t1(test_lock, 1);
 //    thread t2(test_lock, 2);
 //    t1.join();

@@ -65,6 +65,16 @@ public:
         return this->ptr;
     }
 
+    /*重载==*/
+    bool operator==(const SmartPtr<T> &other_ptr) {
+        return ptr == other_ptr.ptr;
+    }
+
+    /*重载<*/
+    bool operator<(const SmartPtr<T> &other_ptr) const {
+        return ptr < other_ptr.ptr;
+    }
+
     /*释放内存*/
     void realse();
 
