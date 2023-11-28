@@ -22,7 +22,6 @@ class Serializable {
 public:
     Serializable() = default;
 
-protected:
     /*序列化*/
     virtual void serialize() = 0;
 

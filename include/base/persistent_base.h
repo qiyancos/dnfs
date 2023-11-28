@@ -2,7 +2,7 @@
  *
  * Copyright Reserved By All Project Contributors
  * Contributor: Jiao Yue 3059497228@qq.com
- *              Pi_yuyang@163.com
+ *              Piyuyang pi_yuyang@163.com
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the MIT License; This program is
@@ -20,13 +20,14 @@
 #include <map>
 #include <vector>
 #include <iostream>
+#include <utility>
 
 #include "base/serializable_base.h"
-// #include "base/base_exception.h"
 
 /*持久化数据*/
 class PersistentBase
 {
+
 public:
     /*持久化
      * params path:持久化到的文件
@@ -44,7 +45,7 @@ public:
      * return: bool 是否成功
      * */
     template <typename KEY, typename VALUE>
-    bool save_to_file(std::map<KEY, VALUE> m_map, const std::string &persisence_path)
+    bool dump(std::map<KEY, VALUE> m_map, const std::string &persisence_path)
     {
         // 得到m_map键值对数量
         int m_size = m_map.size();
@@ -57,41 +58,37 @@ public:
         if (std::is_base_of<Serializable, KEY>::value == false)
         {
             std::cout << "does not support serialization" << std::endl;
-            // throw BaseException("The key class '%s' does not support serialization", typeid(KEY).name());
             return false;
         }
         if (std::is_base_of<Serializable, VALUE>::value == false)
         {
             std::cout << "does not support serialization" << std::endl;
-            // throw BaseException("The value class '%s' does not support serialization", typeid(VALUE).name());
             return false;
         }
 
-        // 遍历m_map，调用序列化方法
-        KEY *key_buffer = (KEY *)malloc(sizeof(KEY) * m_size);
-        KEY *k_ptr = key_buffer;
-        VALUE *value_buffer = (VALUE *)malloc(sizeof(VALUE) * m_size);
-        VALUE *v_ptr = value_buffer;
+        // 遍历m_map，放入数组
+        int pair_size = sizeof(std::pair<KEY, VALUE>);
+        std::pair<KEY, VALUE> *buffer = (std::pair<KEY, VALUE> *)malloc(pair_size * m_size);
+        std::pair<KEY, VALUE> *ptr = buffer;
         for (const auto iter : m_map)
         {
-            *k_ptr = iter.first;
-            k_ptr += 1;
-            *v_ptr = iter.second;
-            v_ptr += 1;
+            *ptr = std::pair<KEY, VALUE>{iter.first, iter.second};
+            ptr += 1;
         }
 
-        // 存入文件
+        // 写文件
         FILE *f = fopen(persisence_path.c_str(), "w");
         size_t res = fwrite(&m_size, sizeof(int), 1, f);
-        std::cout << "write m_size res: " << res << std::endl;
-        res = fwrite(key_buffer, sizeof(KEY), m_size, f);
-        std::cout << "write key_buffer res: " << res << std::endl;
-        res = fwrite(value_buffer, sizeof(VALUE), m_size, f);
-        std::cout << "write value_buffer res: " << res << std::endl;
+        res = fwrite(buffer, pair_size, m_size, f);
         fclose(f);
+        free(buffer);
 
-        free(key_buffer);
-        free(value_buffer);
+        if (res != m_size)
+        {
+            std::cout << "write failed" << std::endl;
+            return false;
+        }
+
         return true;
     }
 
@@ -101,9 +98,40 @@ public:
      * return: bool 是否成功
      * */
     template <typename KEY, typename VALUE>
-    bool read_from_file(const std::string &resolve_path, std::map<KEY, VALUE> *m_map){
-        KEY k;
-        VALUE v;
+    bool load(const std::string &resolve_path, std::map<KEY, VALUE> *m_map)
+    {
+
+        FILE *f = fopen(resolve_path.c_str(), "r");
+        if (f == NULL)
+        {
+            return false;
+        }
+        // 读取map大小
+        int m_size;
+        fread(&m_size, sizeof(int), 1, f);
+
+        // 读取pair数组
+        int pair_size = sizeof(std::pair<KEY, VALUE>);
+        std::pair<KEY, VALUE> *buffer = (std::pair<KEY, VALUE> *)malloc(pair_size * m_size);
+        std::pair<KEY, VALUE> *ptr = buffer;
+        size_t res = fread(buffer, pair_size, m_size, f);
+        fclose(f);
+        
+        if (res != m_size)
+        {
+            std::cout << "read failed" << std::endl;
+            return false;
+        }
+
+        // 放入map
+        for (int i = 0; i < m_size; i++)
+        {
+            std::pair<KEY, VALUE> p = *(std::pair<KEY, VALUE> *)(ptr);
+            ptr += 1;
+            m_map->emplace(p.first, p.second);
+        }
+        free(buffer);
+
         return true;
     }
 };
