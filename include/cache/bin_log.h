@@ -42,13 +42,13 @@ typedef std::map<std::string, std::vector<ObjectHandle *>> disk_map;
 class BinLog final : public PersistentBase {
 private:
     /*缓存数据,用filehandle的hash作为索引，最新的文件信息指针，文件信息在日志文件的偏移量，便于修改*/
-    LogBufferMap *memery_buffer = new LogBufferMap();
+    LogBufferMap *memery_buffer = nullptr;
 
     /*存储需要罗盘的缓存数据*/
-    LogBufferMap *disk_buffer = new LogBufferMap();
+    LogBufferMap *disk_buffer = nullptr;
 
     /*写日志文件时的保存数据*/
-    LogBufferMap *persist_buffer = new LogBufferMap();
+    LogBufferMap *persist_buffer = nullptr;
 
     /*缓存文件io句柄*/
     int bin_log_fd = -1;
@@ -104,13 +104,13 @@ public:
     bool find_info(ObjectHandle *obj_handle, ObjectInfoBase *obj_info);
 
     /*缓存大小信息大小比对，只有追加文件信息才进行大小比对*/
-    void need_switch();
+    bool need_switch();
 
     /*切换缓存log，封存当前log文件,创建新的文件并获取句柄*/
     void switch_buffer();
 
     /*规划需要落盘的缓存*/
-    void statistics_disk_buffer(disk_map &disk_m);
+    void object_mapping(disk_map &disk_m);
 
     /*将落盘任务发送到落盘管理器
      * params disk_m:分发的任务数据
@@ -118,7 +118,7 @@ public:
     void dispatch_task(const disk_map &disk_m);
 
     /*缓存落盘*/
-    void cache_to_disk();
+    void persist_old_binlog();
 
     /*持久化
      * params path:持久化到的文件

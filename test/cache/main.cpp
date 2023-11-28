@@ -14,32 +14,42 @@
  */
 #include "cache/bin_log.h"
 #include <cstring>
-int main() {
-    auto *a = new LogBufferMap();
-    ObjectHandle *s = (ObjectHandle *) malloc(sizeof(ObjectHandle));
-    ObjectInfoBase *w = (ObjectInfoBase *) malloc(sizeof(ObjectInfoBase));
-    ObjectInfoBase *j = (ObjectInfoBase *) malloc(sizeof(ObjectInfoBase));
-    a->insert({s, w});
-    printf("%p\n",a->find(s)->second);
-    auto n=a->find(s);
-    n->second=j;
-    printf("%p\n",a->find(s)->second);
-    printf("%p\n",j);
-    auto *p=new LogBufferMap();
+#include <mutex>
+#include <thread>
+#include <ctime>
+#include <map>
+#include "utils/smart_ptr.h"
 
-    auto *o=new LogBufferMap();
-    for (auto &data: *a) {
-        p->insert({data.first,data.second});
+
+using namespace std;
+mutex whar;
+int i = 0;
+
+void test_lock(int s) {
+    while (i < 100) {
+        {
+            unique_lock<mutex> tt(whar);
+            i++;
+            printf("id:%d,sss%d\n", s, i);
+        }
+        unique_lock<mutex> ww(whar);
+        printf("id:%d,www%d\n", s, i);
     }
-    n->second=w;
-    printf("%p\n",p->find(s)->second);
-    printf("%p\n",a->find(s)->second);
+}
 
-    memcpy(p,a,a->size()*(sizeof(ObjectInfoBase*)+ sizeof(ObjectHandle*)));
-    printf("%d\n",p->size());
-    printf("%d\n", a->size());
-    free(s);
-    free(w);
-    delete a;
+int main() {
+    SmartPtr<string> ptr_1(new string("1111"));
+    printf("%d\n", ptr_1.use_count());
+    SmartPtr<string> ptr_2 = ptr_1;
+    printf("%d\n", ptr_2.use_count());
+
+    map<SmartPtr<string>, SmartPtr<string>> map_test;
+    map_test.emplace(ptr_1,ptr_2);
+
+//    thread t1(test_lock, 1);
+//    thread t2(test_lock, 2);
+//    t1.join();
+//    t2.join();
+
     return 0;
 }

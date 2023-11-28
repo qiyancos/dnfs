@@ -38,6 +38,9 @@ BinLog::BinLog(FileInfoType info_type) {
     /*判断创建文件夹*/
     creat_directory(BIN_LOG_PATH);
 
+    /*缓存数据,用filehandle的hash作为索引，最新的文件信息指针，文件信息在日志文件的偏移量，便于修改*/
+    memery_buffer = new LogBufferMap();
+
     /*todo 开启监控缓存落盘线程*/
     sync_log();
 
@@ -46,8 +49,8 @@ BinLog::BinLog(FileInfoType info_type) {
 
     /*是否开启落盘线程*/
     if (!disk_buffer->empty()) {
-        /*todo开启落盘线程*/
-        cache_to_disk();
+        /*todo 开启落盘线程*/
+        persist_old_binlog();
     }
 }
 
@@ -61,6 +64,7 @@ void BinLog::resolve_last_file() {
                 last_log_file_path.c_str());
         }
         /*todo 将数据读取到disk_buffer*/
+
     }
 }
 
@@ -114,7 +118,9 @@ void BinLog::push_info(ObjectHandle *obj_handle, ObjectInfoBase *obj_info) {
         /*不存在插入句柄*/
         memery_buffer->insert({obj_handle, obj_info});
         /*缓存大小信息大小比对，只有追加文件信息才进行大小比对*/
-        need_switch();
+        if (need_switch()) {
+            switch_buffer();
+        }
     }
     /*缓存变化次数加1*/
     buffer_change_count += 1;
@@ -126,22 +132,19 @@ void BinLog::sync_log() {
     while (true) {
         /*说明需要落盘*/
         if (buffer_change_count > buffer_change_limit) {
-            /*缓存落盘时需要加锁*/
-            unique_lock<mutex> buffer_t(buffer_lock, defer_lock);
-            /*加锁进行数据复制*/
-            buffer_t.lock();
-            /*清空记录数*/
-            buffer_change_count = 0;
-            /*todo 复制数据memery_buffer*/
-            for (auto &data: *disk_buffer) {
-                persist_buffer->insert({data.first, data.second});
+            {
+                /*缓存落盘时需要加锁*/
+                unique_lock<mutex> buffer_t(buffer_lock, defer_lock);
+                /*清空记录数*/
+                buffer_change_count = 0;
+                /*复制内存数据*/
+                persist_buffer = new LogBufferMap(*memery_buffer);
             }
-            /*释放锁*/
-            buffer_t.unlock();
             /*todo 持久化数据*/
             persist("");
             /*删除复制数据*/
             delete persist_buffer;
+            persist_buffer = nullptr;
         }
     }
 
@@ -166,26 +169,23 @@ bool BinLog::find_info(ObjectHandle *obj_handle, ObjectInfoBase *obj_info) {
 }
 
 /*缓存大小信息大小比对，只有追加文件信息才进行大小比对*/
-void BinLog::need_switch() {
-    /*比大小时加锁*/
-    unique_lock<mutex> buffer_l(buffer_lock);
-    /*大于限制*/
-    if (buffer_limit < memery_buffer->size()) {
-        switch_buffer();
+bool BinLog::need_switch() {
+    /*大于限制,只有当落盘缓存为空指针时才进行落盘，否则忽略此次罗盘*/
+    if (buffer_limit < memery_buffer->size() and disk_buffer == nullptr) {
+        return true;
     }
+    return false;
 }
 
 /*切换缓存log，封存当前log文件,创建新的文件并获取句柄*/
 void BinLog::switch_buffer() {
-    /*只有当落盘缓存为空指针时才进行落盘，否则忽略此次罗盘*/
-    if (disk_buffer->empty()) {
+    {
+        /*切换缓存时需要加锁*/
+        unique_lock<mutex> buffer_t(buffer_lock);
+
         /*切换缓存指针*/
         disk_buffer = memery_buffer;
 
-        /*切换缓存时需要加锁*/
-        unique_lock<mutex> buffer_t(buffer_lock, defer_lock);
-
-        buffer_t.lock();
         /*关闭文件句柄*/
         close(bin_log_fd);
 
@@ -207,17 +207,17 @@ void BinLog::switch_buffer() {
 
         /*重新分配缓存空间*/
         memery_buffer = new LogBufferMap();
-        buffer_t.unlock();
-
-        /*将数据进行整理落盘*/
-        cache_to_disk();
     }
+
+    /*将数据进行整理落盘*/
+    persist_old_binlog();
+
 }
 
 /*规划需要落盘的缓存
  * params disk_m:统计落盘缓存
  * */
-void BinLog::statistics_disk_buffer(disk_map &disk_m) {
+void BinLog::object_mapping(disk_map &disk_m) {
     /*创建统计信息保存map*/
     for (auto &data: *disk_buffer) {
         /*获取文件保存路径*/
@@ -240,21 +240,21 @@ void BinLog::statistics_disk_buffer(disk_map &disk_m) {
  * */
 void BinLog::dispatch_task(const disk_map &disk_m) {
     /*todo 将任务分发到落盘管理器，并监控任务的返回，如果有未完成的任务，重新规划数据进行分发，如果所有的分发都已经完成，删除文件和缓存*/
-
-
+    /*todo 返回来的数据进行 判断*/
     /*删除保存的日志文件*/
     remove(last_log_file_path.c_str());
     /*清空缓存*/
     delete disk_buffer;
+    disk_buffer = nullptr;
 }
 
-/*将缓存数据落盘*/
-void BinLog::cache_to_disk() {
+/*todo 开线程将缓存数据落盘*/
+void BinLog::persist_old_binlog() {
     /*落盘整理信息保存map*/
     disk_map disk_m = {};
 
     /*统计缓存信息,滨海推送到日志落盘管理器*/
-    statistics_disk_buffer(disk_m);
+    object_mapping(disk_m);
 
     /*将落盘任务数据发送到落盘管理器*/
     dispatch_task(disk_m);
@@ -268,6 +268,10 @@ BinLog::~BinLog() {
     persist("");
     /*释放日志缓存*/
     delete memery_buffer;
+    /*todo 查询*/
+    while (disk_buffer != nullptr) {
+
+    }
     delete disk_buffer;
 }
 
