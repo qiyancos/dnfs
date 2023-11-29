@@ -12,29 +12,39 @@
  * along with this project.
  *
  */
-#ifndef DNFSD_FILE_HANDLE_POOL_H
-#define DNFSD_FILE_HANDLE_POOL_H
+#ifndef DNFSD_OBJECT_HANDLE_POOL_H
+#define DNFSD_OBJECT_HANDLE_POOL_H
 
 #include <map>
 #include "object_handle.h"
 #include "base/persistent_base.h"
 #include "utils/smart_ptr.h"
+#include "object_info_base.h"
+
 /*句柄管理池 , todo 单例*/
-class FileHandlePool : public PersistentBase {
+class ObjectHandlePool : public PersistentBase, SmartPtrPool {
 private:
     /*构建句柄池，id:句柄*/
-    std::map<uint64_t, SmartPtr<ObjectHandle>> handle_pool;
+    std::map<SmartPtr<ObjectHandle> *, ObjectInfoBase *> handle_pool;
+
 public:
+    /*默认构造函数*/
+    ObjectHandlePool() = default;
+
     /*添加
-     * params object_handle:存储的句柄
+     * params smart_object_handle:智能指针数据
+     * params object_base:
      * */
-    void push_fh(ObjectHandle &object_handle);
-     /*todo 进行引用计数，引用消失删除*/
+    void push_fh(SmartPtr<ObjectHandle> &smart_object_handle,ObjectInfoBase *object_base);
+
     /*得到
      * params fh_id:得到的句柄id
      * return 获取的句柄指针
      * */
     SmartPtr<ObjectHandle> get_fh(const uint64_t &fh_id);
+
+    /*刪除数据*/
+    void delete_item(void *key) override;
 
     /*持久化
      * params path:持久化到的文件
@@ -47,8 +57,8 @@ public:
     void resolve(const std::string &resolve_path) override;
 
     /*释放所有句柄*/
-    ~FileHandlePool();
+    ~ObjectHandlePool() = default;
 };
 
 
-#endif //DNFSD_FILE_HANDLE_POOL_H
+#endif //DNFSD_OBJECT_HANDLE_POOL_H

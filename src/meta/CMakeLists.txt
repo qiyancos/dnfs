@@ -5,4 +5,4 @@ add_library(meta
         dir_info.cpp
         dir_persistent.cpp
         file_persistent.cpp
-        file_handle_pool.cpp)
+        object_handle_pool.cpp)

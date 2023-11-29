@@ -19,7 +19,7 @@ message("Get linux kernel version: ${KERNEL_VERSION}")
 # 获取系统的架构已经架构关联的include目录
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "unknown")
     # uname -p is broken on this system.  Try uname -m
-    EXECUTE_PROCESS( COMMAND uname -m
+    EXECUTE_PROCESS(COMMAND uname -m
             OUTPUT_STRIP_TRAILING_WHITESPACE
             ERROR_QUIET
             OUTPUT_VARIABLE SYSTEM_ARCH)
@@ -33,7 +33,7 @@ elseif (SYSTEM_ARCH MATCHES "aarch64")
     set(INCLUDE_ARCH "arm64")
 elseif (SYSTEM_ARCH MATCHES "arm64")
     set(INCLUDE_ARCH "arm64")
-else()
+else ()
     message(FATAL_ERROR "Unhandled architecture ${SYSTEM_ARCH}")
 endif ()
 set(ARCH ${INCLUDE_ARCH})
@@ -42,7 +42,7 @@ message("Get linux system arch: ${SYSTEM_ARCH}, include arch: ${INCLUDE_ARCH}")
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/src/libntirpc/ntirpc)
 
-set(CMAKE_CXX_FLAGS_DEBUG  "$ENV{CXXFLAGS} -fno-pie -ggdb3 -O0 -no-pie")
+set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -fno-pie -ggdb3 -O0 -no-pie")
 ADD_DEFINITIONS(-D_RUN_MODE=\"${CMAKE_BUILD_TYPE}\")
 
 
@@ -61,6 +61,8 @@ add_subdirectory(src/volume)
 add_subdirectory(src/storage)
 add_subdirectory(src/cache)
 add_subdirectory(src/base)
+add_subdirectory(src/executer)
+add_subdirectory(src/global_single)
 #add_subdirectory(src/protocol)
 
 #[[测试日志]]
@@ -71,5 +73,7 @@ add_subdirectory(test/volume)
 add_subdirectory(test/cache)
 #测试base
 add_subdirectory(test/base)
+#测试meta
+add_subdirectory(test/meta)
 # #[[测试配置文件读取]]
 # add_subdirectory(test/dnfs_config)
