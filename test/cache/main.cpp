@@ -36,15 +36,7 @@ public:
 
 SmartPtr<string> PoolTest::get(const int &t) {
     auto item = map_test.find(t);
-    /*说明直接引用消除了，直接删除*/
-    if (item->second.get_delete()) {
-        printf("delete\n");
-        map_test.erase(t);
-        SmartPtr<string> null(new string("null"));
-        return null;
-    } else {
-        return item->second;
-    }
+    return item->second;
 }
 
 void PoolTest::push(const SmartPtr<string> &t, int data) {
