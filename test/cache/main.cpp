@@ -25,6 +25,7 @@
 using namespace std;
 
 class PoolTest {
+public:
     map<int, SmartPtr<string>> map_test;
 public:
     /*得到数据*/
@@ -50,19 +51,36 @@ void PoolTest::push(const SmartPtr<string> &t, int data) {
 
 void insert(PoolTest &pool_test) {
     SmartPtr<string> ptr_1(new string("1111"));
+    printf("-------------------------------\n");
     SmartPtr<string> ptr_2(new string("111s"));
+    printf("-------------------------------\n");
+    pool_test.map_test.emplace(3,SmartPtr<string> (new string("111111")));
+    printf("-------------------------------\n");
+    pool_test.map_test.emplace(4,new string("111111"));
+    printf("-------------------------------\n");
+//    ptr_1=ptr_2;
     pool_test.push(ptr_1, 1);
+    printf("-------------------------------\n");
     pool_test.push(ptr_2, 2);
+    printf("-------------------------------\n");
     printf("insert end\n");
 }
 
 void get(PoolTest &pool_test, PoolTest &pool_3) {
     printf("get data\n");
     SmartPtr<string> ptr_1 = pool_test.get(1);
+    printf("-------------------------------\n");
     SmartPtr<string> ptr_2 = pool_test.get(2);
-    pool_3.push(ptr_1, 1);
-    pool_3.push(ptr_2, 2);
+    printf("-------------------------------\n");
+    SmartPtr<string> ptr_3 = pool_test.get(3);
+    printf("-------------------------------\n");
+    SmartPtr<string> ptr_4 = pool_test.get(4);
+    printf("-------------------------------\n");
     printf("插入第二个pool\n");
+    pool_3.push(ptr_1, 1);
+    printf("-------------------------------\n");
+    pool_3.push(ptr_2, 2);
+    printf("-------------------------------\n");
 }
 
 mutex whar;

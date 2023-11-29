@@ -17,6 +17,7 @@
 
 #include <mutex>
 #include <map>
+
 template<typename T>
 class SmartPtr {
 private:
@@ -43,14 +44,17 @@ public:
 
     /*重载=，只有当两个ptr不相等时计数加1*/
     SmartPtr<T> &operator=(const SmartPtr<T> &cp_ptr) {
+        printf("======\n");
         /*判断是不是同一个指针*/
-        if (ptr != cp_ptr.ptr) {
+        if (ptr != cp_ptr.ptr and cp_ptr.ptr != nullptr) {
             /*释放当前的内存*/
             realse();
             /*复制参数*/
             ptr = cp_ptr.ptr;
             count = cp_ptr.count;
             count_mutex = cp_ptr.count_mutex;
+            count_change = cp_ptr.count_change;
+            is_build = cp_ptr.is_build;
             /*计数加1*/
             add_count();
         }
@@ -92,7 +96,7 @@ template<typename T>
 SmartPtr<T>::SmartPtr(T *ptr) {
     printf("%p,调用构造函数\n", ptr);
     this->ptr = ptr;
-    count = new int(0);
+    count = new int(1);
     count_mutex = new std::mutex;
     count_change = new bool(false);
     is_build = new bool(true);
@@ -133,8 +137,8 @@ int &SmartPtr<T>::use_count() {
 template<typename T>
 void SmartPtr<T>::realse() {
     printf("%p,%s\n", ptr, "调用解析");
-    bool is_delete=false;
-    {
+    bool is_delete = false;
+    if (count_mutex != nullptr) {
         std::unique_lock<std::mutex> count_l(*count_mutex);
         /*如果需要计数为0*/
         if (--(*count) == 1 or !*count_change) {
@@ -156,9 +160,6 @@ void SmartPtr<T>::realse() {
 
             /*todo 从全局map删除其对应的数据*/
         }
-        if (count != nullptr) {
-            printf("%p,现在的count %d\n", ptr, *count);
-        }
     }
     /*说明这是最后一个指针，进行删除剩余空间操作*/
     if (is_delete) {
@@ -175,8 +176,17 @@ SmartPtr<T>::~SmartPtr() {
     printf("%p,%s\n", ptr, "调用析构");
     if (!*is_build) {
         realse();
+        if (count != nullptr) {
+            printf("%p,进行了realse现在的count %d\n", ptr, *count);
+        }
+        return;
     }
     *is_build = false;
+    /*这里只进行减一操作*/
+    (*count)--;
+    if (count != nullptr) {
+        printf("%p,没进行realse现在的count %d\n", ptr, *count);
+    }
 }
 
 

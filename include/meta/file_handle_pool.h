@@ -18,23 +18,23 @@
 #include <map>
 #include "object_handle.h"
 #include "base/persistent_base.h"
-
+#include "utils/smart_ptr.h"
 /*句柄管理池 , todo 单例*/
 class FileHandlePool : public PersistentBase {
 private:
     /*构建句柄池，id:句柄*/
-    std::map<uint64_t, ObjectHandle*> handle_pool;
+    std::map<uint64_t, SmartPtr<ObjectHandle>> handle_pool;
 public:
     /*添加
      * params object_handle:存储的句柄
      * */
-    void push_fh(const ObjectHandle &object_handle);
+    void push_fh(ObjectHandle &object_handle);
      /*todo 进行引用计数，引用消失删除*/
     /*得到
      * params fh_id:得到的句柄id
      * return 获取的句柄指针
      * */
-    ObjectHandle *get_fh(const ObjectHandle &object_handle);
+    SmartPtr<ObjectHandle> get_fh(const uint64_t &fh_id);
 
     /*持久化
      * params path:持久化到的文件

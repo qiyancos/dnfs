@@ -25,7 +25,11 @@ ObjectHandle::ObjectHandle(struct nfs_fh3 &fh) {
 /*生成文件句柄
  * params fh:生成的文件句柄
  * */
-void ObjectHandle::generate_nfs_fh(nfs_fh3 &fh) {
+void ObjectHandle::generate_nfs_fh(nfs_fh3 &fh) const {
     fh.data.data_len = this->data_len;
     fh.data.data_val = (char *) this->data_val;
+}
+
+uint64_t ObjectHandle::get_data_id() const {
+    return data_val;
 }

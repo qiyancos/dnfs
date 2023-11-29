@@ -21,8 +21,7 @@
 #include "file/file_handle.h"
 
 /*文件句柄管理*/
-class ObjectHandle : public PersistentBase
-{
+class ObjectHandle : public PersistentBase {
 private:
     /*句柄id*/
     u_int64_t data_val;
@@ -38,7 +37,12 @@ public:
     /*生成文件句柄。/
      * params fh:生成的文件句柄
      * */
-    void generate_nfs_fh(struct nfs_fh3 &fh);
+    void generate_nfs_fh(struct nfs_fh3 &fh) const;
+
+    /*获取id*/
+    uint64_t get_data_id() const;
+
+    ~ObjectHandle() = default;
 };
 
 #endif // DNFSD_OBJECT_HANDLE_H
