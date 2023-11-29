@@ -60,6 +60,7 @@ add_subdirectory(src/meta)
 add_subdirectory(src/volume)
 add_subdirectory(src/storage)
 add_subdirectory(src/cache)
+add_subdirectory(src/base)
 #add_subdirectory(src/protocol)
 
 #[[测试日志]]
