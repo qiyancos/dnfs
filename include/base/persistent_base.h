@@ -18,10 +18,10 @@
 
 #include <string>
 #include <map>
-#include <vector>
 #include <iostream>
-#include <utility>
+#include <exception>
 
+#include "base/exception.h"
 #include "base/serializable_base.h"
 
 /*持久化数据*/
@@ -45,52 +45,7 @@ public:
      * return: bool 是否成功
      * */
     template <typename KEY, typename VALUE>
-    bool dump(std::map<KEY, VALUE> m_map, const std::string &persisence_path)
-    {
-        // 得到m_map键值对数量
-        int m_size = m_map.size();
-        if (m_size == 0)
-        {
-            return false;
-        }
-
-        // 判断m_map中键、值是否可以序列化（是否为Serializable的子类）
-        if (std::is_base_of<Serializable, KEY>::value == false)
-        {
-            std::cout << "does not support serialization" << std::endl;
-            return false;
-        }
-        if (std::is_base_of<Serializable, VALUE>::value == false)
-        {
-            std::cout << "does not support serialization" << std::endl;
-            return false;
-        }
-
-        // 遍历m_map，放入数组
-        int pair_size = sizeof(std::pair<KEY, VALUE>);
-        std::pair<KEY, VALUE> *buffer = (std::pair<KEY, VALUE> *)malloc(pair_size * m_size);
-        std::pair<KEY, VALUE> *ptr = buffer;
-        for (const auto iter : m_map)
-        {
-            *ptr = std::pair<KEY, VALUE>{iter.first, iter.second};
-            ptr += 1;
-        }
-
-        // 写文件
-        FILE *f = fopen(persisence_path.c_str(), "w");
-        size_t res = fwrite(&m_size, sizeof(int), 1, f);
-        res = fwrite(buffer, pair_size, m_size, f);
-        fclose(f);
-        free(buffer);
-
-        if (res != m_size)
-        {
-            std::cout << "write failed" << std::endl;
-            return false;
-        }
-
-        return true;
-    }
+    bool dump(std::map<KEY, VALUE> m_map, const std::string &persisence_path);
 
     /*从文件读取map
      * params: resolve_path 文件路径
@@ -98,42 +53,104 @@ public:
      * return: bool 是否成功
      * */
     template <typename KEY, typename VALUE>
-    bool load(const std::string &resolve_path, std::map<KEY, VALUE> *m_map)
-    {
-
-        FILE *f = fopen(resolve_path.c_str(), "r");
-        if (f == NULL)
-        {
-            return false;
-        }
-        // 读取map大小
-        int m_size;
-        fread(&m_size, sizeof(int), 1, f);
-
-        // 读取pair数组
-        int pair_size = sizeof(std::pair<KEY, VALUE>);
-        std::pair<KEY, VALUE> *buffer = (std::pair<KEY, VALUE> *)malloc(pair_size * m_size);
-        std::pair<KEY, VALUE> *ptr = buffer;
-        size_t res = fread(buffer, pair_size, m_size, f);
-        fclose(f);
-        
-        if (res != m_size)
-        {
-            std::cout << "read failed" << std::endl;
-            return false;
-        }
-
-        // 放入map
-        for (int i = 0; i < m_size; i++)
-        {
-            std::pair<KEY, VALUE> p = *(std::pair<KEY, VALUE> *)(ptr);
-            ptr += 1;
-            m_map->emplace(p.first, p.second);
-        }
-        free(buffer);
-
-        return true;
-    }
+    bool load(const std::string &resolve_path, std::map<KEY, VALUE> *m_map);
 };
+
+/*map存入文件
+ * params: m_map 待存入的map
+ * params: persisence_path 存入的文件路径
+ * return: bool 是否成功
+ * */
+template <typename KEY, typename VALUE>
+bool PersistentBase::dump(std::map<KEY, VALUE> m_map, const std::string &persisence_path)
+{
+    // 得到m_map键值对数量
+    int m_size = m_map.size();
+    if (m_size == 0)
+    {
+        return false;
+    }
+
+    // 判断m_map中键、值是否可以序列化（是否为Serializable的子类）
+    if (std::is_base_of<Serializable, KEY>::value == false)
+    {
+        std::cout << "does not support serialization" << std::endl;
+        return false;
+    }
+    if (std::is_base_of<Serializable, VALUE>::value == false)
+    {
+        std::cout << "does not support serialization" << std::endl;
+        return false;
+    }
+    throw Exception("class %s does not support serialization", "aaa");
+    // 遍历m_map，放入数组
+    int pair_size = sizeof(std::pair<KEY, VALUE>);
+    std::pair<KEY, VALUE> *buffer = (std::pair<KEY, VALUE> *)malloc(pair_size * m_size);
+    std::pair<KEY, VALUE> *ptr = buffer;
+    for (const auto iter : m_map)
+    {
+        *ptr = std::pair<KEY, VALUE>{iter.first, iter.second};
+        ptr += 1;
+    }
+
+    // 写文件
+    FILE *f = fopen(persisence_path.c_str(), "w");
+    size_t res = fwrite(&m_size, sizeof(int), 1, f);
+    res = fwrite(buffer, pair_size, m_size, f);
+    fclose(f);
+    free(buffer);
+
+    if (res != m_size)
+    {
+        std::cout << "write failed" << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+/*从文件读取map
+ * params: resolve_path 文件路径
+ * params: m_map 读出的map
+ * return: bool 是否成功
+ * */
+template <typename KEY, typename VALUE>
+bool PersistentBase::load(const std::string &resolve_path, std::map<KEY, VALUE> *m_map)
+{
+
+    FILE *f = fopen(resolve_path.c_str(), "r");
+    if (f == NULL)
+    {
+        return false;
+    }
+    // 读取map大小
+    int m_size;
+    fread(&m_size, sizeof(int), 1, f);
+
+    // 读取pair数组
+    int pair_size = sizeof(std::pair<KEY, VALUE>);
+    std::pair<KEY, VALUE> *buffer = (std::pair<KEY, VALUE> *)malloc(pair_size * m_size);
+    std::pair<KEY, VALUE> *ptr = buffer;
+    size_t res = fread(buffer, pair_size, m_size, f);
+    fclose(f);
+
+    if (res != m_size)
+    {
+        std::cout << "read failed" << std::endl;
+        free(buffer);
+        return false;
+    }
+
+    // 放入map
+    for (int i = 0; i < m_size; i++)
+    {
+        std::pair<KEY, VALUE> p = *(std::pair<KEY, VALUE> *)(ptr);
+        ptr += 1;
+        m_map->emplace(p.first, p.second);
+    }
+    free(buffer);
+
+    return true;
+}
 
 #endif // DNFSD_PERSISTENT_BASE_H

@@ -78,13 +78,17 @@ int main()
     m_map.emplace(SerializableA(1), SerializableB(1));
     m_map.emplace(SerializableA(2), SerializableB(2));
     Persistent p;
-    p.dump<SerializableA, SerializableB>(m_map, "/workspaces/dnfs/cmake-build-debug/test/base/tmp.bin");
-    std::cout << "-----------" << std::endl;
+    bool dump_res = p.dump<SerializableA, SerializableB>(m_map, "/workspaces/dnfs/cmake-build-debug/test/base/tmp.bin");
+    std::cout << "dump_res: " << dump_res << std::endl;
 
     std::map<SerializableA, SerializableB> new_map = {};
-    p.load<SerializableA, SerializableB>("/workspaces/dnfs/cmake-build-debug/test/base/tmp.bin", &new_map);
-    auto iter = new_map.end();
-    iter--;
-    std::cout << iter->first.a << "," << iter->second.b << std::endl;
+    bool load_res = p.load<SerializableA, SerializableB>("/workspaces/dnfs/cmake-build-debug/test/base/tmp.bin", &new_map);
+    std::cout << "load_res: " << load_res << std::endl;
+    if (load_res)
+    {
+        auto iter = new_map.end();
+        iter--;
+        std::cout << iter->first.a << "," << iter->second.b << std::endl;
+    }
     return 0;
 }
