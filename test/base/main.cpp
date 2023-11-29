@@ -16,6 +16,14 @@
 #include "base/persistent_base.h"
 
 #include <cstring>
+#include <typeinfo>
+#include <vector>
+#include <map>
+#include <array>
+#include <list>
+#include <set>
+
+using namespace std;
 
 class TestA
 {
@@ -75,40 +83,56 @@ public:
     /*持久化
      * params path:持久化到的文件
      * */
-    void persist(const std::string &persisence_path) override{};
+    void persist(const string &persisence_path) override{};
 
     /*读取持久化文件
      * params path:读取的持久化文件
      * */
-    void resolve(const std::string &resolve_path) override{};
+    void resolve(const string &resolve_path) override{};
 };
 
 int main()
 {
-    std::map<SerializableA, SerializableB> m_map = {};
+    map<SerializableA, SerializableB> m_map = {};
     m_map.emplace(SerializableA(1), SerializableB(1));
     m_map.emplace(SerializableA(2), SerializableB(2));
     Persistent p;
     bool dump_res = p.dump<SerializableA, SerializableB>(m_map, "/workspaces/dnfs/cmake-build-debug/test/base/tmp.bin");
-    std::cout << "dump_res: " << dump_res << std::endl;
+    cout << "dump_res: " << dump_res << endl;
 
-    std::map<SerializableA, SerializableB> new_map = {};
+    map<SerializableA, SerializableB> new_map = {};
     bool load_res = p.load<SerializableA, SerializableB>("/workspaces/dnfs/cmake-build-debug/test/base/tmp.bin", &new_map);
-    std::cout << "load_res: " << load_res << std::endl;
+    cout << "load_res: " << load_res << endl;
     if (load_res)
     {
         auto iter = new_map.end();
         iter--;
-        std::cout << iter->first.a << "," << iter->second.b << std::endl;
+        cout << iter->first.a << "," << iter->second.b << endl;
     }
 
-    std::cout << "----------" << std::endl;
+    cout << "----------" << endl;
+    cout << typeid(int).name() << endl;
+    cout << typeid(float).name() << endl;
+    cout << typeid(TestA).name() << endl;
+    cout << typeid(SerializableA).name() << endl;
+    cout << typeid(SerializableB).name() << endl;
+    cout << typeid(array<int, 6>).name() << endl;
+    cout << typeid(vector<int>).name() << endl;
+    cout << typeid(list<int>).name() << endl;
+    cout << typeid(set<int>).name() << endl;
+    cout << typeid(map<int, int>).name() << endl;
+    cout << "----------" << endl;
 
-    // std::map<TestA, SerializableB> mm_map = {};
-    // mm_map.emplace(TestA(1), SerializableB(1));
-    // Persistent pp;
-    // bool pp_dump_res = pp.dump<TestA, SerializableB>(mm_map, "/workspaces/dnfs/cmake-build-debug/test/base/tmp_1.bin");
-    // std::cout << "dump_res: " << pp_dump_res << std::endl;
+    try
+    {
+        map<TestA, SerializableB> mm_map = {};
+        mm_map.emplace(TestA(1), SerializableB(1));
+        Persistent pp;
+        bool pp_dump_res = pp.dump<TestA, SerializableB>(mm_map, "/workspaces/dnfs/cmake-build-debug/test/base/tmp_1.bin");
+        cout << "dump_res: " << pp_dump_res << endl;
+    } catch(exception& e){
+        cout << e.what() << endl;
+    }
 
     return 0;
 }
