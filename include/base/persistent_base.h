@@ -74,15 +74,15 @@ bool PersistentBase::dump(std::map<KEY, VALUE> m_map, const std::string &persise
     // 判断m_map中键、值是否可以序列化（是否为Serializable的子类）
     if (std::is_base_of<Serializable, KEY>::value == false)
     {
-        std::cout << "does not support serialization" << std::endl;
+        throw Exception("class %s does not support serialization", typeid(KEY).name());
         return false;
     }
     if (std::is_base_of<Serializable, VALUE>::value == false)
     {
-        std::cout << "does not support serialization" << std::endl;
+        throw Exception("%s does not support serialization", typeid(VALUE).name());
         return false;
     }
-    throw Exception("class %s does not support serialization", "aaa");
+
     // 遍历m_map，放入数组
     int pair_size = sizeof(std::pair<KEY, VALUE>);
     std::pair<KEY, VALUE> *buffer = (std::pair<KEY, VALUE> *)malloc(pair_size * m_size);

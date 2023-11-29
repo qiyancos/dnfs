@@ -17,6 +17,17 @@
 
 #include <cstring>
 
+class TestA
+{
+public:
+    int a;
+    explicit TestA(int aa) { a = aa; };
+    bool operator<(const TestA &other_ptr) const
+    {
+        return a < other_ptr.a;
+    }
+};
+
 class SerializableA final : public Serializable
 {
 public:
@@ -90,5 +101,14 @@ int main()
         iter--;
         std::cout << iter->first.a << "," << iter->second.b << std::endl;
     }
+
+    std::cout << "----------" << std::endl;
+
+    // std::map<TestA, SerializableB> mm_map = {};
+    // mm_map.emplace(TestA(1), SerializableB(1));
+    // Persistent pp;
+    // bool pp_dump_res = pp.dump<TestA, SerializableB>(mm_map, "/workspaces/dnfs/cmake-build-debug/test/base/tmp_1.bin");
+    // std::cout << "dump_res: " << pp_dump_res << std::endl;
+
     return 0;
 }
