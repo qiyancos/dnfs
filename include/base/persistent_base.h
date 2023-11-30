@@ -45,7 +45,7 @@ public:
      * return: bool 是否成功
      * */
     template <typename KEY, typename VALUE>
-    bool dump(std::map<KEY, VALUE> m_map, const std::string &persisence_path);
+    bool dump(const std::map<KEY, VALUE> &m_map, const std::string &persisence_path);
 
     /*从文件读取map
      * params: resolve_path 文件路径
@@ -62,7 +62,7 @@ public:
  * return: bool 是否成功
  * */
 template <typename KEY, typename VALUE>
-bool PersistentBase::dump(std::map<KEY, VALUE> m_map, const std::string &persisence_path)
+bool PersistentBase::dump(const std::map<KEY, VALUE> &m_map, const std::string &persisence_path)
 {
     // 得到m_map键值对数量
     int m_size = m_map.size();
