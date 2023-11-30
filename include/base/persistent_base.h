@@ -45,7 +45,7 @@ public:
      * return: bool 是否成功
      * */
     template <typename KEY, typename VALUE>
-    bool dump(std::map<KEY, VALUE> m_map, const std::string &persisence_path);
+    bool dump(const std::map<KEY, VALUE> &m_map, const std::string &persisence_path);
 
     /*从文件读取map
      * params: resolve_path 文件路径
@@ -62,7 +62,7 @@ public:
  * return: bool 是否成功
  * */
 template <typename KEY, typename VALUE>
-bool PersistentBase::dump(std::map<KEY, VALUE> m_map, const std::string &persisence_path)
+bool PersistentBase::dump(const std::map<KEY, VALUE> &m_map, const std::string &persisence_path)
 {
     // 得到m_map键值对数量
     int m_size = m_map.size();
@@ -74,15 +74,15 @@ bool PersistentBase::dump(std::map<KEY, VALUE> m_map, const std::string &persise
     // 判断m_map中键、值是否可以序列化（是否为Serializable的子类）
     if (std::is_base_of<Serializable, KEY>::value == false)
     {
-        std::cout << "does not support serialization" << std::endl;
+        throw Exception("class %s does not support serialization", typeid(KEY).name());
         return false;
     }
     if (std::is_base_of<Serializable, VALUE>::value == false)
     {
-        std::cout << "does not support serialization" << std::endl;
+        throw Exception("%s does not support serialization", typeid(VALUE).name());
         return false;
     }
-    throw Exception("class %s does not support serialization", "aaa");
+
     // 遍历m_map，放入数组
     int pair_size = sizeof(std::pair<KEY, VALUE>);
     std::pair<KEY, VALUE> *buffer = (std::pair<KEY, VALUE> *)malloc(pair_size * m_size);
