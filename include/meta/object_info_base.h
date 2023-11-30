@@ -55,6 +55,7 @@ private:
 public:
     /*生成信息保存路径*/
     std::string generate_file_save();
+    /*todo 生成hash,將其傳給filehandle*/
 };
 
 

@@ -116,6 +116,7 @@ int test::tes() {
 }
 
 int main() {
+    printf("%lu\n", sizeof(SmartPtr<string>));
     PoolTest pool_t = PoolTest();
     PoolTest pool_3 = PoolTest();
     insert(pool_t);
