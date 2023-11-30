@@ -102,21 +102,21 @@ void BinLog::resolve_work_file() {
 }
 
 /*推送信息，增加操作字节追加缓存，删除修改进行合并
- * params obj_handle:操作句柄
- * params obj_info:需要记录的文件信息指针，当进行删除操作是应传入空指针
+ * params smart_obj_handle:文件句柄智能对象
+ * params obj_info:需要记录的文件信息指针
  * */
-void BinLog::push_info(ObjectHandle *obj_handle, ObjectInfoBase *obj_info) {
+void BinLog::push_info(SmartPtr &smart_obj_handle, ObjectInfoBase *obj_info) {
     /*写缓存需要加锁*/
     unique_lock<mutex> buffer_l(buffer_lock);
     /*保存查找到的数据*/
-    auto find_buffer = memery_buffer->find(obj_handle);
+    auto find_buffer = memery_buffer->find(smart_obj_handle);
     /*如果句柄存在更新数据*/
     if (find_buffer != memery_buffer->end()) {
         /*存在更新句柄*/
         find_buffer->second = obj_info;
     } else {
         /*不存在插入句柄*/
-        memery_buffer->insert({obj_handle, obj_info});
+        memery_buffer->insert({smart_obj_handle, obj_info});
         /*缓存大小信息大小比对，只有追加文件信息才进行大小比对*/
         if (need_switch()) {
             switch_buffer();
@@ -151,14 +151,14 @@ void BinLog::sync_log() {
 }
 
 /*读取缓存
- * params obj_handle:需要获取信息的句柄
+ * params smart_obj_handle:需要获取信息的:文件句柄智能对象
  * return 获取的文件信息
  * */
-bool BinLog::find_info(ObjectHandle *obj_handle, ObjectInfoBase *obj_info) {
+bool BinLog::find_info(SmartPtr &smart_obj_handle, ObjectInfoBase *obj_info) {
     /*先置成空指针*/
     obj_info = nullptr;
     /*查找句柄信息*/
-    auto find_buffer = memery_buffer->find(obj_handle);
+    auto find_buffer = memery_buffer->find(smart_obj_handle);
     /*如果找到了，赋值指针return true*/
     if (find_buffer != memery_buffer->end()) {
         /*删除了就是空指针*/
@@ -253,7 +253,7 @@ void BinLog::persist_old_binlog() {
     /*落盘整理信息保存map*/
     disk_map disk_m = {};
 
-    /*统计缓存信息,滨海推送到日志落盘管理器*/
+    /*统计缓存信息,推送到日志落盘管理器*/
     object_mapping(disk_m);
 
     /*将落盘任务数据发送到落盘管理器*/

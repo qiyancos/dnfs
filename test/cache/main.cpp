@@ -21,81 +21,121 @@
 #include "utils/smart_ptr.h"
 #include <memory>
 #include <chrono>
+#include <utility>
 #include <ctime>
 
 using namespace std;
 
-class PoolTest final : public SmartPtrPool {
+/*需要添加的数据*/
+class InsertData final : public SmartPtrValue {
+private:
+    uint64_t data_id;
+    string data;
 public:
-    map<int, SmartPtr<string>> map_test;
-    map<SmartPtr<string>, int> map_reverse;
-public:
-    /*得到数据*/
-    SmartPtr<string> get(const int &t);
+    /*构造函数*/
+    explicit InsertData(uint64_t data_id, string data) : data_id(data_id),
+                                                         data(std::move(data)) {}
 
-    /*存储数据*/
-    void push(const int &data, const string &value);
+    /*重写获取id的方法*/
+    uint64_t get_id() override;
 
-    void delete_item(void *key) override;
+    bool compore_data(SmartPtrValue *compare_value) override;
+
+    string get_data();
 };
 
-SmartPtr<string> PoolTest::get(const int &t) {
-    auto item = map_test.find(t);
-    return item->second;
+uint64_t InsertData::get_id() {
+    return data_id;
 }
 
-void PoolTest::push(const int &data, const string &value) {
-    auto new_value_ptr = new string(value);
-    printf("%p\n", this);
-    Ptrs p = {new_value_ptr, this};
-    map_test.emplace(data, p);
-    map_reverse.emplace(get(data),data);
+bool InsertData::compore_data(SmartPtrValue *compare_value) {
+    auto *com = (InsertData *) compare_value;
+    return data == com->get_data();
 }
 
-void PoolTest::delete_item(void *key) {
-    printf("%p\n", key);
-    printf("delete\n");
+string InsertData::get_data() {
+    return data;
 }
 
 
-void insert(PoolTest &pool_test) {
-    Ptrs p1 = {new string("1111"), &pool_test};
-    SmartPtr<string> ptr_1({new string("1111"), &pool_test});
-    printf("-------------------------------\n");
-    Ptrs p2 = {new string("1111"), &pool_test};
-    SmartPtr<string> ptr_2({new string("1111"), &pool_test});
-    printf("-------------------------------\n");
-    /**/
-    Ptrs p3 = {new string("111111"), &pool_test};
-    pool_test.map_test.emplace(3, p3);
-    printf("-------------------------------\n");
-//    pool_test.map_test.emplace(4, {new string("111111"), &pool_test});
-//    printf("-------------------------------\n");
-//    ptr_1=ptr_2;
-    pool_test.push(1, "test1");
-    printf("-------------------------------\n");
-    pool_test.push(2, "test2");
-    printf("-------------------------------\n");
-    printf("insert end\n");
+/*存储数据的list*/
+struct DataList {
+    std::list<SmartPtr> value;
+public:
+    explicit DataList(SmartPtrValue *tr, SmartPtrPool *pool);
+
+    void push(SmartPtrValue *tr, SmartPtrPool *pool);
+
+    void delete_data(SmartPtrValue *tr);
+};
+
+DataList::DataList(SmartPtrValue *tr, SmartPtrPool *pool) {
+    value.emplace_back(SmartPtr::Ptrs({tr, pool}));
 }
 
-void get(PoolTest &pool_test, PoolTest &pool_3) {
-    printf("get data\n");
-    SmartPtr<string> ptr_1 = pool_test.get(1);
-    printf("-------------------------------\n");
-    SmartPtr<string> ptr_2 = pool_test.get(2);
-    printf("-------------------------------\n");
-    SmartPtr<string> ptr_3 = pool_test.get(3);
-    printf("-------------------------------\n");
-    SmartPtr<string> ptr_4 = pool_test.map_reverse.find(ptr_1)->first;
-//    SmartPtr<string> ptr_4 = pool_test.get(4);
-//    printf("-------------------------------\n");
-//    printf("插入第二个pool\n");
-//    pool_3.push(ptr_1, 1);
-//    printf("-------------------------------\n");
-//    pool_3.push(ptr_2, 2);
-//    printf("-------------------------------\n");
+void DataList::push(SmartPtrValue *tr, SmartPtrPool *pool) {
+    value.emplace_back(SmartPtr::Ptrs({tr, pool}));
 }
+
+void DataList::delete_data(SmartPtrValue *tr) {
+    for (auto &item: value) {
+        if (tr->compore_data(item.get_ptr())) {
+            /*释放数据*/
+            item.realse();
+        }
+    }
+}
+
+class TestList final : public SmartPtrPool {
+public:
+    map<uint64_t, DataList *> test_map = {};
+public:
+    void gett(const int &key);
+
+    void push(const int &data, InsertData &st);
+
+    void delete_item(const uint64_t &delete_key, SmartPtrValue *smart_ptr_value) override;
+
+    ~TestList();
+};
+
+void TestList::gett(const int &key) {
+    auto s = test_map.find(key)->second->value;
+    auto w = s.end();
+}
+
+void TestList::push(const int &data, InsertData &st) {
+
+    auto *inda = new InsertData(st);
+
+    auto item = test_map.find(data);
+    if (item != test_map.end()) {
+        item->second->push(inda, this);
+    } else {
+        auto *da = new DataList(inda, this);
+        test_map.emplace(data, da);
+    }
+    printf("_________");
+}
+
+void TestList::delete_item(const uint64_t &delete_key, SmartPtrValue *smart_ptr_value) {
+    printf("删除的id:%lu\n", delete_key);
+    /*先获取需要删除的数据*/
+    auto d_data = test_map.find(delete_key);
+    if (d_data != test_map.end()) {
+        printf("删除数据\n");
+        d_data->second->delete_data(smart_ptr_value);
+    }
+    test_map.erase(delete_key);
+}
+
+TestList::~TestList() {
+    for (auto s: test_map) {
+        delete s.second;
+    }
+
+}
+
 
 mutex whar;
 int i = 0;
@@ -121,32 +161,23 @@ int test::tes() {
     return 0;
 }
 
+
 int main() {
-    printf("%lu\n", sizeof(SmartPtr<string>));
-    PoolTest pool_t = PoolTest();
-    PoolTest pool_3 = PoolTest();
-    printf("%p\n", &pool_3);
-    printf("%p\n", &pool_t);
-    insert(pool_t);
-    get(pool_t, pool_3);
-    /*获取毫秒*/
-//    auto now = chrono::system_clock::now();
-//    uint64_t microseconds = chrono::duration_cast<chrono::microseconds>(
-//            now.time_since_epoch()).count();
-//    uint64_t naroseconds = chrono::duration_cast<chrono::nanoseconds>(
-//            now.time_since_epoch()).count();
-//    printf("%lu\n",microseconds);
-//    printf("%lu\n",naroseconds);
-//    printf("what fuck %zu\n",map_test.size());
-//
-//    auto ptr_3 = map_test.find(ptr_1);
-//    if(ptr_3==map_test.end()){
-//        printf("what fuck %zu\n",map_test.size());
-//    }
-//    auto ptr_4 = map_test.find(ptr_2);
-//    if(ptr_4==map_test.end()){
-//        printf("what fuck\n");
-//    }
+//    printf("%lu\n", sizeof(SmartPtr));
+//    PoolTest pool_t = PoolTest();
+//    PoolTest pool_3 = PoolTest();
+//    printf("%p\n", &pool_3);
+//    printf("%p\n", &pool_t);
+//    insert(pool_t);
+//    get(pool_t, pool_3);
+
+
+    TestList test_list = TestList();
+    InsertData s = InsertData(1, "111");
+    test_list.push(1, s);
+    printf("______________________\n");
+    test_list.gett(1);
+
 //    printf("%d\n",ptr_4->second);
 //    thread t1(test_lock, 1);
 //    thread t2(test_lock, 2);

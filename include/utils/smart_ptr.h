@@ -19,23 +19,39 @@
 #include <map>
 #include <memory>
 
+/*使用智能指针都需要继承此类，实现获取id的方法*/
+class SmartPtrValue {
+public:
+    /*删除数据虚函数*/
+    virtual uint64_t get_id() = 0;
+
+    /*相同类型数据对照方法*/
+    virtual bool compore_data(SmartPtrValue *compare_value) = 0;
+};
+
+/*使用智能指针构建池管理器的都需要继承此类*/
 class SmartPtrPool {
 public:
     /*删除数据虚函数*/
-    virtual void delete_item(void *key) = 0;
+    virtual void
+    delete_item(const uint64_t &delete_key, SmartPtrValue *smart_ptr_value) = 0;
 };
 
-struct Ptrs {
-    /*保存的指针*/
-    void *ptr;
-    /*数据池指针*/
-    SmartPtrPool *smart_ptr_pool;
-};
-
-template<typename T>
+/*智能指针*/
 class SmartPtr {
+public:
+    struct Ptrs {
+        /*保存的指针*/
+        SmartPtrValue *ptr = nullptr;
+        /*数据池指针*/
+        SmartPtrPool *smart_ptr_pool = nullptr;
+
+        /*构造函数*/
+        Ptrs(SmartPtrValue *ptr, SmartPtrPool *smart_ptr_pool);
+    };
+
 private:
-    T *ptr;
+    SmartPtrValue *ptr;
     /*数据池指针*/
     SmartPtrPool *smart_ptr_pool;
     /*指针计数*/
@@ -46,50 +62,31 @@ public:
     explicit SmartPtr(const Ptrs &ptrs);
 
     /*拷贝构造函数*/
-    SmartPtr(const SmartPtr<T> &cp_ptr);
+    SmartPtr(const SmartPtr &cp_ptr);
 
     /*计数器加1*/
     void add_count();
 
-    /*重载=，只有当两个ptr不相等时计数加1*/
-    SmartPtr<T> &operator=(const SmartPtr<T> &cp_ptr) {
-        printf("======\n");
-        /*判断是不是同一个指针*/
-        if (ptr != cp_ptr.ptr and cp_ptr.ptr != nullptr) {
-            /*释放当前的内存*/
-            realse();
-            /*复制参数*/
-            ptr = cp_ptr.ptr;
-            count = cp_ptr.count;
-            /*计数加1*/
-            add_count();
-        }
-        return *this;
-    }
-
     /*返回引用计数*/
     unsigned int use_count();
 
+    /*返回记录的数据指针*/
+    SmartPtrValue *get_ptr();
+
+    /*重载=，只有当两个ptr不相等时计数加1*/
+    SmartPtr &operator=(const SmartPtr &cp_ptr);
+
     /*重载* */
-    T &operator*() {
-        printf("**\n");
-        return *this->ptr;
-    }
+    SmartPtrValue &operator*();
 
     /*重载->*/
-    T *operator->() {
-        return this->ptr;
-    }
+    SmartPtrValue *operator->();
 
     /*重载==*/
-    bool operator==(const SmartPtr<T> &other_ptr) {
-        return ptr == other_ptr.ptr;
-    }
+    bool operator==(const SmartPtr &other_ptr);
 
     /*重载<*/
-    bool operator<(const SmartPtr<T> &other_ptr) const {
-        return ptr < other_ptr.ptr;
-    }
+    bool operator<(const SmartPtr &other_ptr) const;
 
     /*释放内存*/
     void realse();
@@ -97,65 +94,5 @@ public:
     /*析构函数*/
     ~SmartPtr();
 };
-
-/*构造函数*/
-template<typename T>
-SmartPtr<T>::SmartPtr(const Ptrs &ptrs) {
-    ptr = (T *) ptrs.ptr;
-    printf("%p,调用构造函数\n", ptr);
-    smart_ptr_pool = ptrs.smart_ptr_pool;
-    count = new std::atomic<uint32_t>(1);
-}
-
-/*拷贝构造函数*/
-template<typename T>
-SmartPtr<T>::SmartPtr(const SmartPtr<T> &cp_ptr) {
-    /*复制参数*/
-    ptr = cp_ptr.ptr;
-    count = cp_ptr.count;
-    smart_ptr_pool = cp_ptr.smart_ptr_pool;
-    printf("%p,%s\n", ptr, "调用拷贝构造");
-    /*计数加1*/
-    add_count();
-}
-
-/*计数器加1*/
-template<typename T>
-void SmartPtr<T>::add_count() {
-    (*count)++;
-    printf("%p,计数器为 %d\n", ptr, count->load());
-}
-
-/*重载=，只有当两个ptr不相等时计数加1*/
-template<typename T>
-unsigned int SmartPtr<T>::use_count() {
-    return count->load();
-}
-
-/*释放内存*/
-template<typename T>
-void SmartPtr<T>::realse() {
-    printf("%p,%s\n", ptr, "调用解析");
-    /*如果需要计数为0*/
-    if (--(*count) == 1) {
-        printf("%p,%s\n", ptr, "真正释放");
-        /*释放计数内存*/
-        delete count;
-        count = nullptr;
-        /*释放内容内存*/
-        delete ptr;
-        ptr = nullptr;
-        smart_ptr_pool->delete_item(this);
-
-    }
-}
-
-/*析构函数*/
-template<typename T>
-SmartPtr<T>::~SmartPtr() {
-    printf("%p,%s\n", ptr, "调用析构");
-    realse();
-}
-
 
 #endif //DNFSD_SMART_PTR_H

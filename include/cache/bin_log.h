@@ -21,13 +21,14 @@
 #include "meta/object_handle.h"
 #include "meta/object_info_base.h"
 #include "base/persistent_base.h"
+#include "utils//smart_ptr.h"
 #include "lru.h"
 
 /*日志缓存map,hash:<文件句柄，文件信息>*/
-typedef std::map<ObjectHandle *, ObjectInfoBase *> LogBufferMap;
+typedef std::map<SmartPtr, ObjectInfoBase *> LogBufferMap;
 
 /*保存落盘统计信息*/
-typedef std::map<std::string, std::vector<ObjectHandle *>> disk_map;
+typedef std::map<std::string, std::vector<SmartPtr>> disk_map;
 
 /*bin_log路劲*/
 #define BIN_LOG_PATH "/var/lib/dnfs/bin_log"
@@ -89,19 +90,19 @@ public:
     void resolve_work_file();
 
     /*推送信息，增加操作字节追加缓存，删除修改进行合并
-     * params obj_handle:操作句柄
+     * params smart_obj_handle:文件句柄智能对象
      * params obj_info:需要记录的文件信息指针
      * */
-    void push_info(ObjectHandle *obj_handle, ObjectInfoBase *obj_info);
+    void push_info(SmartPtr &smart_obj_handle, ObjectInfoBase *obj_info);
 
     /*写入缓存文件,将整个信息写入*/
     void sync_log();
 
     /*读取缓存
-     * params obj_handle:需要获取信息的句柄
+     * params smart_obj_handle:需要获取信息的:文件句柄智能对象
      * return 获取的文件信息
      * */
-    bool find_info(ObjectHandle *obj_handle, ObjectInfoBase *obj_info);
+    bool find_info(SmartPtr &smart_obj_handle, ObjectInfoBase *obj_info);
 
     /*缓存大小信息大小比对，只有追加文件信息才进行大小比对*/
     bool need_switch();
