@@ -25,19 +25,25 @@ public:
     virtual void delete_item(void *key) = 0;
 };
 
+struct Ptrs {
+    /*保存的指针*/
+    void *ptr;
+    /*数据池指针*/
+    SmartPtrPool *smart_ptr_pool;
+};
+
 template<typename T>
 class SmartPtr {
 private:
-    /*保存的指针*/
     T *ptr;
-    /*指针计数*/
-    std::atomic<uint32_t> *count;
     /*数据池指针*/
     SmartPtrPool *smart_ptr_pool;
+    /*指针计数*/
+    std::atomic<uint32_t> *count;
 
 public:
     /*构造函数*/
-    explicit SmartPtr(T *ptr, SmartPtrPool *smart_ptr_pool);
+    explicit SmartPtr(const Ptrs &ptrs);
 
     /*拷贝构造函数*/
     SmartPtr(const SmartPtr<T> &cp_ptr);
@@ -66,6 +72,7 @@ public:
 
     /*重载* */
     T &operator*() {
+        printf("**\n");
         return *this->ptr;
     }
 
@@ -93,12 +100,11 @@ public:
 
 /*构造函数*/
 template<typename T>
-SmartPtr<T>::SmartPtr(T *ptr, SmartPtrPool *smart_ptr_pool) {
+SmartPtr<T>::SmartPtr(const Ptrs &ptrs) {
+    ptr = (T *) ptrs.ptr;
     printf("%p,调用构造函数\n", ptr);
-    this->ptr = ptr;
-    this->smart_ptr_pool = smart_ptr_pool;
-    count = new std::atomic<uint32_t>;
-    count->store(1);
+    smart_ptr_pool = ptrs.smart_ptr_pool;
+    count = new std::atomic<uint32_t>(1);
 }
 
 /*拷贝构造函数*/
@@ -107,6 +113,7 @@ SmartPtr<T>::SmartPtr(const SmartPtr<T> &cp_ptr) {
     /*复制参数*/
     ptr = cp_ptr.ptr;
     count = cp_ptr.count;
+    smart_ptr_pool = cp_ptr.smart_ptr_pool;
     printf("%p,%s\n", ptr, "调用拷贝构造");
     /*计数加1*/
     add_count();
@@ -138,8 +145,8 @@ void SmartPtr<T>::realse() {
         /*释放内容内存*/
         delete ptr;
         ptr = nullptr;
-        /*todo 从全局map删除其对应的数据*/
         smart_ptr_pool->delete_item(this);
+
     }
 }
 

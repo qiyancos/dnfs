@@ -20,68 +20,74 @@
 #include <map>
 #include "utils/smart_ptr.h"
 #include <memory>
-
+#include <chrono>
+#include <ctime>
 
 using namespace std;
 
 class PoolTest final : public SmartPtrPool {
 public:
-    map<SmartPtr<string> *, SmartPtr<string>> map_test;
+    map<int, SmartPtr<string>> map_test;
+    map<SmartPtr<string>, int> map_reverse;
 public:
     /*得到数据*/
-    SmartPtr<string> get(SmartPtr<string> *t);
+    SmartPtr<string> get(const int &t);
 
     /*存储数据*/
-    void push(const SmartPtr<string> &t, SmartPtr<string> *data);
+    void push(const int &data, const string &value);
 
     void delete_item(void *key) override;
 };
 
-SmartPtr<string> PoolTest::get(SmartPtr<string> *t) {
+SmartPtr<string> PoolTest::get(const int &t) {
     auto item = map_test.find(t);
     return item->second;
 }
 
-void PoolTest::push(const SmartPtr<string> &t, SmartPtr<string> *data) {
-    auto item = map_test.find(data);
-    if (item != map_test.end()) {
-        item->second = t;
-    } else {
-        map_test.emplace(data, t);
-    }
+void PoolTest::push(const int &data, const string &value) {
+    auto new_value_ptr = new string(value);
+    printf("%p\n", this);
+    Ptrs p = {new_value_ptr, this};
+    map_test.emplace(data, p);
+    map_reverse.emplace(get(data),data);
 }
 
 void PoolTest::delete_item(void *key) {
+    printf("%p\n", key);
     printf("delete\n");
-    map_test.erase((SmartPtr<string>*)key);
 }
 
 
 void insert(PoolTest &pool_test) {
-    SmartPtr<string> ptr_1(new string("1111"), &pool_test);
+    Ptrs p1 = {new string("1111"), &pool_test};
+    SmartPtr<string> ptr_1({new string("1111"), &pool_test});
     printf("-------------------------------\n");
-    SmartPtr<string> ptr_2(new string("111s"), &pool_test);
-//    printf("-------------------------------\n");
-//    pool_test.map_test.emplace(3, SmartPtr<string>(new string("111111"), &pool_test));
-//    printf("-------------------------------\n");
-//    pool_test.map_test.emplace(4, new string("111111"), &pool_test);
+    Ptrs p2 = {new string("1111"), &pool_test};
+    SmartPtr<string> ptr_2({new string("1111"), &pool_test});
+    printf("-------------------------------\n");
+    /**/
+    Ptrs p3 = {new string("111111"), &pool_test};
+    pool_test.map_test.emplace(3, p3);
+    printf("-------------------------------\n");
+//    pool_test.map_test.emplace(4, {new string("111111"), &pool_test});
 //    printf("-------------------------------\n");
 //    ptr_1=ptr_2;
-    pool_test.push(ptr_1, &ptr_1);
+    pool_test.push(1, "test1");
     printf("-------------------------------\n");
-    pool_test.push(ptr_2, &ptr_2);
+    pool_test.push(2, "test2");
     printf("-------------------------------\n");
     printf("insert end\n");
 }
 
 void get(PoolTest &pool_test, PoolTest &pool_3) {
-//    printf("get data\n");
-//    SmartPtr<string> ptr_1 = pool_test.get(1);
-//    printf("-------------------------------\n");
-//    SmartPtr<string> ptr_2 = pool_test.get(2);
-//    printf("-------------------------------\n");
-//    SmartPtr<string> ptr_3 = pool_test.get(3);
-//    printf("-------------------------------\n");
+    printf("get data\n");
+    SmartPtr<string> ptr_1 = pool_test.get(1);
+    printf("-------------------------------\n");
+    SmartPtr<string> ptr_2 = pool_test.get(2);
+    printf("-------------------------------\n");
+    SmartPtr<string> ptr_3 = pool_test.get(3);
+    printf("-------------------------------\n");
+    SmartPtr<string> ptr_4 = pool_test.map_reverse.find(ptr_1)->first;
 //    SmartPtr<string> ptr_4 = pool_test.get(4);
 //    printf("-------------------------------\n");
 //    printf("插入第二个pool\n");
@@ -119,8 +125,18 @@ int main() {
     printf("%lu\n", sizeof(SmartPtr<string>));
     PoolTest pool_t = PoolTest();
     PoolTest pool_3 = PoolTest();
+    printf("%p\n", &pool_3);
+    printf("%p\n", &pool_t);
     insert(pool_t);
     get(pool_t, pool_3);
+    /*获取毫秒*/
+//    auto now = chrono::system_clock::now();
+//    uint64_t microseconds = chrono::duration_cast<chrono::microseconds>(
+//            now.time_since_epoch()).count();
+//    uint64_t naroseconds = chrono::duration_cast<chrono::nanoseconds>(
+//            now.time_since_epoch()).count();
+//    printf("%lu\n",microseconds);
+//    printf("%lu\n",naroseconds);
 //    printf("what fuck %zu\n",map_test.size());
 //
 //    auto ptr_3 = map_test.find(ptr_1);

@@ -23,11 +23,10 @@
 /*文件句柄管理*/
 class ObjectHandle : public PersistentBase {
 private:
-    /*句柄id*/
-    u_int64_t data_val;
-    /*句柄长度*/
-    u_int data_len;
-
+    /*二进制hash*/
+    char hash[8];
+    /*创建文件时间戳（纳秒）*/
+    uint64_t build_time_nanoseconds;
 public:
     /*构造函数
      * params fh:获取数据的文件句柄
