@@ -67,6 +67,8 @@ public:
     void push(SmartPtrValue *tr, SmartPtrPool *pool);
 
     void delete_data(SmartPtrValue *tr);
+
+    SmartPtr *search_data(SmartPtrValue *ptr);
 };
 
 DataList::DataList(SmartPtrValue *tr, SmartPtrPool *pool) {
@@ -86,36 +88,62 @@ void DataList::delete_data(SmartPtrValue *tr) {
     }
 }
 
+SmartPtr *DataList::search_data(SmartPtrValue *ptr) {
+    for (auto &item: value) {
+        if (ptr->compore_data(item.get_ptr())) {
+            return &item;
+        }
+    }
+    return nullptr;
+}
+
 class TestList final : public SmartPtrPool {
 public:
     map<uint64_t, DataList *> test_map = {};
 public:
-    void gett(const int &key);
+    SmartPtr gett(const InsertData &st);
 
-    void push(const int &data, InsertData &st);
+    SmartPtr push(SmartPtrValue *ptr);
 
     void delete_item(const uint64_t &delete_key, SmartPtrValue *smart_ptr_value) override;
 
     ~TestList();
 };
 
-void TestList::gett(const int &key) {
-    auto s = test_map.find(key)->second->value;
-    auto w = s.end();
+SmartPtr TestList::gett(const InsertData &st) {
+    /*直接构造句柄*/
+    auto *in_data = new InsertData(st);
+    /*查询数据是否存在*/
+    auto item = test_map.find(in_data->get_id());
+    /*保存查找到的数据*/
+    SmartPtr *find_ptr = nullptr;
+    if (item != test_map.end()) {
+        /*遍历查找数据*/
+        find_ptr = item->second->search_data(in_data);
+        /*如果找到数据直接返回*/
+        if (find_ptr) {
+            printf("直接找到\n");
+            delete in_data;
+            return *find_ptr;
+        }
+    }
+    /*插入后在返回*/
+    return push(in_data);
 }
 
-void TestList::push(const int &data, InsertData &st) {
-
-    auto *inda = new InsertData(st);
-
-    auto item = test_map.find(data);
+SmartPtr TestList::push(SmartPtrValue *ptr) {
+    /*先判定hashmap是否存在*/
+    auto item = test_map.find(ptr->get_id());
     if (item != test_map.end()) {
-        item->second->push(inda, this);
+        printf("往后插入\n");
+        item->second->push(ptr, this);
+        return *item->second->value.rbegin();
     } else {
-        auto *da = new DataList(inda, this);
-        test_map.emplace(data, da);
+        printf("直接创建\n");
+        auto *da = new DataList(ptr, this);
+        test_map.emplace(ptr->get_id(), da);
+        return *da->value.begin();
     }
-    printf("_________");
 }
 
 void TestList::delete_item(const uint64_t &delete_key, SmartPtrValue *smart_ptr_value) {
@@ -135,7 +163,6 @@ TestList::~TestList() {
     }
 
 }
-
 
 mutex whar;
 int i = 0;
@@ -174,9 +201,13 @@ int main() {
 
     TestList test_list = TestList();
     InsertData s = InsertData(1, "111");
-    test_list.push(1, s);
     printf("______________________\n");
-    test_list.gett(1);
+    SmartPtr j = test_list.gett(s);
+    printf("______________________\n");
+    SmartPtr n = test_list.gett(InsertData(1, "1111"));
+    printf("______________________\n");
+    SmartPtr w = test_list.gett(InsertData(2, "111"));
+    printf("______________________\n");
 
 //    printf("%d\n",ptr_4->second);
 //    thread t1(test_lock, 1);

@@ -26,14 +26,27 @@
 struct ObjectHandleList {
     std::list<SmartPtr> handle_list = {};
 public:
-    /*建立数据列表*/
-    explicit ObjectHandleList(SmartPtrValue *tr, SmartPtrPool *pool);
+    /*建立数据列表
+     * params ptr:存储数据指针
+     * params pool:数据池指针
+     * */
+    explicit ObjectHandleList(SmartPtrValue *ptr, SmartPtrPool *pool);
 
-    /*数据列表追加数据*/
-    void push(SmartPtrValue *tr, SmartPtrPool *pool);
+    /*数据列表追加数据
+     * params ptr:存储数据指针
+     * params pool:数据池指针
+     * */
+    void push(SmartPtrValue *ptr, SmartPtrPool *pool);
 
-    /*遍历列表删除数据*/
-    void delete_data(SmartPtrValue *tr);
+    /*遍历列表删除数据
+     * params delete_ptr:待删除的数据
+     * */
+    void delete_data(SmartPtrValue *delete_ptr);
+
+    /*遍历查找数据列表
+     * params serch_ptr:查找的数据
+     * */
+    SmartPtr *search_data(SmartPtrValue *serch_ptr);
 };
 
 /*句柄管理池 , todo 单例*/
@@ -47,14 +60,15 @@ public:
     ObjectHandlePool() = default;
 
     /*添加
-     * params ObjectHandle:需要存储的句柄
+     * params smart_value:需要插入的数据
+     * return 创建的句柄智能指针
      * */
-    void
-    push_fh(ObjectHandle &object_handle);
+    SmartPtr
+    push_fh(SmartPtrValue *obj_handle_ptr);
 
     /*得到
      * params fh3:查询的nfs3 handle
-     * return 获取的句柄
+     * return 查询到的句柄智能指针
      * */
     SmartPtr get_fh(const nfs_fh3 &fh3);
 

@@ -17,7 +17,7 @@
 /*构造函数
  * params fh:获取数据的文件句柄
  * */
-ObjectHandle::ObjectHandle(struct nfs_fh3 &fh) {
+ObjectHandle::ObjectHandle(const nfs_fh3 &fh) {
 
 }
 

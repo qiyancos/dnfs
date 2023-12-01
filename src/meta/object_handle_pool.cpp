@@ -14,54 +14,95 @@
  */
 #include "meta/object_handle_pool.h"
 
-/*建立数据列表*/
-ObjectHandleList::ObjectHandleList(SmartPtrValue *tr, SmartPtrPool *pool) {
-    handle_list.emplace_back(SmartPtr::Ptrs({tr, pool}));
+/*建立数据列表
+ * params ptr:存储数据指针
+ * params pool:数据池指针
+ * */
+ObjectHandleList::ObjectHandleList(SmartPtrValue *ptr, SmartPtrPool *pool) {
+    handle_list.emplace_back(SmartPtr::Ptrs({ptr, pool}));
 }
 
-/*数据列表追加数据*/
-void ObjectHandleList::push(SmartPtrValue *tr, SmartPtrPool *pool) {
-    handle_list.emplace_back(SmartPtr::Ptrs({tr, pool}));
+/*数据列表追加数据
+ * params ptr:存储数据指针
+ * params pool:数据池指针
+ * */
+void ObjectHandleList::push(SmartPtrValue *ptr, SmartPtrPool *pool) {
+    handle_list.emplace_back(SmartPtr::Ptrs({ptr, pool}));
 }
 
-/*遍历列表删除数据*/
-void ObjectHandleList::delete_data(SmartPtrValue *tr) {
+/*遍历列表删除数据
+ * params delete_ptr:待删除的数据
+ * */
+void ObjectHandleList::delete_data(SmartPtrValue *delete_ptr) {
     for (auto &item: handle_list) {
-        if (tr->compore_data(item.get_ptr())) {
+        if (delete_ptr->compore_data(item.get_ptr())) {
             /*释放数据*/
             item.realse();
+            break;
         }
     }
 }
 
-/*添加 todo 这里是不是应该传f3的handle过来
- * params ObjectHandle:需要存储的句柄
+/*遍历查找数据列表
+ * params serch_ptr:查找的数据
  * */
-void ObjectHandlePool::push_fh(ObjectHandle &object_handle) {
-    /*先为句柄分配空间*/
-    auto *obj_handle_ptr = new ObjectHandle(object_handle);
+SmartPtr *ObjectHandleList::search_data(SmartPtrValue *serch_ptr) {
+    for (auto &item: handle_list) {
+        if (serch_ptr->compore_data(item.get_ptr())) {
+            /*保存数据*/
+            return &item;
+        }
+    }
+    return nullptr;
+}
 
+/*添加
+ * params smart_value:需要插入的数据，todo 思考需不需要加锁
+ * return 创建的句柄智能指针
+ * */
+SmartPtr ObjectHandlePool::push_fh(SmartPtrValue *obj_handle_ptr) {
     /*查询是否已经存在*/
     auto item = handle_pool.find(obj_handle_ptr->get_id());
     /*存在尽心追加*/
     if (item != handle_pool.end()) {
+        /*将句柄插进列表*/
         item->second->push(obj_handle_ptr, this);
+        /*返回最后一个数据 todo 思考需不需要加锁*/
+        return *item->second->handle_list.rbegin();
     } else {
         /*不存在创建*/
         auto *da = new ObjectHandleList(obj_handle_ptr, this);
+        /*插入句柄管理池*/
         handle_pool.emplace(obj_handle_ptr->get_id(), da);
+        /*直接返回第一个数据引用，todo 思考需不需要加锁*/
+        return *da->handle_list.begin();
     }
 }
 
 /*得到
  * params fh3:查询的nfs3 handle
- * return 获取的句柄
+ * return 查询到的句柄智能指针
  * */
 SmartPtr ObjectHandlePool::get_fh(const nfs_fh3 &fh3) {
-    /*查询是否已经存在*/
-    /*todo 使用fh3偏移数据进行查询
-     * 查到了进行比对返回
-     * 没查到添加数据*/
+    /*直接构造句柄*/
+    auto *obj_handle = new ObjectHandle(fh3);
+    /*查询数据是否存在*/
+    auto item = handle_pool.find(obj_handle->get_id());
+    /*保存查找到的数据*/
+    SmartPtr *find_ptr;
+    /*todo 在创建完数据后进行关联数据更新，比如更新binlog对应的文件信息*/
+    if (item != handle_pool.end()) {
+        /*遍历查找数据*/
+        find_ptr = item->second->search_data(obj_handle);
+        /*如果找到数据直接返回*/
+        if (find_ptr) {
+            /*释放临时的数据*/
+            delete obj_handle;
+            return *find_ptr;
+        }
+    }
+    /*插入之后在返回*/
+    return push_fh(obj_handle);
 }
 
 void ObjectHandlePool::delete_item(const uint64_t &delete_key,

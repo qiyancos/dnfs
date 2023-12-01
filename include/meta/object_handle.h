@@ -25,14 +25,14 @@
 class ObjectHandle : public SmartPtrValue, public PersistentBase {
 private:
     /*二进制hash*/
-    uint64_t bin_hash;
+    uint64_t bin_hash = 0;
     /*创建文件时间戳（纳秒）uint64_t*/
-    uint64_t build_time_nanoseconds;
+    uint64_t build_time_nanoseconds = 0;
 public:
     /*构造函数
      * params fh:获取数据的文件句柄
      * */
-    explicit ObjectHandle(struct nfs_fh3 &fh);
+    explicit ObjectHandle(const nfs_fh3 &fh);
 
     /*生成文件句柄。/
      * params fh:生成的文件句柄
