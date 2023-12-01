@@ -13,7 +13,6 @@
  * along with this project.
  *
  */
-#include "base/persistent_base.h"
 
 #include <cstring>
 #include <typeinfo>
@@ -22,6 +21,9 @@
 #include <array>
 #include <list>
 #include <set>
+
+#include "base/persistent_base.h"
+#include "utils/city_hash.h"
 
 using namespace std;
 
@@ -130,9 +132,17 @@ int main()
         Persistent pp;
         bool pp_dump_res = pp.dump<TestA, SerializableB>(mm_map, "/workspaces/dnfs/cmake-build-debug/test/base/tmp_1.bin");
         cout << "dump_res: " << pp_dump_res << endl;
-    } catch(exception& e){
+    }
+    catch (exception &e)
+    {
         cout << e.what() << endl;
     }
+
+    std::string s = "hello world";
+    const char *ss = s.c_str();
+    int l = strlen(ss);
+    uint64 hash_res = CityHash64(ss, l);
+    std::cout << "CityHash64: " << hash_res << std::endl;
 
     return 0;
 }
