@@ -85,7 +85,7 @@ public:
     /*持久化
      * params path:持久化到的文件
      * */
-    void persist(const string &persisence_path) override{};
+    void persist(const string &persistence_path) override{};
 
     /*读取持久化文件
      * params path:读取的持久化文件

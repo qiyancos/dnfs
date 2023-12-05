@@ -42,7 +42,7 @@ private:
 
 public:
     /*初始化*/
-    LRU(int cap);
+    explicit LRU(int cap);
 
     /*添加*/
     LRUAddRes add(VALUE value) {
