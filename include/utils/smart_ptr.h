@@ -27,17 +27,22 @@ public:
 
 template<typename T>
 class SmartPtr {
+public:
+    struct Pointers {
+        /*保存的指针*/
+        T *ptr;
+        /*数据池指针*/
+        SmartPtrPool *smart_ptr_pool;
+    };
 private:
-    /*保存的指针*/
-    T *ptr;
+    /* 所有的指针 */
+    Pointers pointers;
     /*指针计数*/
     std::atomic<uint32_t> *count;
-    /*数据池指针*/
-    SmartPtrPool *smart_ptr_pool;
 
 public:
     /*构造函数*/
-    explicit SmartPtr(T *ptr, SmartPtrPool *smart_ptr_pool);
+    explicit SmartPtr(Pointers ptr_struct);
 
     /*拷贝构造函数*/
     SmartPtr(const SmartPtr<T> &cp_ptr);
@@ -93,12 +98,10 @@ public:
 
 /*构造函数*/
 template<typename T>
-SmartPtr<T>::SmartPtr(T *ptr, SmartPtrPool *smart_ptr_pool) {
-    printf("%p,调用构造函数\n", ptr);
-    this->ptr = ptr;
-    this->smart_ptr_pool = smart_ptr_pool;
-    count = new std::atomic<uint32_t>;
-    count->store(1);
+SmartPtr<T>::SmartPtr(SmartPtr<T>::Pointers ptr_struct) {
+    printf("调用构造函数");
+    pointers = ptr;
+    count = new std::atomic<uint32_t>(1);
 }
 
 /*拷贝构造函数*/
