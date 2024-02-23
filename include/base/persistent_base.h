@@ -8,7 +8,7 @@
  * modify it under the terms of the MIT License; This program is
  * distributed in the hope that it will be useful, but WITHOUT ANY
  * WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the MIT lisence for
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the MIT license for
  * more details. You should have received a copy of the MIT License
  * along with this project.
  *
@@ -32,7 +32,7 @@ public:
     /*持久化
      * params path:持久化到的文件
      * */
-    virtual void persist(const std::string &persisence_path) = 0;
+    virtual void persist(const std::string &persistence_path) = 0;
 
     /*读取持久化文件
      * params path:读取的持久化文件
@@ -41,11 +41,11 @@ public:
 
     /*map存入文件
      * params: m_map 待存入的map
-     * params: persisence_path 存入的文件路径
+     * params: persistence_path 存入的文件路径
      * return: bool 是否成功
      * */
     template <typename KEY, typename VALUE>
-    bool dump(const std::map<KEY, VALUE> &m_map, const std::string &persisence_path);
+    bool dump(const std::map<KEY, VALUE> &m_map, const std::string &persistence_path);
 
     /*从文件读取map
      * params: resolve_path 文件路径
@@ -58,11 +58,11 @@ public:
 
 /*map存入文件
  * params: m_map 待存入的map
- * params: persisence_path 存入的文件路径
+ * params: persistence_path 存入的文件路径
  * return: bool 是否成功
  * */
 template <typename KEY, typename VALUE>
-bool PersistentBase::dump(const std::map<KEY, VALUE> &m_map, const std::string &persisence_path)
+bool PersistentBase::dump(const std::map<KEY, VALUE> &m_map, const std::string &persistence_path)
 {
     // 得到m_map键值对数量
     int m_size = m_map.size();
@@ -94,7 +94,7 @@ bool PersistentBase::dump(const std::map<KEY, VALUE> &m_map, const std::string &
     }
 
     // 写文件
-    FILE *f = fopen(persisence_path.c_str(), "w");
+    FILE *f = fopen(persistence_path.c_str(), "w");
     size_t res = fwrite(&m_size, sizeof(int), 1, f);
     res = fwrite(buffer, pair_size, m_size, f);
     fclose(f);

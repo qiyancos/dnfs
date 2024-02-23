@@ -74,6 +74,8 @@ add_subdirectory(test/cache)
 #测试base
 add_subdirectory(test/base)
 #测试meta
-add_subdirectory(test/meta)
+# add_subdirectory(test/meta)
+#测试execute
+add_subdirectory(test/executer)
 # #[[测试配置文件读取]]
 # add_subdirectory(test/dnfs_config)

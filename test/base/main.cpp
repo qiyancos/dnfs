@@ -8,12 +8,11 @@
  * modify it under the terms of the MIT License; This program is
  * distributed in the hope that it will be useful, but WITHOUT ANY
  * WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the MIT lisence for
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the MIT license for
  * more details. You should have received a copy of the MIT License
  * along with this project.
  *
  */
-#include "base/persistent_base.h"
 
 #include <cstring>
 #include <typeinfo>
@@ -22,6 +21,9 @@
 #include <array>
 #include <list>
 #include <set>
+
+#include "base/persistent_base.h"
+#include "utils/city_hash.h"
 
 using namespace std;
 
@@ -83,7 +85,7 @@ public:
     /*持久化
      * params path:持久化到的文件
      * */
-    void persist(const string &persisence_path) override{};
+    void persist(const string &persistence_path) override{};
 
     /*读取持久化文件
      * params path:读取的持久化文件
@@ -130,9 +132,17 @@ int main()
         Persistent pp;
         bool pp_dump_res = pp.dump<TestA, SerializableB>(mm_map, "/workspaces/dnfs/cmake-build-debug/test/base/tmp_1.bin");
         cout << "dump_res: " << pp_dump_res << endl;
-    } catch(exception& e){
+    }
+    catch (exception &e)
+    {
         cout << e.what() << endl;
     }
+
+    std::string s = "hello world";
+    const char *ss = s.c_str();
+    int l = strlen(ss);
+    uint64 hash_res = CityHash64(ss, l);
+    std::cout << "CityHash64: " << hash_res << std::endl;
 
     return 0;
 }

@@ -7,7 +7,7 @@
  * modify it under the terms of the MIT License; This program is
  * distributed in the hope that it will be useful, but WITHOUT ANY
  * WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the MIT lisence for
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the MIT license for
  * more details. You should have received a copy of the MIT License
  * along with this project.
  *
@@ -19,13 +19,25 @@
 #include <map>
 #include <memory>
 
+/*使用智能指针都需要继承此类，实现获取id的方法*/
+class SmartPtrValue {
+public:
+    /*删除数据虚函数*/
+    virtual uint64_t get_id() = 0;
+
+    /*相同类型数据对照方法*/
+    virtual bool compore_data(SmartPtrValue *compare_value) = 0;
+};
+
+/*使用智能指针构建池管理器的都需要继承此类*/
 class SmartPtrPool {
 public:
     /*删除数据虚函数*/
-    virtual void delete_item(void *key) = 0;
+    virtual void
+    delete_item(const uint64_t &delete_key, SmartPtrValue *smart_ptr_value) = 0;
 };
 
-template<typename T>
+/*智能指针*/
 class SmartPtr {
 public:
     struct Pointers {
@@ -45,49 +57,31 @@ public:
     explicit SmartPtr(Pointers ptr_struct);
 
     /*拷贝构造函数*/
-    SmartPtr(const SmartPtr<T> &cp_ptr);
+    SmartPtr(const SmartPtr &cp_ptr);
 
     /*计数器加1*/
     void add_count();
 
-    /*重载=，只有当两个ptr不相等时计数加1*/
-    SmartPtr<T> &operator=(const SmartPtr<T> &cp_ptr) {
-        printf("======\n");
-        /*判断是不是同一个指针*/
-        if (ptr != cp_ptr.ptr and cp_ptr.ptr != nullptr) {
-            /*释放当前的内存*/
-            realse();
-            /*复制参数*/
-            ptr = cp_ptr.ptr;
-            count = cp_ptr.count;
-            /*计数加1*/
-            add_count();
-        }
-        return *this;
-    }
-
     /*返回引用计数*/
     unsigned int use_count();
 
+    /*返回记录的数据指针*/
+    SmartPtrValue *get_ptr();
+
+    /*重载=，只有当两个ptr不相等时计数加1*/
+    SmartPtr &operator=(const SmartPtr &cp_ptr);
+
     /*重载* */
-    T &operator*() {
-        return *this->ptr;
-    }
+    SmartPtrValue &operator*();
 
     /*重载->*/
-    T *operator->() {
-        return this->ptr;
-    }
+    SmartPtrValue *operator->();
 
     /*重载==*/
-    bool operator==(const SmartPtr<T> &other_ptr) {
-        return ptr == other_ptr.ptr;
-    }
+    bool operator==(const SmartPtr &other_ptr);
 
     /*重载<*/
-    bool operator<(const SmartPtr<T> &other_ptr) const {
-        return ptr < other_ptr.ptr;
-    }
+    bool operator<(const SmartPtr &other_ptr) const;
 
     /*释放内存*/
     void realse();

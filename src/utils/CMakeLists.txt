@@ -4,7 +4,8 @@ add_library(utils
         time_utils.cpp
         util_exception.cpp
         net_utils.cpp
-        ../../include/utils/smart_ptr.h
+        city_hash.cpp
+        smart_ptr.cpp
         )
 
 target_link_libraries(utils dl)
